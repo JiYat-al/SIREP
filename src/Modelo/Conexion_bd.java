@@ -11,7 +11,7 @@ public class Conexion_bd {
     private Connection conexion;
 
     private final String user = "postgres";
-    private final String password = "6904032w";
+    private final String password = "yahalo.098";
     private final String base = "SIREP";
     private final String host = "localhost";
     private final String port = "5432";
