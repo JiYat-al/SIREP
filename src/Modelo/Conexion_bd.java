@@ -2,6 +2,7 @@ package Modelo;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Conexion_bd {
 
@@ -22,5 +23,10 @@ public class Conexion_bd {
         }
 
     }
-
+    public static Connection getConnection() throws SQLException {
+        String user = "postgres";
+        String password = "isaacadmin";
+        String url = "jdbc:postgresql://localhost:5432/sirep";
+        return DriverManager.getConnection(url, user, password);
+    }
 }
