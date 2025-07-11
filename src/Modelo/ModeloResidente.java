@@ -15,6 +15,11 @@ public class ModeloResidente {
     private String telefono;
     private int idProyecto;
 
+    // Constantes para la conexión
+    private static final String URL = "jdbc:postgresql://localhost:5432/postgres";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "yahalon.098";
+
     public ModeloResidente() {
         // Constructor vacío
     }
@@ -32,6 +37,21 @@ public class ModeloResidente {
         this.idProyecto = idProyecto;
     }
 
+    // Método para obtener conexión
+    private static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+
+    // Método para probar conexión
+    private static boolean probarConexion() {
+        try (Connection conn = getConnection()) {
+            return conn != null && !conn.isClosed();
+        } catch (SQLException e) {
+            System.err.println("Error al probar conexión: " + e.getMessage());
+            return false;
+        }
+    }
+
     // ==================== MÉTODOS DE BASE DE DATOS ====================
 
     /**
@@ -41,7 +61,7 @@ public class ModeloResidente {
         String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
                 "carrera, semestre, correo, telefono, id_proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = Conexion_bd.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, this.numeroControl);
@@ -71,7 +91,7 @@ public class ModeloResidente {
                 "carrera = ?, semestre = ?, correo = ?, telefono = ?, id_proyecto = ? " +
                 "WHERE numero_control = ?";
 
-        try (Connection conn = Conexion_bd.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, this.nombre);
@@ -99,7 +119,7 @@ public class ModeloResidente {
     public boolean eliminar() {
         String sql = "DELETE FROM residente WHERE numero_control = ?";
 
-        try (Connection conn = Conexion_bd.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, this.numeroControl);
@@ -119,7 +139,7 @@ public class ModeloResidente {
     public static ModeloResidente buscarPorNumeroControl(int numeroControl) {
         String sql = "SELECT * FROM residente WHERE numero_control = ?";
 
-        try (Connection conn = Conexion_bd.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, numeroControl);
@@ -153,7 +173,7 @@ public class ModeloResidente {
         List<ModeloResidente> residentes = new ArrayList<>();
         String sql = "SELECT * FROM residente ORDER BY numero_control";
 
-        try (Connection conn = Conexion_bd.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -185,7 +205,7 @@ public class ModeloResidente {
     public static boolean existe(int numeroControl) {
         String sql = "SELECT COUNT(*) FROM residente WHERE numero_control = ?";
 
-        try (Connection conn = Conexion_bd.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, numeroControl);
@@ -211,7 +231,7 @@ public class ModeloResidente {
                 "VALUES (1, 'Proyecto Por Defecto', 'Proyecto general para residentes', " +
                 "'Indefinido', 0, 'Activo', 'Sistema')";
 
-        try (Connection conn = Conexion_bd.getConnection()) {
+        try (Connection conn = getConnection()) {
 
             // Verificar cuántos proyectos por defecto existen
             try (PreparedStatement checkStmt = conn.prepareStatement(sqlCheck)) {
@@ -261,7 +281,7 @@ public class ModeloResidente {
         List<String> errores = new ArrayList<>();
 
         // Verificar conexión
-        if (!Conexion_bd.probarConexion()) {
+        if (!probarConexion()) {
             errores.add("No se puede conectar a la base de datos");
             return new ResultadoImportacion(0, residentes.size(), 0, errores);
         }
@@ -288,7 +308,7 @@ public class ModeloResidente {
                 "telefono = EXCLUDED.telefono, " +
                 "id_proyecto = EXCLUDED.id_proyecto";
 
-        try (Connection conn = Conexion_bd.getConnection()) {
+        try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -385,7 +405,7 @@ public class ModeloResidente {
                 "VALUES (1, 'Proyecto Por Defecto', 'Proyecto temporal para residentes sin asignar', " +
                 "'Indefinido', 0, 'Activo', 'Sistema')";
 
-        try (Connection conn = Conexion_bd.getConnection()) {
+        try (Connection conn = getConnection()) {
             // Verificar si existe
             try (PreparedStatement checkStmt = conn.prepareStatement(sqlCheck)) {
                 ResultSet rs = checkStmt.executeQuery();
