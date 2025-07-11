@@ -16,9 +16,9 @@ public class ModeloResidente {
     private int idProyecto;
 
     // Constantes para la conexión
-    private static final String URL = "jdbc:postgresql://localhost:5432/postgres";
+    private static final String URL = "jdbc:postgresql://localhost:5432/SIREP";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "yahalon.098";
+    private static final String PASSWORD = "hola";
 
     public ModeloResidente() {
         // Constructor vacío

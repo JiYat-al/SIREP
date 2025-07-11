@@ -1,7 +1,5 @@
 package Controlador;
 
-
-
 import Modelo.ModeloResidente;
 import Vista.VistaResidentes.VistaResidente;
 import Utilidades.ExcelHandler;

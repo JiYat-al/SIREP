@@ -12,7 +12,7 @@ public class Conexion_bd {
 
         try {
 
-            Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", user, password);
+            Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/SIREP", user, password);
             System.out.println("Connected to the database");
 
         } catch (Exception e) {
