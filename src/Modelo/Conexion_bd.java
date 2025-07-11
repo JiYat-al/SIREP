@@ -2,25 +2,47 @@ package Modelo;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
 
 public class Conexion_bd {
 
-    public static void main(String[] args) {
+    private static Conexion_bd instancia;
+    private Connection conexion;
 
-        String user = "postgres";
-        String password = "hola";
+    private final String user = "postgres";
+    private final String password = "hola";
+    private final String base = "SIREP";
+    private final String host = "localhost";
+    private final String port = "5432";
+    private final String url = "jdbc:postgresql://" + host + ":" + port + "/" + base;
 
+    private Conexion_bd() {
         try {
-
-            Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/SIREP", user, password);
-            System.out.println("Connected to the database");
-
+            Class.forName("org.postgresql.Driver");
+            conexion = DriverManager.getConnection(url, user, password);
         } catch (Exception e) {
-
-            System.out.println("Could not connect to the database");
-
+            JOptionPane.showMessageDialog(null, "Error de conexión a PostgreSQL: " + e.getMessage());
+            e.printStackTrace();
         }
-
     }
 
+    public static synchronized Conexion_bd getInstancia() {
+        if (instancia == null) {
+            instancia = new Conexion_bd();
+        } else {
+            try {
+                if (instancia.conexion == null || instancia.conexion.isClosed()) {
+                    instancia = new Conexion_bd();
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error verificando conexión: " + e.getMessage());
+            }
+        }
+        return instancia;
+    }
+
+    public Connection getConexion() {
+        return conexion;
+    }
 }
