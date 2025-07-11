@@ -1,4 +1,4 @@
-package Vista.Resource;
+package Vista;
 
 import javax.swing.*;
 import java.awt.*;
