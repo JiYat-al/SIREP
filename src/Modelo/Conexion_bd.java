@@ -8,7 +8,7 @@ public class Conexion_bd {
     public static void main(String[] args) {
 
         String user = "postgres";
-        String password = "yahalon.098";
+        String password = "isaacadmin";
 
         try {
 
