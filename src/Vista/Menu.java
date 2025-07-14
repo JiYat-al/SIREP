@@ -1,4 +1,5 @@
 package Vista;
+import Controlardor.ControladorDocente;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -7,15 +8,11 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.*;
 
-/**
- * Menú principal ultra mejorado con efectos visuales, iconos, animaciones y detalles modernos.
- * Pensado para impresionar a la profesora Maricarmen.
- */
-public class MenuPrincipalUI extends JFrame {
+public class Menu extends JFrame {
     private final Color colorPrincipal = new Color(92, 93, 169);
     private final Color colorFondo = new Color(245, 243, 255);
 
-    public MenuPrincipalUI() {
+    public Menu() {
         setTitle("Sistema de Banco de Proyectos - ITO");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -102,7 +99,7 @@ public class MenuPrincipalUI extends JFrame {
         panelLogo.setOpaque(false);
 
         // Carga el logotipo del ITO desde la carpeta de imágenes y ajusta el tamaño
-        ImageIcon icon = cargarPNGComoIcono("/Recursos/logo.png", 64, 64); // Ajusta el tamaño aquí
+        ImageIcon icon = cargarPNGComoIcono("/imagenes/logo.png", 64, 64); // Ajusta el tamaño aquí
         JLabel logo = new JLabel();
         if (icon != null && icon.getIconWidth() > 0) {
             logo.setIcon(icon);
@@ -118,24 +115,24 @@ public class MenuPrincipalUI extends JFrame {
         panelMenu.setOpaque(false);
 
         JButton btnAlumnos = new JButton("Alumnos");
-        btnAlumnos.setIcon(cargarPNGComoIcono("/Recursos/alumnos.png", 28, 28));
+        btnAlumnos.setIcon(cargarPNGComoIcono("/imagenes/alumnos.png", 28, 28));
         configurarBotonMenu(btnAlumnos);
 
         JButton btnDocentes = new JButton("Docentes");
-        btnDocentes.setIcon(cargarPNGComoIcono("/Recursos/docentes.png", 28, 28));
+        btnDocentes.setIcon(cargarPNGComoIcono("/imagenes/docentes.png", 28, 28));
         configurarBotonMenu(btnDocentes);
 
         JButton btnEmpresas = new JButton("Empresas");
-        btnEmpresas.setIcon(cargarPNGComoIcono("/Recursos/empresa.png", 28, 28));
+        btnEmpresas.setIcon(cargarPNGComoIcono("/imagenes/empresa.png", 28, 28));
         configurarBotonMenu(btnEmpresas);
 
         JButton btnProyectos = new JButton("Proyectos \u25BC");
-        btnProyectos.setIcon(cargarPNGComoIcono("/Recursos/proyectos.png", 28, 28));
+        btnProyectos.setIcon(cargarPNGComoIcono("/imagenes/proyectos.png", 28, 28));
         configurarBotonMenu(btnProyectos);
 
         JPopupMenu menuProyectos = new JPopupMenu();
-        JMenuItem itemBancoProyectos = new JMenuItem("Banco de Proyectos", cargarPNGComoIcono("/Recursos/proyecto.png", 22, 22));
-        JMenuItem itemAnteproyectos = new JMenuItem("Anteproyectos", cargarPNGComoIcono("/Recursos/proyecto.png", 22, 22));
+        JMenuItem itemBancoProyectos = new JMenuItem("Banco de Proyectos", cargarPNGComoIcono("/imagenes/proyecto.png", 22, 22));
+        JMenuItem itemAnteproyectos = new JMenuItem("Anteproyectos", cargarPNGComoIcono("/imagenes/proyecto.png", 22, 22));
         itemBancoProyectos.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         itemAnteproyectos.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         itemBancoProyectos.setBackground(Color.WHITE);
@@ -168,7 +165,7 @@ public class MenuPrincipalUI extends JFrame {
         // Botón de perfil PNG en la esquina superior derecha
         JButton btnPerfil = new JButton();
         btnPerfil.setToolTipText("Perfil");
-        btnPerfil.setIcon(cargarPNGComoIcono("/Recursos/perfil.png", 32, 32)); // Usa un tamaño más grande para mejor visibilidad
+        btnPerfil.setIcon(cargarPNGComoIcono("/imagenes/perfil.png", 32, 32)); // Usa un tamaño más grande para mejor visibilidad
         btnPerfil.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         btnPerfil.setBackground(Color.WHITE);
         btnPerfil.setFocusPainted(false);
@@ -192,7 +189,7 @@ public class MenuPrincipalUI extends JFrame {
         // Botón de créditos en la esquina inferior derecha
         JButton btnCreditos = new JButton();
         btnCreditos.setToolTipText("Créditos");
-        btnCreditos.setIcon(cargarPNGComoIcono("/Recursos/creditos.png", 32, 32)); // Usa tu icono, por ejemplo "creditos.png"
+        btnCreditos.setIcon(cargarPNGComoIcono("/imagenes/creditos.png", 32, 32)); // Usa tu icono, por ejemplo "creditos.png"
         btnCreditos.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         btnCreditos.setBackground(Color.WHITE);
         btnCreditos.setFocusPainted(false);
@@ -305,7 +302,7 @@ public class MenuPrincipalUI extends JFrame {
         // Icono antes del texto de bienvenida
         gbc.gridy++;
         JLabel iconoProfa = new JLabel();
-        iconoProfa.setIcon(cargarPNGComoIcono("/Recursos/profa.png", 54, 54));
+        iconoProfa.setIcon(cargarPNGComoIcono("/imagenes/profa.png", 54, 54));
         iconoProfa.setHorizontalAlignment(SwingConstants.CENTER);
         panelCentral.add(iconoProfa, gbc);
 
@@ -363,14 +360,16 @@ public class MenuPrincipalUI extends JFrame {
         setContentPane(mainPanel);
 
         // Acciones de los botones para abrir los bancos
-        /*btnAlumnos.addActionListener(e -> new BancoAlumnosUI().setVisible(true));
-        btnDocentes.addActionListener(e -> new BancoDocentesUI().setVisible(true));*/
-        btnEmpresas.addActionListener(e -> {
-            new BancoEmpresasUI().setVisible(true);
-            this.dispose();
+        /**  btnAlumnos.addActionListener(e -> new BancoAlumnosUI().setVisible(true)); */
+        /** Apertura de docentes*/
+        btnDocentes.addActionListener(e -> {
+            DocentesUI vistaDocentes = new DocentesUI();
+            ControladorDocente controladorDocentes = new ControladorDocente();
+            vistaDocentes.setVisible(true);
         });
-        itemBancoProyectos.addActionListener(e -> new BancoProyectosUI().setVisible(true));
-       // itemAnteproyectos.addActionListener(e -> new BancoAnteproyectosUI().setVisible(true));
+        btnEmpresas.addActionListener(e -> new BancoEmpresasUI().setVisible(true));
+         itemBancoProyectos.addActionListener(e -> new BancoProyectosUI().setVisible(true));
+         //itemAnteproyectos.addActionListener(e -> new BancoAnteproyectosUI().setVisible(true));
         btnPerfil.addActionListener(e -> JOptionPane.showMessageDialog(this,
                 "Perfil de la profesora Maricarmen\nCorreo: maricarmen@ito.edu.mx\nRol: Administradora",
                 "Perfil", JOptionPane.INFORMATION_MESSAGE));
@@ -430,7 +429,7 @@ public class MenuPrincipalUI extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            new MenuPrincipalUI().setVisible(true);
+            new Menu().setVisible(true);
         });
     }
 }

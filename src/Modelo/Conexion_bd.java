@@ -45,5 +45,10 @@ public class Conexion_bd {
     public Connection getConexion() {
         return conexion;
     }
+
+    /**Método adicional para compatibilidad con código anterior*/
+    public static Connection getConnection() throws SQLException {
+        return getInstancia().getConexion();
+    }
 }
 
