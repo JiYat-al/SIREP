@@ -75,7 +75,7 @@ public class LoginITO extends JFrame {
 
         JLabel lblLogo = new JLabel();
         try {
-            ImageIcon icono = new ImageIcon(getClass().getResource("/imagenes/logo.png"));
+            ImageIcon icono = new ImageIcon(getClass().getResource("/Recursos/logo.png"));
             Image img = icono.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
             lblLogo.setIcon(new ImageIcon(img));
         } catch (Exception ex) {
