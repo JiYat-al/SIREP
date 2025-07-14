@@ -302,7 +302,7 @@ public class BancoEmpresasUI extends JFrame {
         }
     }
 
-    // Botón Editar y Eliminar bonito en la tabla
+    // Botón Editar y Eliminar en la tabla
     class BotonAccionesRenderer extends JPanel implements TableCellRenderer {
         private final JButton btnEditar;
         private final JButton btnEliminar;
@@ -504,36 +504,30 @@ public class BancoEmpresasUI extends JFrame {
             }
 
             btnGuardar.addActionListener(ev -> {
-                String nombre = txtNombre.getText().trim();
-                String direccion = txtDireccion.getText().trim();
-                String responsable = txtResponsable.getText().trim();
-                String telefono = txtTelefono.getText().trim();
-                String correo = txtCorreo.getText().trim();
 
-                if (nombre.isEmpty()) {
+                if (txtNombre.getText().isEmpty()) {
                     JOptionPane.showMessageDialog(this, "El nombre no puede estar vacío.", "Validación", JOptionPane.WARNING_MESSAGE);
                     txtNombre.requestFocus(); return;
                 }
-                if (direccion.isEmpty()) {
+                if (txtDireccion.getText().isEmpty()) {
                     JOptionPane.showMessageDialog(this, "La dirección no puede estar vacía.", "Validación", JOptionPane.WARNING_MESSAGE);
                     txtDireccion.requestFocus(); return;
                 }
-                if (responsable.isEmpty()) {
+                if (txtResponsable.getText().isEmpty()) {
                     JOptionPane.showMessageDialog(this, "El responsable no puede estar vacío.", "Validación", JOptionPane.WARNING_MESSAGE);
                     txtResponsable.requestFocus(); return;
                 }
-                if (telefono.isEmpty()) {
+                if (txtTelefono.getText().isEmpty()) {
                     JOptionPane.showMessageDialog(this, "El teléfono no puede estar vacío.", "Validación", JOptionPane.WARNING_MESSAGE);
                     txtTelefono.requestFocus(); return;
                 }
-                if (correo.isEmpty()) {
+                if (txtCorreo.getText().isEmpty()) {
                     JOptionPane.showMessageDialog(this, "El correo no puede estar vacío.", "Validación", JOptionPane.WARNING_MESSAGE);
                     txtCorreo.requestFocus(); return;
                 }
 
-                int id = (empresa == null) ? generarId(parent) : empresa.id;
-                empresaEditada = new Empresa(id, nombre, direccion, responsable, telefono, correo);
-                seRegistro = true;
+                CtrlEmpresa.btnGuardar(txtNombre,txtDireccion,txtResponsable,txtTelefono,txtCorreo);
+
                 dispose();
             });
         }
