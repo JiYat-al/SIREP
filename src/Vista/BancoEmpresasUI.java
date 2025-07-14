@@ -1,6 +1,6 @@
 package Vista;
 
-import Controlardor.CtrlEmpresa;
+import Controlador.CtrlEmpresa;
 import Modelo.Empresa;
 
 import java.awt.*;

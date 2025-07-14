@@ -1,7 +1,7 @@
 
 package Vista;
 
-import Controlardor.ControladorDocente;
+import Controlador.ControladorDocente;
 import Modelo.Docente;
 
 import java.awt.*;

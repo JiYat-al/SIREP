@@ -1,9 +1,7 @@
 package app;
 
-import Controlardor.ControladorLogin;
+import Controlador.ControladorLogin;
 import Vista.LoginITO;
-
-import javax.swing.*;
 
 public class main {
     public static void main(String[] args) {
