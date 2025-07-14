@@ -278,7 +278,6 @@ public class BancoEmpresasUI extends JFrame {
         mainPanel.add(panelContenido, BorderLayout.CENTER);
         setContentPane(mainPanel);
 
-        // Empresas de ejemplo:
         cargarTabla();
 
         // ---- Evento del botón Registrar (Abre formulario) ----
@@ -286,7 +285,6 @@ public class BancoEmpresasUI extends JFrame {
             RegistrarEmpresaDialog dialog = new RegistrarEmpresaDialog(this, colorPrincipal, null);
             dialog.setVisible(true);
             if (dialog.seRegistro) {
-                listaEmpresas.add(dialog.empresaEditada);
                 cargarTabla();
             }
         });
@@ -527,7 +525,7 @@ public class BancoEmpresasUI extends JFrame {
                 }
 
                 CtrlEmpresa.btnGuardar(txtNombre,txtDireccion,txtResponsable,txtTelefono,txtCorreo);
-
+                seRegistro = true;
                 dispose();
             });
         }
