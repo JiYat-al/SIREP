@@ -2,6 +2,7 @@
   <library name="postgresql-42.7.7">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/postgresql-42.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/jbcrypt-0.4.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

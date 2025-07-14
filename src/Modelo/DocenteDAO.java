@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**INSERTAR */
 public class DocenteDAO {
     public boolean nuevoDocente(int numeroTarjeta, String nombre,String apellido_paterno,String apellido_materno, String correo){
@@ -23,8 +26,36 @@ public class DocenteDAO {
         }
         return false;
     }
+    /**Cargar tabla docentes*/
+    public List<Docente> obtenerTodos() {
+        List<Docente> lista = new ArrayList<>();
+        String sql="SELECT * FROM docente WHERE numero_tarjeta NOT IN (SELECT numero_tarjeta FROM usuario)";
 
-/**MODIFICAR NOMBRE*/
+        /**String sql = "SELECT * FROM docente";*/
+
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Docente d = new Docente();
+                d.setNumeroTarjeta(rs.getInt("numero_tarjeta"));
+                d.setNombre(rs.getString("nombre"));
+                d.setApellidoPaterno(rs.getString("apellido_paterno"));
+                d.setApellidoMaterno(rs.getString("apellido_materno"));
+                d.setCorreo(rs.getString("correo"));
+                lista.add(d);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
+
+
+    /**
     public boolean actualizarNombre(int numeroTarjeta, String nombre,String apellido_paterno,String apellido_materno){
         String sql="UPDATE public.docente SET nombre=?, apellido_paterno=?, apellido_materno=? WHERE numero_tarjeta = ?";
         try (Connection con = Conexion_bd.getConnection();
@@ -46,7 +77,7 @@ public class DocenteDAO {
     }
 
 
-    /**MODIFICAR correo*/
+
 
     public boolean nuevoCorreo(int numeroTarjeta, String correo){
         String sql="UPDATE public.docente SET correo=? WHERE numero_tarjeta = ?";
@@ -65,5 +96,42 @@ public class DocenteDAO {
         }
         return false;
     }
+     */
+    public boolean actualizarDatos(Docente docente) {
+        String sql = "UPDATE public.docente SET nombre = ?, apellido_paterno = ?, apellido_materno = ?, correo = ? WHERE numero_tarjeta = ?";
+
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, docente.getNombre());
+            ps.setString(2, docente.getApellidoPaterno());
+            ps.setString(3, docente.getApellidoMaterno());
+            ps.setString(4, docente.getCorreo());
+            ps.setInt(5, docente.getNumeroTarjeta());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+
+    public boolean eliminarDocente(int numeroTarjeta) {
+        String sql = "DELETE FROM public.docente WHERE numero_tarjeta = ?";
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, numeroTarjeta);
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
 }
