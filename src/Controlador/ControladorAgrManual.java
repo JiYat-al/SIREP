@@ -15,7 +15,7 @@ public class ControladorAgrManual {
     }
 
     /**
-     * Validar todos los campos del formulario con validaciones mejoradas
+     * Validar todos los campos del formulario - SIN VALIDACIÓN DE CARRERA
      */
     public boolean validarCampos(String numeroControl, String nombre, String apellidoPaterno,
                                  String apellidoMaterno, String carrera, String semestre,
@@ -146,16 +146,8 @@ public class ControladorAgrManual {
             }
         }
 
-        // ==================== VALIDAR CARRERA ====================
-        if (carrera.trim().isEmpty()) {
-            mostrarError("La carrera es obligatoria");
-            return false;
-        }
-
-        if (carrera.trim().length() < 3) {
-            mostrarError("El nombre de la carrera debe tener al menos 3 caracteres");
-            return false;
-        }
+        // ==================== CARRERA ELIMINADA - ES AUTOMÁTICA ====================
+        // No hay validación de carrera porque se setea automáticamente
 
         // ==================== VALIDAR SEMESTRE ====================
         if (semestre.trim().isEmpty()) {
@@ -263,8 +255,7 @@ public class ControladorAgrManual {
     }
 
     /**
-     * Crear y guardar un residente en la base de datos
-     * MODIFICADO: Solo valida, NO guarda en BD, menos mensajes de aviso
+     * Crear y guardar un residente - MODIFICADO PARA CARRERA AUTOMÁTICA
      */
     public boolean guardarResidente(String numeroControl, String nombre, String apellidoPaterno,
                                     String apellidoMaterno, String carrera, String semestre,
@@ -287,9 +278,9 @@ public class ControladorAgrManual {
                 return false;
             }
 
-            // CONFIRMACIÓN SIMPLIFICADA - menos texto, más directo
+            // CONFIRMACIÓN SIMPLIFICADA
             int opcion = JOptionPane.showConfirmDialog(vista,
-                    "¿Agregar este residente a la tabla?",
+                    "¿Agregar este residente a la tabla?\nCarrera: " + carrera,
                     "Confirmar",
                     JOptionPane.YES_NO_OPTION);
 
@@ -351,19 +342,6 @@ public class ControladorAgrManual {
             mostrarError("El número de control debe ser un número válido");
             return false;
         }
-    }
-
-    /**
-     * Limpiar formulario - SIMPLIFICADO
-     */
-    public void limpiarFormulario() {
-        // Mensaje simplificado
-        SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(vista,
-                    "Formulario limpiado",
-                    "Información",
-                    JOptionPane.INFORMATION_MESSAGE);
-        });
     }
 
     /**
