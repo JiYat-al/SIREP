@@ -112,6 +112,34 @@ public class ExcelHandler {
     /**
      * Validar que los encabezados del archivo Excel sean correctos
      */
+    private String formatearTexto(String texto) {
+        if (texto == null || texto.trim().isEmpty()) {
+            return texto;
+        }
+
+        String textoLimpio = texto.trim();
+
+        // Si es una sola palabra
+        if (!textoLimpio.contains(" ")) {
+            return textoLimpio.substring(0, 1).toUpperCase() + textoLimpio.substring(1).toLowerCase();
+        }
+
+        // Si son múltiples palabras, formatear cada una
+        String[] palabras = textoLimpio.split("\\s+");
+        StringBuilder resultado = new StringBuilder();
+
+        for (int i = 0; i < palabras.length; i++) {
+            if (palabras[i].length() > 0) {
+                String palabra = palabras[i].substring(0, 1).toUpperCase() + palabras[i].substring(1).toLowerCase();
+                resultado.append(palabra);
+                if (i < palabras.length - 1) {
+                    resultado.append(" ");
+                }
+            }
+        }
+
+        return resultado.toString();
+    }
     private static boolean validarEncabezados(Sheet sheet) {
         Row headerRow = sheet.getRow(0);
         if (headerRow == null) {

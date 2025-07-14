@@ -2,8 +2,7 @@ package Vista.VistaResidentes;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import Controlador.ControladorAgrManual;
 
 public class AgregarManual extends JDialog {
@@ -12,24 +11,17 @@ public class AgregarManual extends JDialog {
     private JTextField txtApellidoPaterno;
     private JTextField txtApellidoMaterno;
     private JTextField txtCarrera;
-    private JTextField txtSemestre;
+    private JSpinner spnSemestre;
     private JTextField txtCorreo;
     private JTextField txtTelefono;
     private JButton btnGuardar;
     private JButton btnCancelar;
+    private JButton btnAyuda;
+    private JButton btnLimpiar;
 
     private boolean guardado = false;
     private ControladorAgrManual controlador;
-    private JTextField Nombre;
-    private JTextField Apellido_Materno;
-    private JTextField Carrera;
-    private JTextField textField1;
-    private JLabel Apellido_Paterno;
-    private JTextField Semestre;
-    private JTextField textField6;
-    private JTextField textField7;
-    private JButton guardar;
-    private JButton cancelar;
+    private final Color colorPrincipal = new Color(92, 93, 169);
 
     public AgregarManual(Frame parent) {
         super(parent, "Agregar Residente Manual", true);
@@ -37,127 +29,325 @@ public class AgregarManual extends JDialog {
         // Inicializar controlador
         controlador = new ControladorAgrManual(this);
 
-        initComponents();
-        setupLayout();
-        setupEvents();
-
-        setSize(450, 400);
+        setSize(650, 750);
         setLocationRelativeTo(parent);
         setResizable(false);
-    }
-
-    // ==================== CONFIGURACIÓN DE COMPONENTES ====================
-
-    private void initComponents() {
-        txtNumeroControl = new JTextField(15);
-        txtNombre = new JTextField(15);
-        txtApellidoPaterno = new JTextField(15);
-        txtApellidoMaterno = new JTextField(15);
-        txtCarrera = new JTextField(15);
-        txtSemestre = new JTextField(15);
-        txtCorreo = new JTextField(15);
-        txtTelefono = new JTextField(15);
-
-        btnGuardar = new JButton("💾 Guardar");
-        btnCancelar = new JButton("❌ Cancelar");
-
-        // Establecer colores para mejor apariencia
-        btnGuardar.setBackground(new Color(46, 125, 50));
-        btnGuardar.setForeground(Color.WHITE);
-        btnGuardar.setFocusPainted(false);
-
-        btnCancelar.setBackground(new Color(211, 47, 47));
-        btnCancelar.setForeground(Color.WHITE);
-        btnCancelar.setFocusPainted(false);
-    }
-
-    private void setupLayout() {
         setLayout(new BorderLayout());
 
-        // Panel principal con campos
-        JPanel panelCampos = new JPanel(new GridBagLayout());
+        configurarInterfaz();
+        configurarEventos();
+        configurarValidacionTiempoReal();
+    }
+
+    private void configurarInterfaz() {
+        // Panel principal con fondo blanco
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.WHITE);
+
+        // Header con título
+        JPanel headerPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                GradientPaint grad = new GradientPaint(
+                        0, 0, colorPrincipal,
+                        0, getHeight(), colorPrincipal.brighter()
+                );
+                g2.setPaint(grad);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        headerPanel.setPreferredSize(new Dimension(0, 80));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+
+        JLabel lblTituloDialog = new JLabel("📝 Registro de Nuevo Residente");
+        lblTituloDialog.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTituloDialog.setForeground(Color.WHITE);
+        headerPanel.add(lblTituloDialog, BorderLayout.CENTER);
+
+        // Botón ayuda en el header
+        btnAyuda = new JButton("❓");
+        btnAyuda.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        btnAyuda.setBackground(Color.WHITE);
+        btnAyuda.setForeground(colorPrincipal);
+        btnAyuda.setFocusPainted(false);
+        btnAyuda.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        btnAyuda.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnAyuda.setToolTipText("Ayuda sobre el formato del número de control");
+        headerPanel.add(btnAyuda, BorderLayout.EAST);
+
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+
+        // Panel de formulario
+        JPanel panelFormulario = new JPanel(new GridBagLayout());
+        panelFormulario.setBackground(Color.WHITE);
+        panelFormulario.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.insets = new Insets(12, 4, 4, 4);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Título
-        JLabel lblTitulo = new JLabel("📝 Registro de Nuevo Residente");
-        lblTitulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
+        // Crear campos del formulario
+        crearCamposFormulario(panelFormulario, gbc);
 
-        // Agregar campos
-        agregarCampo(panelCampos, "* Número de Control:", txtNumeroControl, gbc, 0);
-        agregarCampo(panelCampos, "* Nombre:", txtNombre, gbc, 1);
-        agregarCampo(panelCampos, "* Apellido Paterno:", txtApellidoPaterno, gbc, 2);
-        agregarCampo(panelCampos, "Apellido Materno:", txtApellidoMaterno, gbc, 3);
-        agregarCampo(panelCampos, "* Carrera:", txtCarrera, gbc, 4);
-        agregarCampo(panelCampos, "* Semestre:", txtSemestre, gbc, 5);
-        agregarCampo(panelCampos, "* Correo:", txtCorreo, gbc, 6);
-        agregarCampo(panelCampos, "Teléfono:", txtTelefono, gbc, 7);
-
-        // Nota sobre campos obligatorios
-        JLabel lblNota = new JLabel("* Campos obligatorios");
-        lblNota.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 11));
-        lblNota.setForeground(Color.GRAY);
+        mainPanel.add(panelFormulario, BorderLayout.CENTER);
 
         // Panel de botones
-        JPanel panelBotones = new JPanel(new FlowLayout());
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 20));
+        panelBotones.setBackground(Color.WHITE);
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+
+        crearBotones(panelBotones);
+
+        mainPanel.add(panelBotones, BorderLayout.SOUTH);
+
+        // Nota sobre campos obligatorios
+        JPanel panelNota = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelNota.setBackground(Color.WHITE);
+        JLabel lblNota = new JLabel("⚠️ * Campos obligatorios - 💡 Hover sobre los campos para más información");
+        lblNota.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblNota.setForeground(new Color(150, 150, 150));
+        panelNota.add(lblNota);
+        panelNota.setBorder(BorderFactory.createEmptyBorder(0, 40, 0, 40));
+
+        // Panel inferior que contiene nota y botones
+        JPanel panelInferior = new JPanel(new BorderLayout());
+        panelInferior.setBackground(Color.WHITE);
+        panelInferior.add(panelNota, BorderLayout.NORTH);
+        panelInferior.add(panelBotones, BorderLayout.CENTER);
+
+        mainPanel.add(panelInferior, BorderLayout.SOUTH);
+
+        add(mainPanel, BorderLayout.CENTER);
+    }
+
+    private void crearCamposFormulario(JPanel panel, GridBagConstraints gbc) {
+        // Número de Control
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("* Número de Control"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtNumeroControl = crearCampoTexto();
+        txtNumeroControl.setToolTipText("Formato: AACCCCCC (8 dígitos) - Ej: 22161063");
+        panel.add(txtNumeroControl, gbc);
+
+        // Nombre
+        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("* Nombre"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtNombre = crearCampoTexto();
+        txtNombre.setToolTipText("Solo letras, espacios y acentos. Mínimo 2 caracteres");
+        panel.add(txtNombre, gbc);
+
+        // Apellido Paterno
+        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("* Apellido Paterno"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtApellidoPaterno = crearCampoTexto();
+        txtApellidoPaterno.setToolTipText("Solo letras, espacios y acentos. Mínimo 2 caracteres");
+        panel.add(txtApellidoPaterno, gbc);
+
+        // Apellido Materno
+        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("Apellido Materno"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtApellidoMaterno = crearCampoTexto();
+        txtApellidoMaterno.setToolTipText("Opcional. Solo letras, espacios y acentos");
+        panel.add(txtApellidoMaterno, gbc);
+
+        // Carrera
+        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("* Carrera"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtCarrera = crearCampoTexto();
+        txtCarrera.setToolTipText("Nombre completo de la carrera. Mínimo 3 caracteres");
+        panel.add(txtCarrera, gbc);
+
+        // Semestre
+        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("* Semestre"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        spnSemestre = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
+        spnSemestre.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        spnSemestre.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(colorPrincipal, 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+        spnSemestre.setToolTipText("Semestre actual del estudiante (1-12)");
+        ((JSpinner.DefaultEditor) spnSemestre.getEditor()).getTextField().setEditable(false);
+        panel.add(spnSemestre, gbc);
+
+        // Correo
+        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("* Correo Electrónico"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtCorreo = crearCampoTexto();
+        txtCorreo.setToolTipText("Formato: usuario@dominio.com - Ej: juan.perez@tecnm.mx");
+        panel.add(txtCorreo, gbc);
+
+        // Teléfono
+        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        panel.add(crearEtiqueta("Teléfono"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtTelefono = crearCampoTexto();
+        txtTelefono.setToolTipText("Opcional. 8-15 dígitos - Ej: 4421234567 o (442) 123-4567");
+        panel.add(txtTelefono, gbc);
+    }
+
+    private JLabel crearEtiqueta(String texto) {
+        JLabel label = new JLabel(texto);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+
+        if (texto.startsWith("*")) {
+            label.setForeground(new Color(200, 60, 60)); // Rojo para campos obligatorios
+        } else {
+            label.setForeground(colorPrincipal);
+        }
+
+        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15));
+        return label;
+    }
+
+    private JTextField crearCampoTexto() {
+        JTextField campo = new JTextField();
+        campo.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(colorPrincipal, 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+
+        // Efectos de foco mejorados
+        campo.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                campo.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(33, 150, 243), 3, true),
+                        BorderFactory.createEmptyBorder(7, 11, 7, 11)
+                ));
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                campo.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(colorPrincipal, 2, true),
+                        BorderFactory.createEmptyBorder(8, 12, 8, 12)
+                ));
+            }
+        });
+
+        return campo;
+    }
+
+    private void crearBotones(JPanel panelBotones) {
+        // Botón Limpiar
+        btnLimpiar = new JButton("🧹 Limpiar") {
+            private boolean hover = false;
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(Color.WHITE);
+                setFont(new Font("Segoe UI", Font.BOLD, 15));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
+                    public void mouseExited(MouseEvent e) { hover = false; repaint(); }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color colorLimpiar = new Color(158, 158, 158);
+                // Sombra
+                g2.setColor(new Color(60,60,100,60));
+                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 35, 35);
+                // Gradiente
+                GradientPaint grad = new GradientPaint(0, 0, hover ? colorLimpiar.darker() : colorLimpiar,
+                        getWidth(), getHeight(), colorLimpiar.brighter());
+                g2.setPaint(grad);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 35, 35);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+
+        // Botón Guardar
+        btnGuardar = new JButton("💾 Guardar") {
+            private boolean hover = false;
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(Color.WHITE);
+                setFont(new Font("Segoe UI", Font.BOLD, 16));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
+                    public void mouseExited(MouseEvent e) { hover = false; repaint(); }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color colorGuardar = new Color(46, 125, 50);
+                // Sombra
+                g2.setColor(new Color(60,60,100,60));
+                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 40, 40);
+                // Gradiente
+                GradientPaint grad = new GradientPaint(0, 0, hover ? colorGuardar.darker() : colorGuardar,
+                        getWidth(), getHeight(), colorGuardar.brighter());
+                g2.setPaint(grad);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+
+        // Botón Cancelar
+        btnCancelar = new JButton("❌ Cancelar") {
+            private boolean hover = false;
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(Color.WHITE);
+                setFont(new Font("Segoe UI", Font.BOLD, 16));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
+                    public void mouseExited(MouseEvent e) { hover = false; repaint(); }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color colorCancelar = new Color(211, 47, 47);
+                // Sombra
+                g2.setColor(new Color(60,60,100,60));
+                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 40, 40);
+                // Gradiente
+                GradientPaint grad = new GradientPaint(0, 0, hover ? colorCancelar.darker() : colorCancelar,
+                        getWidth(), getHeight(), colorCancelar.brighter());
+                g2.setPaint(grad);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+
+        panelBotones.add(btnLimpiar);
         panelBotones.add(btnGuardar);
         panelBotones.add(btnCancelar);
-
-        // Panel superior con título
-        JPanel panelSuperior = new JPanel(new BorderLayout());
-        panelSuperior.add(lblTitulo, BorderLayout.CENTER);
-        panelSuperior.setBorder(BorderFactory.createEmptyBorder(10, 10, 15, 10));
-
-        // Panel inferior con nota y botones
-        JPanel panelInferior = new JPanel(new BorderLayout());
-        panelInferior.add(lblNota, BorderLayout.NORTH);
-        panelInferior.add(panelBotones, BorderLayout.CENTER);
-        panelInferior.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Agregar todo al diálogo
-        add(panelSuperior, BorderLayout.NORTH);
-        add(panelCampos, BorderLayout.CENTER);
-        add(panelInferior, BorderLayout.SOUTH);
-
-        // Borde general
-        ((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
     }
 
-    private void agregarCampo(JPanel panel, String etiqueta, JTextField campo, GridBagConstraints gbc, int fila) {
-        gbc.gridx = 0;
-        gbc.gridy = fila;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
+    private void configurarEventos() {
+        btnGuardar.addActionListener(e -> guardarResidente());
+        btnCancelar.addActionListener(e -> cancelar());
+        btnLimpiar.addActionListener(e -> limpiarFormulario());
 
-        JLabel label = new JLabel(etiqueta);
-        if (etiqueta.startsWith("*")) {
-            label.setForeground(new Color(211, 47, 47)); // Rojo para obligatorios
-        }
-        panel.add(label, gbc);
-
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-        panel.add(campo, gbc);
-    }
-
-    private void setupEvents() {
-        // SOLO DELEGACIÓN AL CONTROLADOR - NO LÓGICA DE NEGOCIO
-        btnGuardar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                guardarResidente();
-            }
-        });
-
-        btnCancelar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cancelar();
-            }
-        });
 
         // Enter para guardar
         getRootPane().setDefaultButton(btnGuardar);
@@ -171,23 +361,179 @@ public class AgregarManual extends JDialog {
                 cancelar();
             }
         });
+
+        // Establecer foco inicial
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                txtNumeroControl.requestFocusInWindow();
+            }
+        });
+    }
+
+    /**
+     * Configurar validación en tiempo real para mejora de UX
+     */
+    private void configurarValidacionTiempoReal() {
+        // Validación del número de control en tiempo real
+        txtNumeroControl.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                String texto = txtNumeroControl.getText().trim();
+                if (!texto.isEmpty()) {
+                    validarNumeroControlVisual(texto);
+                } else {
+                    restaurarBordeNormal(txtNumeroControl);
+                }
+            }
+        });
+
+        // Validación de nombres en tiempo real
+        KeyAdapter validadorNombres = new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                JTextField campo = (JTextField) e.getSource();
+                String texto = campo.getText().trim();
+                if (!texto.isEmpty()) {
+                    validarNombreVisual(campo, texto);
+                } else {
+                    restaurarBordeNormal(campo);
+                }
+            }
+        };
+
+        txtNombre.addKeyListener(validadorNombres);
+        txtApellidoPaterno.addKeyListener(validadorNombres);
+        txtApellidoMaterno.addKeyListener(validadorNombres);
+
+        // Validación de correo en tiempo real
+        txtCorreo.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                String texto = txtCorreo.getText().trim();
+                if (!texto.isEmpty()) {
+                    validarCorreoVisual(texto);
+                } else {
+                    restaurarBordeNormal(txtCorreo);
+                }
+            }
+        });
+
+        // Validación de teléfono en tiempo real
+        txtTelefono.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                String texto = txtTelefono.getText().trim();
+                if (!texto.isEmpty()) {
+                    validarTelefonoVisual(texto);
+                } else {
+                    restaurarBordeNormal(txtTelefono);
+                }
+            }
+        });
+    }
+
+    // ==================== MÉTODOS DE VALIDACIÓN VISUAL ====================
+
+    private void validarNumeroControlVisual(String numeroControl) {
+        String numLimpio = numeroControl.replaceAll("[\\s-]", "");
+
+        if (numLimpio.matches("\\d{8}")) {
+            // Validar año
+            int anio = Integer.parseInt(numLimpio.substring(0, 2));
+            int anioActual = java.time.Year.now().getValue() % 100;
+            int anioMinimo = (anioActual - 20 + 100) % 100;
+            int anioMaximo = (anioActual + 2) % 100;
+
+            boolean anioValido = false;
+            if (anioMinimo <= anioMaximo) {
+                anioValido = (anio >= anioMinimo && anio <= anioMaximo);
+            } else {
+                anioValido = (anio >= anioMinimo || anio <= anioMaximo);
+            }
+
+            if (anioValido && !numLimpio.substring(2).startsWith("00")) {
+                mostrarBordeExito(txtNumeroControl);
+            } else {
+                mostrarBordeAdvertencia(txtNumeroControl);
+            }
+        } else {
+            mostrarBordeError(txtNumeroControl);
+        }
+    }
+
+    private void validarNombreVisual(JTextField campo, String texto) {
+        if (texto.length() >= 2 && texto.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
+            mostrarBordeExito(campo);
+        } else {
+            mostrarBordeError(campo);
+        }
+    }
+
+    private void validarCorreoVisual(String correo) {
+        if (correo.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+                !correo.contains("..") && correo.length() <= 254) {
+            mostrarBordeExito(txtCorreo);
+        } else {
+            mostrarBordeError(txtCorreo);
+        }
+    }
+
+    private void validarTelefonoVisual(String telefono) {
+        String telefonoLimpio = telefono.replaceAll("[^0-9]", "");
+        if (telefonoLimpio.length() >= 8 && telefonoLimpio.length() <= 15 &&
+                !telefonoLimpio.matches("(\\d)\\1{7,}")) {
+            mostrarBordeExito(txtTelefono);
+        } else {
+            mostrarBordeError(txtTelefono);
+        }
+    }
+
+    // ==================== MÉTODOS DE RETROALIMENTACIÓN VISUAL ====================
+
+    private void mostrarBordeExito(JTextField campo) {
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(76, 175, 80), 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+    }
+
+    private void mostrarBordeError(JTextField campo) {
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(244, 67, 54), 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+    }
+
+    private void mostrarBordeAdvertencia(JTextField campo) {
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 152, 0), 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+    }
+
+    private void restaurarBordeNormal(JTextField campo) {
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(colorPrincipal, 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
     }
 
     // ==================== MÉTODOS DE INTERFAZ - SOLO DELEGACIÓN ====================
 
-    /**
-     * Guardar residente - DELEGA AL CONTROLADOR
-     */
     private void guardarResidente() {
+        // Restaurar bordes normales antes de validar
+        restaurarTodosLosBordes();
+
         // Obtener valores de los campos
-        String numeroControl = txtNumeroControl.getText();
-        String nombre = txtNombre.getText();
-        String apellidoPaterno = txtApellidoPaterno.getText();
-        String apellidoMaterno = txtApellidoMaterno.getText();
-        String carrera = txtCarrera.getText();
-        String semestre = txtSemestre.getText();
-        String correo = txtCorreo.getText();
-        String telefono = txtTelefono.getText();
+        String numeroControl = txtNumeroControl.getText().trim();
+        String nombre = txtNombre.getText().trim();
+        String apellidoPaterno = txtApellidoPaterno.getText().trim();
+        String apellidoMaterno = txtApellidoMaterno.getText().trim();
+        String carrera = txtCarrera.getText().trim();
+        String semestre = String.valueOf(spnSemestre.getValue());
+        String correo = txtCorreo.getText().trim();
+        String telefono = txtTelefono.getText().trim();
 
         // DELEGAR AL CONTROLADOR
         boolean resultado = controlador.guardarResidente(
@@ -201,9 +547,6 @@ public class AgregarManual extends JDialog {
         }
     }
 
-    /**
-     * Cancelar - DELEGA AL CONTROLADOR
-     */
     private void cancelar() {
         boolean hayCambios = hayCambios();
 
@@ -214,90 +557,118 @@ public class AgregarManual extends JDialog {
         }
     }
 
+    private void limpiarFormulario() {
+        if (hayCambios()) {
+            int opcion = JOptionPane.showConfirmDialog(this,
+                    "🧹 ¿Está seguro de limpiar todos los campos?\n\n" +
+                            "Se perderán todos los datos ingresados hasta ahora.",
+                    "🗑️ Confirmar Limpieza",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
+            if (opcion == JOptionPane.YES_OPTION) {
+                limpiarCampos();
+                restaurarTodosLosBordes();
+                txtNumeroControl.requestFocus();
+
+                JOptionPane.showMessageDialog(this,
+                        "✅ Formulario limpiado correctamente\n\n" +
+                                "Puede comenzar a ingresar nueva información.",
+                        "🧹 Formulario Limpio",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "ℹ️ El formulario ya está vacío\n\n" +
+                            "No hay datos para limpiar.",
+                    "🧹 Información",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void restaurarTodosLosBordes() {
+        restaurarBordeNormal(txtNumeroControl);
+        restaurarBordeNormal(txtNombre);
+        restaurarBordeNormal(txtApellidoPaterno);
+        restaurarBordeNormal(txtApellidoMaterno);
+        restaurarBordeNormal(txtCarrera);
+        restaurarBordeNormal(txtCorreo);
+        restaurarBordeNormal(txtTelefono);
+    }
+
     // ==================== MÉTODOS DE UTILIDAD DE UI ====================
 
-    /**
-     * Verificar si hay cambios en los campos
-     */
     private boolean hayCambios() {
         return !txtNumeroControl.getText().trim().isEmpty() ||
                 !txtNombre.getText().trim().isEmpty() ||
                 !txtApellidoPaterno.getText().trim().isEmpty() ||
                 !txtApellidoMaterno.getText().trim().isEmpty() ||
                 !txtCarrera.getText().trim().isEmpty() ||
-                !txtSemestre.getText().trim().isEmpty() ||
+                !((Integer) spnSemestre.getValue()).equals(1) ||
                 !txtCorreo.getText().trim().isEmpty() ||
                 !txtTelefono.getText().trim().isEmpty();
     }
 
-    /**
-     * Limpiar todos los campos del formulario
-     */
     public void limpiarCampos() {
         txtNumeroControl.setText("");
         txtNombre.setText("");
         txtApellidoPaterno.setText("");
         txtApellidoMaterno.setText("");
         txtCarrera.setText("");
-        txtSemestre.setText("");
+        spnSemestre.setValue(1);
         txtCorreo.setText("");
         txtTelefono.setText("");
     }
 
-    /**
-     * Establecer foco en el primer campo
-     */
     public void establecerFocoPrimero() {
         txtNumeroControl.requestFocus();
     }
 
-    /**
-     * Habilitar/deshabilitar campos
-     */
     public void habilitarCampos(boolean habilitado) {
         txtNumeroControl.setEnabled(habilitado);
         txtNombre.setEnabled(habilitado);
         txtApellidoPaterno.setEnabled(habilitado);
         txtApellidoMaterno.setEnabled(habilitado);
         txtCarrera.setEnabled(habilitado);
-        txtSemestre.setEnabled(habilitado);
+        spnSemestre.setEnabled(habilitado);
         txtCorreo.setEnabled(habilitado);
         txtTelefono.setEnabled(habilitado);
         btnGuardar.setEnabled(habilitado);
+        btnLimpiar.setEnabled(habilitado);
     }
 
     // ==================== GETTERS PARA EL CONTROLADOR ====================
 
     public String getNumeroControl() {
-        return txtNumeroControl.getText();
+        return txtNumeroControl.getText().trim();
     }
 
     public String getNombre() {
-        return txtNombre.getText();
+        return txtNombre.getText().trim();
     }
 
     public String getApellidoPaterno() {
-        return txtApellidoPaterno.getText();
+        return txtApellidoPaterno.getText().trim();
     }
 
     public String getApellidoMaterno() {
-        return txtApellidoMaterno.getText();
+        return txtApellidoMaterno.getText().trim();
     }
 
     public String getCarrera() {
-        return txtCarrera.getText();
+        return txtCarrera.getText().trim();
     }
 
     public String getSemestre() {
-        return txtSemestre.getText();
+        return String.valueOf(spnSemestre.getValue());
     }
 
     public String getCorreo() {
-        return txtCorreo.getText();
+        return txtCorreo.getText().trim();
     }
 
     public String getTelefono() {
-        return txtTelefono.getText();
+        return txtTelefono.getText().trim();
     }
 
     // ==================== SETTERS PARA PRE-CARGAR DATOS ====================
@@ -323,7 +694,11 @@ public class AgregarManual extends JDialog {
     }
 
     public void setSemestre(String semestre) {
-        txtSemestre.setText(semestre);
+        try {
+            spnSemestre.setValue(Integer.parseInt(semestre));
+        } catch (NumberFormatException e) {
+            spnSemestre.setValue(1);
+        }
     }
 
     public void setCorreo(String correo) {
@@ -336,17 +711,196 @@ public class AgregarManual extends JDialog {
 
     // ==================== MÉTODOS DE ESTADO ====================
 
-    /**
-     * Verificar si el residente fue guardado
-     */
     public boolean isGuardado() {
         return guardado;
     }
 
-    /**
-     * Establecer estado de guardado
-     */
     public void setGuardado(boolean guardado) {
         this.guardado = guardado;
+    }
+
+    // ==================== MÉTODOS ADICIONALES PARA MEJORAR UX ====================
+
+    /**
+     * Muestra un resumen de los datos antes de guardar
+     */
+    public void mostrarResumenDatos() {
+        String resumen = "📋 Resumen de datos ingresados:\n\n" +
+                "• Número de Control: " + getNumeroControl() + "\n" +
+                "• Nombre: " + getNombre() + " " + getApellidoPaterno() +
+                (getApellidoMaterno().isEmpty() ? "" : " " + getApellidoMaterno()) + "\n" +
+                "• Carrera: " + getCarrera() + "\n" +
+                "• Semestre: " + getSemestre() + "\n" +
+                "• Correo: " + getCorreo() + "\n" +
+                (getTelefono().isEmpty() ? "" : "• Teléfono: " + getTelefono() + "\n");
+
+        JOptionPane.showMessageDialog(this, resumen, "📊 Resumen de Datos", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Valida todos los campos visualmente antes de enviar
+     */
+    public boolean validarTodoVisualmente() {
+        boolean todoValido = true;
+
+        // Validar número de control
+        if (getNumeroControl().isEmpty()) {
+            mostrarBordeError(txtNumeroControl);
+            todoValido = false;
+        } else {
+            validarNumeroControlVisual(getNumeroControl());
+        }
+
+        // Validar nombre
+        if (getNombre().isEmpty() || getNombre().length() < 2) {
+            mostrarBordeError(txtNombre);
+            todoValido = false;
+        } else {
+            validarNombreVisual(txtNombre, getNombre());
+        }
+
+        // Validar apellido paterno
+        if (getApellidoPaterno().isEmpty() || getApellidoPaterno().length() < 2) {
+            mostrarBordeError(txtApellidoPaterno);
+            todoValido = false;
+        } else {
+            validarNombreVisual(txtApellidoPaterno, getApellidoPaterno());
+        }
+
+        // Validar apellido materno (si no está vacío)
+        if (!getApellidoMaterno().isEmpty()) {
+            validarNombreVisual(txtApellidoMaterno, getApellidoMaterno());
+        }
+
+        // Validar carrera
+        if (getCarrera().isEmpty() || getCarrera().length() < 3) {
+            mostrarBordeError(txtCarrera);
+            todoValido = false;
+        }
+
+        // Validar correo
+        if (getCorreo().isEmpty()) {
+            mostrarBordeError(txtCorreo);
+            todoValido = false;
+        } else {
+            validarCorreoVisual(getCorreo());
+        }
+
+        // Validar teléfono (si no está vacío)
+        if (!getTelefono().isEmpty()) {
+            validarTelefonoVisual(getTelefono());
+        }
+
+        return todoValido;
+    }
+
+    /**
+     * Método para manejar errores específicos de validación
+     */
+    public void manejarErrorValidacion(String campo, String mensaje) {
+        // Resaltar el campo con error
+        switch (campo.toLowerCase()) {
+            case "numerocontrol":
+                mostrarBordeError(txtNumeroControl);
+                txtNumeroControl.requestFocus();
+                break;
+            case "nombre":
+                mostrarBordeError(txtNombre);
+                txtNombre.requestFocus();
+                break;
+            case "apellidopaterno":
+                mostrarBordeError(txtApellidoPaterno);
+                txtApellidoPaterno.requestFocus();
+                break;
+            case "apellidomaterno":
+                mostrarBordeError(txtApellidoMaterno);
+                txtApellidoMaterno.requestFocus();
+                break;
+            case "carrera":
+                mostrarBordeError(txtCarrera);
+                txtCarrera.requestFocus();
+                break;
+            case "correo":
+                mostrarBordeError(txtCorreo);
+                txtCorreo.requestFocus();
+                break;
+            case "telefono":
+                mostrarBordeError(txtTelefono);
+                txtTelefono.requestFocus();
+                break;
+        }
+
+        // Mostrar mensaje de error
+        JOptionPane.showMessageDialog(this, mensaje, "❌ Error de Validación", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Autocompletar datos comunes (para testing o demostración)
+     */
+    public void autocompletarDatosPrueba() {
+        int opcion = JOptionPane.showConfirmDialog(this,
+                "🎯 ¿Desea autocompletar con datos de prueba?\n\n" +
+                        "Esto llenará automáticamente todos los campos\n" +
+                        "con información de ejemplo válida.",
+                "🔧 Autocompletar Datos",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (opcion == JOptionPane.YES_OPTION) {
+            // Generar número de control actual
+            int anioActual = java.time.Year.now().getValue() % 100;
+            String numeroControl = String.format("%02d", anioActual) + "160" +
+                    String.format("%03d", (int)(Math.random() * 999) + 1);
+
+            setNumeroControl(numeroControl);
+            setNombre("Juan Carlos");
+            setApellidoPaterno("García");
+            setApellidoMaterno("López");
+            setCarrera("Ingeniería en Sistemas Computacionales");
+            setSemestre("6");
+            setCorreo("juan.garcia@tecnm.mx");
+            setTelefono("4421234567");
+
+            JOptionPane.showMessageDialog(this,
+                    "✅ Datos de prueba cargados correctamente\n\n" +
+                            "📝 Revise la información y modifique según sea necesario\n" +
+                            "💡 El número de control se generó automáticamente",
+                    "🎯 Autocompletado Exitoso",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    /**
+     * Método para testing - acceso rápido desde el teclado
+     */
+    private void configurarAtajosTeclado() {
+        // Ctrl+T para autocompletar datos de prueba
+        KeyStroke ctrlT = KeyStroke.getKeyStroke("ctrl T");
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ctrlT, "AUTOCOMPLETE");
+        getRootPane().getActionMap().put("AUTOCOMPLETE", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                autocompletarDatosPrueba();
+            }
+        });
+
+        // Ctrl+R para mostrar resumen
+        KeyStroke ctrlR = KeyStroke.getKeyStroke("ctrl R");
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ctrlR, "RESUMEN");
+        getRootPane().getActionMap().put("RESUMEN", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (hayCambios()) {
+                    mostrarResumenDatos();
+                }
+            }
+        });
+
+
+    }
+
+    // Llamar este método en el constructor después de configurarEventos()
+    {
+        SwingUtilities.invokeLater(() -> configurarAtajosTeclado());
     }
 }

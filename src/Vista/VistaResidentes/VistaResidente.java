@@ -1,180 +1,346 @@
 package Vista.VistaResidentes;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.util.List;
 import java.util.ArrayList;
 import Modelo.ModeloResidente;
 import Controlador.ControladorResidente;
 
 public class VistaResidente {
-    private JPanel panelResidente;
-    private JButton importarExelButton;
-    private JTable tablaResidentes;
-    private JButton cargarExelButton;
-    private JButton cancelarButton;
-    private JTextField textField1;
-    private JButton agregarManualButton;
-    private JButton cargarBDButton; // Nuevo botón para cargar desde BD
+    // Panel principal que será usado por VistaRegistros
+    private JPanel panelPrincipal;
 
-    // Modelo de la tabla para poder manipularlo después
     private DefaultTableModel modeloTabla;
-
-    // Lista para almacenar los residentes (útil para Excel)
-    private List<ModeloResidente> listaResidentes;
-
-    // Controlador
+    private JTable tablaResidentes;
+    private final Color colorPrincipal = new Color(92, 93, 169);
+    private final Color colorFondo = new Color(245, 243, 255);
+    private List<ModeloResidente> listaResidentes = new ArrayList<>();
     private ControladorResidente controlador;
 
     public VistaResidente() {
-        // Inicializar la lista si no fue inicializada en createUIComponents
-        if (listaResidentes == null) {
-            listaResidentes = new ArrayList<>();
-        }
-
         // Inicializar controlador
         controlador = new ControladorResidente(this);
 
-        // Configurar eventos después de que los componentes estén listos
-        configurarEventos();
+        // Crear el panel principal en lugar de configurar JFrame
+        crearPanelPrincipal();
     }
 
-    // ==================== CONFIGURACIÓN DE COMPONENTES ====================
-
-    private void configurarEventos() {
-        // Configurar eventos de los botones - SOLO DELEGACIÓN AL CONTROLADOR
-        if (importarExelButton != null) {
-            importarExelButton.addActionListener(e -> controlador.importarABaseDatos());
-        }
-
-        if (cargarExelButton != null) {
-            cargarExelButton.addActionListener(e -> controlador.cargarExcelEnTabla());
-        }
-
-        if (agregarManualButton != null) {
-            agregarManualButton.addActionListener(e -> abrirDialogoAgregarManual());
-        }
-
-        if (cancelarButton != null) {
-            cancelarButton.addActionListener(e -> cancelar());
-        }
-
-        if (cargarBDButton != null) {
-            cargarBDButton.addActionListener(e -> controlador.cargarResidentesDesdeBaseDatos());
-        }
-    }
-
-    // Método llamado automáticamente por IntelliJ GUI Designer
-    private void createUIComponents() {
-        // Inicializar la lista si no existe (se llama antes del constructor)
-        if (listaResidentes == null) {
-            listaResidentes = new ArrayList<>();
-        }
-
-        // Definir las columnas de la tabla
-        String[] columnas = {
-                "Número de Control", "Nombre", "Apellido Paterno", "Apellido Materno",
-                "Carrera", "Semestre", "Correo", "Teléfono"
-        };
-
-        // Crear el modelo de la tabla
-        modeloTabla = new DefaultTableModel(columnas, 0) {
+    private void crearPanelPrincipal() {
+        // Panel principal con fondo degradado
+        panelPrincipal = new JPanel(new BorderLayout()) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Hacer la tabla de solo lectura
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                GradientPaint gp = new GradientPaint(
+                        0, 0, new Color(230, 225, 255),
+                        0, getHeight(), colorPrincipal
+                );
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                // Líneas curvas decorativas en la esquina superior izquierda
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setStroke(new BasicStroke(3f));
+                g2.setColor(new Color(180, 170, 255, 80));
+                g2.drawArc(-120, -120, 300, 300, 0, 360);
+                g2.setColor(new Color(140, 130, 220, 60));
+                g2.drawArc(-80, -80, 200, 200, 0, 360);
+
+                // Líneas curvas decorativas en la esquina inferior derecha
+                g2.setColor(new Color(180, 170, 255, 60));
+                g2.drawArc(getWidth() - 180, getHeight() - 180, 160, 160, 0, 360);
+                g2.setColor(new Color(140, 130, 220, 40));
+                g2.drawArc(getWidth() - 120, getHeight() - 120, 100, 100, 0, 360);
             }
         };
+        panelPrincipal.setBackground(colorFondo);
 
-        // Crear la tabla con el modelo
-        tablaResidentes = new JTable(modeloTabla);
+        // Panel contenido (sin barra lateral, ya que la maneja VistaRegistros)
+        JPanel panelContenido = new JPanel(new BorderLayout());
+        panelContenido.setOpaque(false);
 
-        // Configurar para que se muestren los headers
-        tablaResidentes.setTableHeader(tablaResidentes.getTableHeader());
+        // Encabezado con fondo blanco y borde inferior
+        JPanel header = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 0, 0);
+                g2.setColor(new Color(230, 230, 250));
+                g2.fillRect(0, getHeight() - 2, getWidth(), 2);
+            }
+        };
+        header.setOpaque(false);
+        header.setBorder(BorderFactory.createEmptyBorder(32, 38, 24, 38));
 
-        // Configurar propiedades básicas de la tabla
-        tablaResidentes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tablaResidentes.setRowHeight(25);
-        tablaResidentes.getTableHeader().setReorderingAllowed(false);
+        JLabel lblTitulo = new JLabel("Gestión de Residentes");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 34));
+        lblTitulo.setForeground(colorPrincipal);
+        header.add(lblTitulo, BorderLayout.WEST);
 
-        // Configurar la tabla
+        // Panel de botones de acción
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 20));
+        panelBotones.setOpaque(false);
+
+        // Botón Cargar Excel
+        JButton btnCargarExcel = crearBotonAccion(" Cargar Excel", colorPrincipal);
+        btnCargarExcel.addActionListener(e -> controlador.cargarExcelEnTabla());
+        panelBotones.add(btnCargarExcel);
+
+        // Botón Importar - CAMBIADO de "Importar Excel" a solo "Importar"
+        JButton btnImportar = crearBotonAccion(" Importar", new Color(34, 139, 34));
+        btnImportar.addActionListener(e -> controlador.importarABaseDatos());
+        panelBotones.add(btnImportar);
+
+        // Botón Agregar Manual
+        JButton btnAgregarManual = crearBotonAccion(" Agregar Manual", new Color(255, 140, 0));
+        btnAgregarManual.addActionListener(e -> abrirAgregarManual());
+        panelBotones.add(btnAgregarManual);
+
+        // Botón Limpiar Tabla
+        JButton btnLimpiarTabla = crearBotonAccion(" Limpiar Tabla", new Color(220, 53, 69));
+        btnLimpiarTabla.addActionListener(e -> limpiarTablaConConfirmacion());
+        panelBotones.add(btnLimpiarTabla);
+
+        header.add(panelBotones, BorderLayout.EAST);
+        panelContenido.add(header, BorderLayout.NORTH);
+
+        // Configurar tabla
         configurarTabla();
+
+        // Scroll de la tabla
+        JScrollPane scrollTabla = new JScrollPane(tablaResidentes);
+        scrollTabla.setBorder(BorderFactory.createEmptyBorder(0, 38, 38, 38));
+        scrollTabla.getViewport().setBackground(Color.WHITE);
+        scrollTabla.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
+            protected void configureScrollBarColors() {
+                this.thumbColor = colorPrincipal;
+                this.trackColor = new Color(235, 235, 250);
+            }
+            protected JButton createDecreaseButton(int orientation) { return createZeroButton(); }
+            protected JButton createIncreaseButton(int orientation) { return createZeroButton(); }
+            private JButton createZeroButton() {
+                JButton jbutton = new JButton();
+                jbutton.setPreferredSize(new Dimension(0, 0));
+                jbutton.setMinimumSize(new Dimension(0, 0));
+                jbutton.setMaximumSize(new Dimension(0, 0));
+                return jbutton;
+            }
+        });
+        panelContenido.add(scrollTabla, BorderLayout.CENTER);
+
+        panelPrincipal.add(panelContenido, BorderLayout.CENTER);
+    }
+
+    private JButton crearBotonAccion(String texto, Color color) {
+        return new JButton(texto) {
+            private boolean hover = false;
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(Color.WHITE);
+                setFont(new Font("Segoe UI", Font.BOLD, 15));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
+                    public void mouseExited(MouseEvent e) { hover = false; repaint(); }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Sombra
+                g2.setColor(new Color(60,60,100,60));
+                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 30, 30);
+                // Gradiente
+                GradientPaint grad = new GradientPaint(0, 0, hover ? color.darker() : color,
+                        getWidth(), getHeight(), color.brighter());
+                g2.setPaint(grad);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
     }
 
     private void configurarTabla() {
-        if (tablaResidentes == null) return;
+        String[] columnas = {
+                "No. Control", "Nombre", "Apellido P.", "Apellido M.",
+                "Carrera", "Semestre", "Correo", "Telefono"
+        };
 
-        // Configurar el comportamiento de la tabla
-        tablaResidentes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tablaResidentes.setRowHeight(25);
-        tablaResidentes.getTableHeader().setReorderingAllowed(false);
+        modeloTabla = new DefaultTableModel(null, columnas) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Toda la tabla de solo lectura
+            }
+        };
 
-        // Configurar el ancho de las columnas
-        tablaResidentes.getColumnModel().getColumn(0).setPreferredWidth(120); // Número de Control
-        tablaResidentes.getColumnModel().getColumn(1).setPreferredWidth(100); // Nombre
-        tablaResidentes.getColumnModel().getColumn(2).setPreferredWidth(120); // Apellido Paterno
-        tablaResidentes.getColumnModel().getColumn(3).setPreferredWidth(120); // Apellido Materno
-        tablaResidentes.getColumnModel().getColumn(4).setPreferredWidth(150); // Carrera
+        tablaResidentes = new JTable(modeloTabla) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+            private int hoveredRow = -1;
+            {
+                setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                setRowSelectionAllowed(true);
+                setColumnSelectionAllowed(false);
+                getTableHeader().setReorderingAllowed(false);
+                setFocusable(true);
+                addMouseMotionListener(new MouseMotionAdapter() {
+                    public void mouseMoved(MouseEvent e) {
+                        int row = rowAtPoint(e.getPoint());
+                        if (row != hoveredRow) {
+                            hoveredRow = row; repaint();
+                        }
+                    }
+                });
+                addMouseListener(new MouseAdapter() {
+                    public void mouseExited(MouseEvent e) {
+                        hoveredRow = -1; repaint();
+                    }
+                });
+            }
+            @Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                if (isRowSelected(row)) {
+                    c.setBackground(new Color(220, 219, 245));
+                } else {
+                    c.setBackground(Color.WHITE);
+                }
+                c.setForeground(new Color(60, 60, 100));
+                return c;
+            }
+        };
+
+        tablaResidentes.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        tablaResidentes.setRowHeight(40);
+        tablaResidentes.setShowVerticalLines(false);
+        tablaResidentes.setShowHorizontalLines(true);
+        tablaResidentes.setGridColor(new Color(230, 230, 250));
+        tablaResidentes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
+        tablaResidentes.getTableHeader().setBackground(new Color(220, 219, 245));
+        tablaResidentes.getTableHeader().setForeground(colorPrincipal);
+        tablaResidentes.getTableHeader().setPreferredSize(new Dimension(0, 40));
+        ((DefaultTableCellRenderer) tablaResidentes.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.LEFT);
+
+        // Configurar anchos de columna
+        tablaResidentes.getColumnModel().getColumn(0).setPreferredWidth(100); // No. Control
+        tablaResidentes.getColumnModel().getColumn(1).setPreferredWidth(120); // Nombre
+        tablaResidentes.getColumnModel().getColumn(2).setPreferredWidth(120); // Apellido P.
+        tablaResidentes.getColumnModel().getColumn(3).setPreferredWidth(120); // Apellido M.
+        tablaResidentes.getColumnModel().getColumn(4).setPreferredWidth(180); // Carrera
         tablaResidentes.getColumnModel().getColumn(5).setPreferredWidth(80);  // Semestre
         tablaResidentes.getColumnModel().getColumn(6).setPreferredWidth(200); // Correo
-        tablaResidentes.getColumnModel().getColumn(7).setPreferredWidth(120); // Teléfono
+        tablaResidentes.getColumnModel().getColumn(7).setPreferredWidth(120); // Telefono
     }
 
-    // ==================== MÉTODOS DE MANIPULACIÓN DE DATOS EN LA TABLA ====================
+    // ==================== MÉTODOS DE FORMATEO DE TEXTO ====================
 
     /**
-     * Agregar un residente a la tabla (SOLO PRESENTACIÓN)
+     * Formatea texto con primera letra mayúscula y demás en minúscula
      */
+    private String formatearTexto(String texto) {
+        if (texto == null || texto.trim().isEmpty()) {
+            return texto;
+        }
+
+        String textoLimpio = texto.trim();
+
+        // Si es una sola palabra
+        if (!textoLimpio.contains(" ")) {
+            return textoLimpio.substring(0, 1).toUpperCase() + textoLimpio.substring(1).toLowerCase();
+        }
+
+        // Si son múltiples palabras, formatear cada una
+        String[] palabras = textoLimpio.split("\\s+");
+        StringBuilder resultado = new StringBuilder();
+
+        for (int i = 0; i < palabras.length; i++) {
+            if (palabras[i].length() > 0) {
+                String palabra = palabras[i].substring(0, 1).toUpperCase() + palabras[i].substring(1).toLowerCase();
+                resultado.append(palabra);
+                if (i < palabras.length - 1) {
+                    resultado.append(" ");
+                }
+            }
+        }
+
+        return resultado.toString();
+    }
+
+    // ==================== MÉTODOS DE MANIPULACIÓN DE DATOS ====================
+
     public void agregarResidente(ModeloResidente residente) {
         listaResidentes.add(residente);
         Object[] fila = {
                 residente.getNumeroControl(),
-                residente.getNombre(),
-                residente.getApellidoPaterno(),
-                residente.getApellidoMaterno(),
-                residente.getCarrera(),
+                formatearTexto(residente.getNombre()),
+                formatearTexto(residente.getApellidoPaterno()),
+                formatearTexto(residente.getApellidoMaterno()),
+                formatearTexto(residente.getCarrera()),
                 residente.getSemestre(),
-                residente.getCorreo(),
+                residente.getCorreo(), // El correo no se formatea
                 residente.getTelefono()
         };
         modeloTabla.addRow(fila);
     }
 
-    /**
-     * Cargar múltiples residentes en la tabla (SOLO PRESENTACIÓN)
-     */
     public void cargarResidentes(List<ModeloResidente> residentes) {
-        // Limpiar la tabla actual
         limpiarTabla();
-
-        // Agregar todos los residentes
         for (ModeloResidente residente : residentes) {
             agregarResidente(residente);
         }
     }
 
-    /**
-     * Limpiar la tabla (SOLO PRESENTACIÓN)
-     */
     public void limpiarTabla() {
         modeloTabla.setRowCount(0);
         listaResidentes.clear();
     }
 
-    // ==================== MÉTODOS DE ACCESO A DATOS ====================
-
     /**
-     * Obtener la lista de residentes actual
+     * Limpiar tabla con confirmación del usuario
      */
+    private void limpiarTablaConConfirmacion() {
+        if (listaResidentes.isEmpty()) {
+            JOptionPane.showMessageDialog(panelPrincipal,
+                    "La tabla ya está vacía",
+                    "Información",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int opcion = JOptionPane.showConfirmDialog(panelPrincipal,
+                "¿Está seguro de limpiar toda la tabla?\n" +
+                        "Se eliminarán " + listaResidentes.size() + " registro(s) de la tabla temporal.\n\n" +
+                        "Esta acción no afecta la base de datos.",
+                "Confirmar limpieza",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (opcion == JOptionPane.YES_OPTION) {
+            limpiarTabla();
+            JOptionPane.showMessageDialog(panelPrincipal,
+                    "Tabla limpiada exitosamente",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
     public List<ModeloResidente> getListaResidentes() {
         return new ArrayList<>(listaResidentes);
     }
 
-    /**
-     * Obtener el residente seleccionado en la tabla
-     */
     public ModeloResidente getResidenteSeleccionado() {
         int filaSeleccionada = tablaResidentes.getSelectedRow();
         if (filaSeleccionada >= 0 && filaSeleccionada < listaResidentes.size()) {
@@ -183,262 +349,104 @@ public class VistaResidente {
         return null;
     }
 
-    // ==================== MÉTODOS DE INTERACCIÓN CON EL USUARIO ====================
+    // MÉTODO MEJORADO: Menos mensajes de aviso, más intuitivo
+    private void abrirAgregarManual() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(panelPrincipal);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
 
-    /**
-     * Abrir diálogo para agregar residente manual
-     */
-    private void abrirDialogoAgregarManual() {
-        DialogoResidente dialogo = new DialogoResidente((Frame) SwingUtilities.getWindowAncestor(panelResidente));
+        AgregarManual dialogo = new AgregarManual(parentFrame);
         dialogo.setVisible(true);
 
-        if (dialogo.isConfirmado()) {
-            ModeloResidente residente = dialogo.getResidente();
-            agregarResidente(residente);
+        if (dialogo.isGuardado()) {
+            // Crear ModeloResidente con los datos del diálogo - FORMATEANDO TEXTOS
+            ModeloResidente residente = new ModeloResidente();
+            residente.setNumeroControl(Integer.parseInt(dialogo.getNumeroControl().replaceAll("[\\s-]", "")));
+            residente.setNombre(formatearTexto(dialogo.getNombre()));
+            residente.setApellidoPaterno(formatearTexto(dialogo.getApellidoPaterno()));
+            residente.setApellidoMaterno(dialogo.getApellidoMaterno().isEmpty() ? null : formatearTexto(dialogo.getApellidoMaterno()));
+            residente.setCarrera(formatearTexto(dialogo.getCarrera()));
+            residente.setSemestre(Integer.parseInt(dialogo.getSemestre()));
+            residente.setCorreo(dialogo.getCorreo().toLowerCase()); // Correo en minúsculas
+            residente.setTelefono(dialogo.getTelefono().isEmpty() ? null : dialogo.getTelefono());
+            residente.setIdProyecto(1);
 
-            JOptionPane.showMessageDialog(panelResidente,
-                    "✅ Residente agregado correctamente a la tabla\n" +
-                            "💡 Use 'Importar Excel' para guardarlo en la base de datos",
-                    "Residente agregado",
+            // Usar el controlador para agregar y validar
+            controlador.agregarResidenteManual(residente);
+
+            // MENSAJE REDUCIDO Y MÁS INTUITIVO
+            JOptionPane.showMessageDialog(panelPrincipal,
+                    "Residente agregado exitosamente",
+                    "Éxito",
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
-    /**
-     * Cancelar operación o cerrar ventana
-     */
-    private void cancelar() {
-        // Cerrar la ventana o realizar acción de cancelación
-        Window window = SwingUtilities.getWindowAncestor(panelResidente);
-        if (window != null) {
-            window.dispose();
+    private void editarResidente(int row) {
+        ModeloResidente residente = listaResidentes.get(row);
+        Window parentWindow = SwingUtilities.getWindowAncestor(panelPrincipal);
+        JFrame parentFrame = (parentWindow instanceof JFrame) ? (JFrame) parentWindow : null;
+
+        DialogoResidente dialogo = new DialogoResidente(parentFrame, colorPrincipal, residente);
+        dialogo.setVisible(true);
+        if (dialogo.isConfirmado()) {
+            listaResidentes.set(row, dialogo.getResidente());
+            cargarResidentes(listaResidentes);
+
+            // Revalidar todos después de la edición
+            controlador.revalidarTodosLosResidentes();
         }
     }
 
-    // ==================== MÉTODOS DE UTILIDAD PARA EL CONTROLADOR ====================
+    // ==================== MÉTODOS DE UTILIDAD ====================
 
-    /**
-     * Cambiar cursor (para indicar operaciones en progreso)
-     */
     public void setCursor(Cursor cursor) {
-        if (panelResidente != null) {
-            panelResidente.setCursor(cursor);
-        }
-
-        // También aplicar al frame padre si existe
-        Window window = SwingUtilities.getWindowAncestor(panelResidente);
-        if (window != null) {
-            window.setCursor(cursor);
+        if (panelPrincipal != null) {
+            panelPrincipal.setCursor(cursor);
         }
     }
 
-    /**
-     * Obtener el panel principal
-     */
+    // Método principal que devuelve el panel para VistaRegistros
     public JPanel getPanelResidente() {
-        return panelResidente;
+        return panelPrincipal;
     }
 
-    /**
-     * Obtener la tabla de residentes
-     */
     public JTable getTablaResidentes() {
         return tablaResidentes;
     }
 
-    /**
-     * Obtener el modelo de la tabla
-     */
     public DefaultTableModel getModeloTabla() {
         return modeloTabla;
     }
 
-    // ==================== MÉTODO MAIN PARA PRUEBAS ====================
+    // ==================== MÉTODOS PARA SINCRONIZACIÓN ====================
 
+    /**
+     * Obtener el controlador para acceso directo
+     */
+    public ControladorResidente getControlador() {
+        return controlador;
+    }
+
+    /**
+     * Método para revalidar todos los residentes (útil después de cambios)
+     */
+    public void revalidarResidentes() {
+        if (controlador != null) {
+            controlador.revalidarTodosLosResidentes();
+        }
+    }
+
+    // Método main para pruebas independientes
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Vista Residentes - Sistema SIREP");
-            VistaResidente vista = new VistaResidente();
-            frame.setContentPane(vista.getPanelResidente());
+            JFrame frame = new JFrame("Test VistaResidente");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1200, 700);
-            frame.setLocationRelativeTo(null);
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+            VistaResidente vista = new VistaResidente();
+            frame.add(vista.getPanelResidente());
+
             frame.setVisible(true);
         });
-    }
-}
-
-// ==================== CLASE DIÁLOGO PARA AGREGAR RESIDENTE ====================
-
-class DialogoResidente extends JDialog {
-    private JTextField txtNumeroControl;
-    private JTextField txtNombre;
-    private JTextField txtApellidoPaterno;
-    private JTextField txtApellidoMaterno;
-    private JTextField txtCarrera;
-    private JSpinner spnSemestre;
-    private JTextField txtCorreo;
-    private JTextField txtTelefono;
-    private JButton btnAceptar;
-    private JButton btnCancelar;
-
-    private boolean confirmado = false;
-    private ModeloResidente residente;
-
-    public DialogoResidente(Frame parent) {
-        super(parent, "Agregar Residente Manual", true);
-        initComponents();
-        setupLayout();
-        setupEvents();
-
-        setSize(400, 350);
-        setLocationRelativeTo(parent);
-        setResizable(false);
-    }
-
-    // ==================== CONFIGURACIÓN DE COMPONENTES ====================
-
-    private void initComponents() {
-        txtNumeroControl = new JTextField(15);
-        txtNombre = new JTextField(15);
-        txtApellidoPaterno = new JTextField(15);
-        txtApellidoMaterno = new JTextField(15);
-        txtCarrera = new JTextField(15);
-        spnSemestre = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
-        txtCorreo = new JTextField(15);
-        txtTelefono = new JTextField(15);
-
-        btnAceptar = new JButton("✅ Aceptar");
-        btnCancelar = new JButton("❌ Cancelar");
-
-        // Configurar el spinner
-        ((JSpinner.DefaultEditor) spnSemestre.getEditor()).getTextField().setEditable(false);
-    }
-
-    private void setupLayout() {
-        setLayout(new BorderLayout());
-
-        // Panel principal con campos
-        JPanel panelCampos = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        // Agregar campos
-        agregarCampo(panelCampos, "Número de Control:", txtNumeroControl, gbc, 0);
-        agregarCampo(panelCampos, "Nombre:", txtNombre, gbc, 1);
-        agregarCampo(panelCampos, "Apellido Paterno:", txtApellidoPaterno, gbc, 2);
-        agregarCampo(panelCampos, "Apellido Materno:", txtApellidoMaterno, gbc, 3);
-        agregarCampo(panelCampos, "Carrera:", txtCarrera, gbc, 4);
-        agregarCampo(panelCampos, "Semestre:", spnSemestre, gbc, 5);
-        agregarCampo(panelCampos, "Correo:", txtCorreo, gbc, 6);
-        agregarCampo(panelCampos, "Teléfono:", txtTelefono, gbc, 7);
-
-        // Panel de botones
-        JPanel panelBotones = new JPanel(new FlowLayout());
-        panelBotones.add(btnAceptar);
-        panelBotones.add(btnCancelar);
-
-        // Agregar al diálogo
-        add(panelCampos, BorderLayout.CENTER);
-        add(panelBotones, BorderLayout.SOUTH);
-
-        // Padding
-        ((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    }
-
-    private void agregarCampo(JPanel panel, String etiqueta, JComponent campo, GridBagConstraints gbc, int fila) {
-        gbc.gridx = 0; gbc.gridy = fila;
-        panel.add(new JLabel(etiqueta), gbc);
-        gbc.gridx = 1;
-        panel.add(campo, gbc);
-    }
-
-    private void setupEvents() {
-        btnAceptar.addActionListener(e -> {
-            // SOLO VALIDACIÓN BÁSICA DE UI - LA LÓGICA DE NEGOCIO VA AL CONTROLADOR
-            if (validarCamposBasicos()) {
-                crearResidente();
-                confirmado = true;
-                dispose();
-            }
-        });
-
-        btnCancelar.addActionListener(e -> {
-            confirmado = false;
-            dispose();
-        });
-
-        // Enter para aceptar
-        getRootPane().setDefaultButton(btnAceptar);
-
-        // Escape para cancelar
-        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke("ESCAPE");
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
-        getRootPane().getActionMap().put("ESCAPE", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                confirmado = false;
-                dispose();
-            }
-        });
-    }
-
-    // ==================== VALIDACIÓN BÁSICA DE UI ====================
-
-    private boolean validarCamposBasicos() {
-        // SOLO VALIDACIONES BÁSICAS DE UI - NO LÓGICA DE NEGOCIO
-        if (txtNumeroControl.getText().trim().isEmpty()) {
-            mostrarError("El número de control es obligatorio");
-            txtNumeroControl.requestFocus();
-            return false;
-        }
-
-        if (txtNombre.getText().trim().isEmpty()) {
-            mostrarError("El nombre es obligatorio");
-            txtNombre.requestFocus();
-            return false;
-        }
-
-        if (txtApellidoPaterno.getText().trim().isEmpty()) {
-            mostrarError("El apellido paterno es obligatorio");
-            txtApellidoPaterno.requestFocus();
-            return false;
-        }
-
-        if (txtCarrera.getText().trim().isEmpty()) {
-            mostrarError("La carrera es obligatoria");
-            txtCarrera.requestFocus();
-            return false;
-        }
-
-        return true;
-    }
-
-    private void mostrarError(String mensaje) {
-        JOptionPane.showMessageDialog(this, mensaje, "Error de validación", JOptionPane.ERROR_MESSAGE);
-    }
-
-    private void crearResidente() {
-        residente = new ModeloResidente();
-        residente.setNumeroControl(Integer.parseInt(txtNumeroControl.getText().trim()));
-        residente.setNombre(txtNombre.getText().trim());
-        residente.setApellidoPaterno(txtApellidoPaterno.getText().trim());
-        residente.setApellidoMaterno(txtApellidoMaterno.getText().trim());
-        residente.setCarrera(txtCarrera.getText().trim());
-        residente.setSemestre((Integer) spnSemestre.getValue());
-        residente.setCorreo(txtCorreo.getText().trim());
-        residente.setTelefono(txtTelefono.getText().trim());
-        residente.setIdProyecto(1); // Valor por defecto
-    }
-
-    // ==================== GETTERS ====================
-
-    public boolean isConfirmado() {
-        return confirmado;
-    }
-
-    public ModeloResidente getResidente() {
-        return residente;
     }
 }

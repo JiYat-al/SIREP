@@ -266,7 +266,12 @@ public class ControladorRegistros {
     public ModeloResidente obtenerResidentePorNumeroControl(int numeroControl) {
         return ModeloResidente.buscarPorNumeroControl(numeroControl);
     }
-}
+
+    /**
+     * Verificar integridad de datos antes de operaciones
+     */
+
+    }
 
 // ==================== CLASE DIÁLOGO DE EDICIÓN ====================
 
