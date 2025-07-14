@@ -1,14 +1,32 @@
 package Modelo;
 
-public class Empresas {
+public class Empresa {
 
     private String nombre;
     private String direccion;
     private String responsable;
     private String telefono;
     private String correo;
+    private int id;
 
-    public Empresas(String nombre, String direccion, String responsable, String telefono, String correo) {
+    public Empresa(String nombre, String direccion, String responsable, String telefono, String correo) {
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.responsable = responsable;
+        this.telefono = telefono;
+        this.correo = correo;
+    }
+
+    public Empresa() {
+        this.id = 0;
+        this.direccion = null;
+        this.responsable = null;
+        this.telefono = null;
+        this.correo = null;
+    }
+
+    public Empresa(int id, String nombre, String direccion, String responsable, String telefono, String correo) {
+        this.id = id;
         this.nombre = nombre;
         this.direccion = direccion;
         this.responsable = responsable;
@@ -56,4 +74,7 @@ public class Empresas {
         this.correo = correo;
     }
 
+    public int getId() {return id;}
+
+    public void setId(int id) {this.id = id;}
 }
