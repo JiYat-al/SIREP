@@ -73,4 +73,35 @@ public class ConsultasEmpresa{
         }
         return empresas;
     }
+
+    public static boolean actualizarEmpresa(Empresa empresa) {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String  sql = "UPDATE empresa SET nombre = ?, direccion = ?, responsable = ?, telefono = ?, correo = ? WHERE id_empresa = ?;";
+
+        try {
+            ps = conn.prepareStatement(sql);
+
+            ps.setString(1, empresa.getNombre());
+            ps.setString(2,empresa.getDireccion());
+            ps.setString(3, empresa.getResponsable());
+            ps.setString(4, empresa.getTelefono());
+            ps.setString(5, empresa.getCorreo());
+            ps.setInt(6, empresa.getId());
+            ps.execute();
+            return true;
+
+        } catch (SQLException e){
+            System.err.println(e);
+            return false;
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+    }
 }

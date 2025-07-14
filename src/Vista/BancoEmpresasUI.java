@@ -16,7 +16,6 @@ public class BancoEmpresasUI extends JFrame {
     private final Color colorPrincipal = new Color(92, 93, 169);
     private final Color colorFondo = new Color(245, 243, 255);
     private ArrayList<Modelo.Empresa> listEmpresas = new ArrayList<>();
-    private ArrayList<Empresa> listaEmpresas = new ArrayList<>();
 
     public BancoEmpresasUI() {
         setTitle("Empresas");
@@ -376,7 +375,7 @@ public class BancoEmpresasUI extends JFrame {
                 // --- Aquí va la lógica para eliminar el registro de la base de datos ---
                 // Por ejemplo:
                 // eliminarEmpresaDeBaseDeDatos(listaEmpresas.get(selectedRow));
-                listaEmpresas.remove(selectedRow);
+                listEmpresas.remove(selectedRow);
                 cargarTabla();
                 // -----------------------------------------------
             });
@@ -393,32 +392,20 @@ public class BancoEmpresasUI extends JFrame {
         }
     }
 
-    // Método para editar empresa
+    // Metodo para editar empresa
     private void editarEmpresa(int row) {
-        if (row >= 0 && row < listaEmpresas.size()) {
-            Empresa empresa = listaEmpresas.get(row);
+        if (row >= 0 && row < listEmpresas.size()) {
+            Empresa empresa = listEmpresas.get(row);
             RegistrarEmpresaDialog dialog = new RegistrarEmpresaDialog(this, colorPrincipal, empresa);
             dialog.setVisible(true);
             if (dialog.seRegistro) {
-                listaEmpresas.set(row, dialog.empresaEditada);
+                listEmpresas.set(row, dialog.empresaEditada);
                 cargarTabla();
             }
         }
     }
 
-    // Método para eliminar empresa de la base de datos (implementa según tu sistema)
-    // private void eliminarEmpresaDeBaseDeDatos(Empresa empresa) {
-    //     // TODO: Conectar y eliminar el registro en la base de datos
-    // }
 
-    static class Empresa {
-        int id;
-        String nombre, direccion, responsable, telefono, correo;
-        Empresa(int id, String nombre, String direccion, String responsable, String telefono, String correo) {
-            this.id = id; this.nombre = nombre; this.direccion = direccion;
-            this.responsable = responsable; this.telefono = telefono; this.correo = correo;
-        }
-    }
 
     public static class RegistrarEmpresaDialog extends JDialog {
         public boolean seRegistro = false;
@@ -494,11 +481,12 @@ public class BancoEmpresasUI extends JFrame {
 
             // Si es edición, llena los campos
             if (empresa != null) {
-                txtNombre.setText(empresa.nombre);
-                txtDireccion.setText(empresa.direccion);
-                txtResponsable.setText(empresa.responsable);
-                txtTelefono.setText(empresa.telefono);
-                txtCorreo.setText(empresa.correo);
+                txtNombre.setText(empresa.getNombre());
+                txtDireccion.setText(empresa.getDireccion());
+                txtResponsable.setText(empresa.getResponsable());
+                txtTelefono.setText(empresa.getTelefono());
+                txtCorreo.setText(empresa.getCorreo());
+
             }
 
             btnGuardar.addActionListener(ev -> {
@@ -524,7 +512,11 @@ public class BancoEmpresasUI extends JFrame {
                     txtCorreo.requestFocus(); return;
                 }
 
-                CtrlEmpresa.btnGuardar(txtNombre,txtDireccion,txtResponsable,txtTelefono,txtCorreo);
+                if (empresa == null) {
+                    CtrlEmpresa.btnGuardar(txtNombre, txtDireccion, txtResponsable, txtTelefono, txtCorreo);
+                } else {
+                    CtrlEmpresa.editarEmpresa(empresa.getId(),txtNombre, txtDireccion, txtResponsable, txtTelefono, txtCorreo);
+                }
                 seRegistro = true;
                 dispose();
             });
@@ -535,18 +527,6 @@ public class BancoEmpresasUI extends JFrame {
             l.setFont(new Font("Segoe UI", Font.BOLD, 15));
             l.setForeground(colorPrincipal);
             return l;
-        }
-
-        private int generarId(JFrame parent) {
-            if (parent instanceof BancoEmpresasUI) {
-                BancoEmpresasUI ui = (BancoEmpresasUI) parent;
-                int max = 0;
-                for (Empresa e : ui.listaEmpresas) {
-                    if (e.id > max) max = e.id;
-                }
-                return max + 1;
-            }
-            return 1;
         }
     }
 

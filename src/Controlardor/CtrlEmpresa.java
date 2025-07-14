@@ -31,5 +31,16 @@ public class CtrlEmpresa  {
         return ConsultasEmpresa.recuperarDatos();
     }
 
+    public static void editarEmpresa (int id, JTextField txtNombre, JTextField txtDireccion, JTextField txtResponsable, JTextField txtTelefono, JTextField txtCorreo){
+        Empresa empresa = new Empresa();
+        empresa.setId(id);
+        empresa.setNombre(txtNombre.getText());
+        empresa.setDireccion(txtDireccion.getText());
+        empresa.setResponsable(txtResponsable.getText());
+        empresa.setTelefono(txtTelefono.getText());
+        empresa.setCorreo(txtCorreo.getText());
+        boolean ban = ConsultasEmpresa.actualizarEmpresa(empresa);
+        System.out.println(empresa.getNombre() + empresa.getDireccion());
+    }
 
 }
