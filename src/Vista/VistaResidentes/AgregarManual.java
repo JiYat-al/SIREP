@@ -10,7 +10,7 @@ public class AgregarManual extends JDialog {
     private JTextField txtNombre;
     private JTextField txtApellidoPaterno;
     private JTextField txtApellidoMaterno;
-    private JTextField txtCarrera;
+    // ELIMINADO: private JTextField txtCarrera;
     private JSpinner spnSemestre;
     private JTextField txtCorreo;
     private JTextField txtTelefono;
@@ -23,13 +23,16 @@ public class AgregarManual extends JDialog {
     private ControladorAgrManual controlador;
     private final Color colorPrincipal = new Color(92, 93, 169);
 
+    // CARRERA FIJA PARA TODOS LOS RESIDENTES
+    private final String CARRERA_FIJA = "Ingeniería en Sistemas Computacionales";
+
     public AgregarManual(Frame parent) {
         super(parent, "Agregar Residente Manual", true);
 
         // Inicializar controlador
         controlador = new ControladorAgrManual(this);
 
-        setSize(650, 750);
+        setSize(650, 650); // REDUCIDO EL TAMAÑO al quitar campo carrera
         setLocationRelativeTo(parent);
         setResizable(false);
         setLayout(new BorderLayout());
@@ -105,7 +108,7 @@ public class AgregarManual extends JDialog {
         // Nota sobre campos obligatorios
         JPanel panelNota = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelNota.setBackground(Color.WHITE);
-        JLabel lblNota = new JLabel("⚠️ * Campos obligatorios - 💡 Hover sobre los campos para más información");
+        JLabel lblNota = new JLabel("⚠️ * Campos obligatorios - 🎓 Carrera: " + CARRERA_FIJA);
         lblNota.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblNota.setForeground(new Color(150, 150, 150));
         panelNota.add(lblNota);
@@ -155,13 +158,7 @@ public class AgregarManual extends JDialog {
         txtApellidoMaterno.setToolTipText("Opcional. Solo letras, espacios y acentos");
         panel.add(txtApellidoMaterno, gbc);
 
-        // Carrera
-        gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
-        panel.add(crearEtiqueta("* Carrera"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
-        txtCarrera = crearCampoTexto();
-        txtCarrera.setToolTipText("Nombre completo de la carrera. Mínimo 3 caracteres");
-        panel.add(txtCarrera, gbc);
+        // ELIMINADO: Campo Carrera - ahora es automático
 
         // Semestre
         gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
@@ -348,7 +345,6 @@ public class AgregarManual extends JDialog {
         btnCancelar.addActionListener(e -> cancelar());
         btnLimpiar.addActionListener(e -> limpiarFormulario());
 
-
         // Enter para guardar
         getRootPane().setDefaultButton(btnGuardar);
 
@@ -530,7 +526,7 @@ public class AgregarManual extends JDialog {
         String nombre = txtNombre.getText().trim();
         String apellidoPaterno = txtApellidoPaterno.getText().trim();
         String apellidoMaterno = txtApellidoMaterno.getText().trim();
-        String carrera = txtCarrera.getText().trim();
+        String carrera = CARRERA_FIJA; // CARRERA AUTOMÁTICA
         String semestre = String.valueOf(spnSemestre.getValue());
         String correo = txtCorreo.getText().trim();
         String telefono = txtTelefono.getText().trim();
@@ -560,28 +556,23 @@ public class AgregarManual extends JDialog {
     private void limpiarFormulario() {
         if (hayCambios()) {
             int opcion = JOptionPane.showConfirmDialog(this,
-                    "🧹 ¿Está seguro de limpiar todos los campos?\n\n" +
-                            "Se perderán todos los datos ingresados hasta ahora.",
-                    "🗑️ Confirmar Limpieza",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
+                    "¿Está seguro de limpiar todos los campos?",
+                    "Confirmar Limpieza",
+                    JOptionPane.YES_NO_OPTION);
 
             if (opcion == JOptionPane.YES_OPTION) {
                 limpiarCampos();
                 restaurarTodosLosBordes();
                 txtNumeroControl.requestFocus();
-
                 JOptionPane.showMessageDialog(this,
-                        "✅ Formulario limpiado correctamente\n\n" +
-                                "Puede comenzar a ingresar nueva información.",
-                        "🧹 Formulario Limpio",
+                        "Formulario limpiado correctamente",
+                        "Información",
                         JOptionPane.INFORMATION_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this,
-                    "ℹ️ El formulario ya está vacío\n\n" +
-                            "No hay datos para limpiar.",
-                    "🧹 Información",
+                    "El formulario ya está vacío",
+                    "Información",
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -591,7 +582,7 @@ public class AgregarManual extends JDialog {
         restaurarBordeNormal(txtNombre);
         restaurarBordeNormal(txtApellidoPaterno);
         restaurarBordeNormal(txtApellidoMaterno);
-        restaurarBordeNormal(txtCarrera);
+        // ELIMINADO: restaurarBordeNormal(txtCarrera);
         restaurarBordeNormal(txtCorreo);
         restaurarBordeNormal(txtTelefono);
     }
@@ -603,7 +594,7 @@ public class AgregarManual extends JDialog {
                 !txtNombre.getText().trim().isEmpty() ||
                 !txtApellidoPaterno.getText().trim().isEmpty() ||
                 !txtApellidoMaterno.getText().trim().isEmpty() ||
-                !txtCarrera.getText().trim().isEmpty() ||
+                // ELIMINADO: !txtCarrera.getText().trim().isEmpty() ||
                 !((Integer) spnSemestre.getValue()).equals(1) ||
                 !txtCorreo.getText().trim().isEmpty() ||
                 !txtTelefono.getText().trim().isEmpty();
@@ -614,27 +605,10 @@ public class AgregarManual extends JDialog {
         txtNombre.setText("");
         txtApellidoPaterno.setText("");
         txtApellidoMaterno.setText("");
-        txtCarrera.setText("");
+        // ELIMINADO: txtCarrera.setText("");
         spnSemestre.setValue(1);
         txtCorreo.setText("");
         txtTelefono.setText("");
-    }
-
-    public void establecerFocoPrimero() {
-        txtNumeroControl.requestFocus();
-    }
-
-    public void habilitarCampos(boolean habilitado) {
-        txtNumeroControl.setEnabled(habilitado);
-        txtNombre.setEnabled(habilitado);
-        txtApellidoPaterno.setEnabled(habilitado);
-        txtApellidoMaterno.setEnabled(habilitado);
-        txtCarrera.setEnabled(habilitado);
-        spnSemestre.setEnabled(habilitado);
-        txtCorreo.setEnabled(habilitado);
-        txtTelefono.setEnabled(habilitado);
-        btnGuardar.setEnabled(habilitado);
-        btnLimpiar.setEnabled(habilitado);
     }
 
     // ==================== GETTERS PARA EL CONTROLADOR ====================
@@ -656,7 +630,7 @@ public class AgregarManual extends JDialog {
     }
 
     public String getCarrera() {
-        return txtCarrera.getText().trim();
+        return CARRERA_FIJA; // RETORNA CARRERA FIJA
     }
 
     public String getSemestre() {
@@ -689,9 +663,7 @@ public class AgregarManual extends JDialog {
         txtApellidoMaterno.setText(apellidoMaterno);
     }
 
-    public void setCarrera(String carrera) {
-        txtCarrera.setText(carrera);
-    }
+    // ELIMINADO: setCarrera() - ya no es necesario
 
     public void setSemestre(String semestre) {
         try {
@@ -719,132 +691,13 @@ public class AgregarManual extends JDialog {
         this.guardado = guardado;
     }
 
-    // ==================== MÉTODOS ADICIONALES PARA MEJORAR UX ====================
+    // ==================== MÉTODO PARA AUTOCOMPLETAR (MODIFICADO) ====================
 
-    /**
-     * Muestra un resumen de los datos antes de guardar
-     */
-    public void mostrarResumenDatos() {
-        String resumen = "📋 Resumen de datos ingresados:\n\n" +
-                "• Número de Control: " + getNumeroControl() + "\n" +
-                "• Nombre: " + getNombre() + " " + getApellidoPaterno() +
-                (getApellidoMaterno().isEmpty() ? "" : " " + getApellidoMaterno()) + "\n" +
-                "• Carrera: " + getCarrera() + "\n" +
-                "• Semestre: " + getSemestre() + "\n" +
-                "• Correo: " + getCorreo() + "\n" +
-                (getTelefono().isEmpty() ? "" : "• Teléfono: " + getTelefono() + "\n");
-
-        JOptionPane.showMessageDialog(this, resumen, "📊 Resumen de Datos", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    /**
-     * Valida todos los campos visualmente antes de enviar
-     */
-    public boolean validarTodoVisualmente() {
-        boolean todoValido = true;
-
-        // Validar número de control
-        if (getNumeroControl().isEmpty()) {
-            mostrarBordeError(txtNumeroControl);
-            todoValido = false;
-        } else {
-            validarNumeroControlVisual(getNumeroControl());
-        }
-
-        // Validar nombre
-        if (getNombre().isEmpty() || getNombre().length() < 2) {
-            mostrarBordeError(txtNombre);
-            todoValido = false;
-        } else {
-            validarNombreVisual(txtNombre, getNombre());
-        }
-
-        // Validar apellido paterno
-        if (getApellidoPaterno().isEmpty() || getApellidoPaterno().length() < 2) {
-            mostrarBordeError(txtApellidoPaterno);
-            todoValido = false;
-        } else {
-            validarNombreVisual(txtApellidoPaterno, getApellidoPaterno());
-        }
-
-        // Validar apellido materno (si no está vacío)
-        if (!getApellidoMaterno().isEmpty()) {
-            validarNombreVisual(txtApellidoMaterno, getApellidoMaterno());
-        }
-
-        // Validar carrera
-        if (getCarrera().isEmpty() || getCarrera().length() < 3) {
-            mostrarBordeError(txtCarrera);
-            todoValido = false;
-        }
-
-        // Validar correo
-        if (getCorreo().isEmpty()) {
-            mostrarBordeError(txtCorreo);
-            todoValido = false;
-        } else {
-            validarCorreoVisual(getCorreo());
-        }
-
-        // Validar teléfono (si no está vacío)
-        if (!getTelefono().isEmpty()) {
-            validarTelefonoVisual(getTelefono());
-        }
-
-        return todoValido;
-    }
-
-    /**
-     * Método para manejar errores específicos de validación
-     */
-    public void manejarErrorValidacion(String campo, String mensaje) {
-        // Resaltar el campo con error
-        switch (campo.toLowerCase()) {
-            case "numerocontrol":
-                mostrarBordeError(txtNumeroControl);
-                txtNumeroControl.requestFocus();
-                break;
-            case "nombre":
-                mostrarBordeError(txtNombre);
-                txtNombre.requestFocus();
-                break;
-            case "apellidopaterno":
-                mostrarBordeError(txtApellidoPaterno);
-                txtApellidoPaterno.requestFocus();
-                break;
-            case "apellidomaterno":
-                mostrarBordeError(txtApellidoMaterno);
-                txtApellidoMaterno.requestFocus();
-                break;
-            case "carrera":
-                mostrarBordeError(txtCarrera);
-                txtCarrera.requestFocus();
-                break;
-            case "correo":
-                mostrarBordeError(txtCorreo);
-                txtCorreo.requestFocus();
-                break;
-            case "telefono":
-                mostrarBordeError(txtTelefono);
-                txtTelefono.requestFocus();
-                break;
-        }
-
-        // Mostrar mensaje de error
-        JOptionPane.showMessageDialog(this, mensaje, "❌ Error de Validación", JOptionPane.ERROR_MESSAGE);
-    }
-
-    /**
-     * Autocompletar datos comunes (para testing o demostración)
-     */
     public void autocompletarDatosPrueba() {
         int opcion = JOptionPane.showConfirmDialog(this,
-                "🎯 ¿Desea autocompletar con datos de prueba?\n\n" +
-                        "Esto llenará automáticamente todos los campos\n" +
-                        "con información de ejemplo válida.",
-                "🔧 Autocompletar Datos",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
+                "¿Desea autocompletar con datos de prueba?",
+                "Autocompletar Datos",
+                JOptionPane.YES_NO_OPTION);
 
         if (opcion == JOptionPane.YES_OPTION) {
             // Generar número de control actual
@@ -856,22 +709,20 @@ public class AgregarManual extends JDialog {
             setNombre("Juan Carlos");
             setApellidoPaterno("García");
             setApellidoMaterno("López");
-            setCarrera("Ingeniería en Sistemas Computacionales");
+            // ELIMINADO: setCarrera() - carrera es automática
             setSemestre("6");
             setCorreo("juan.garcia@tecnm.mx");
             setTelefono("4421234567");
 
             JOptionPane.showMessageDialog(this,
-                    "✅ Datos de prueba cargados correctamente\n\n" +
-                            "📝 Revise la información y modifique según sea necesario\n" +
-                            "💡 El número de control se generó automáticamente",
-                    "🎯 Autocompletado Exitoso",
+                    "Datos de prueba cargados correctamente\nCarrera: " + CARRERA_FIJA,
+                    "Autocompletado Exitoso",
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     /**
-     * Método para testing - acceso rápido desde el teclado
+     * Configurar atajos de teclado
      */
     private void configurarAtajosTeclado() {
         // Ctrl+T para autocompletar datos de prueba
@@ -883,23 +734,9 @@ public class AgregarManual extends JDialog {
                 autocompletarDatosPrueba();
             }
         });
-
-        // Ctrl+R para mostrar resumen
-        KeyStroke ctrlR = KeyStroke.getKeyStroke("ctrl R");
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ctrlR, "RESUMEN");
-        getRootPane().getActionMap().put("RESUMEN", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (hayCambios()) {
-                    mostrarResumenDatos();
-                }
-            }
-        });
-
-
     }
 
-    // Llamar este método en el constructor después de configurarEventos()
+    // Llamar este método en el constructor
     {
         SwingUtilities.invokeLater(() -> configurarAtajosTeclado());
     }

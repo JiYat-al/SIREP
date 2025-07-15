@@ -14,7 +14,7 @@ public class VistaRegistros extends JFrame {
     // Paneles principales para intercambio
     private JPanel panelContenedor;
     private JPanel panelRegistros;
-    private VistaResidente panelResidentes;
+    private VistaResidente panelResidentes; // AGREGADO: referencia directa
     private CardLayout cardLayout;
 
     // Vista actual
@@ -204,11 +204,10 @@ public class VistaRegistros extends JFrame {
     }
 
     private void crearPanelResidentes() {
-        // Crear una instancia de VistaResidente pero sin usar su JFrame
+        // MODIFICADO: Crear una instancia de VistaResidente y mantener referencia
         panelResidentes = new VistaResidente();
         // Ya no necesita setVisible porque ahora es solo un panel
     }
-
 
     private void crearBotonRegresar(JPanel mainPanel) {
         JButton btnRegresar = new JButton("\u2190");
@@ -237,9 +236,17 @@ public class VistaRegistros extends JFrame {
         panelResidentes.getPanelResidente().requestFocusInWindow();
     }
 
-
     private void regresarAVistaRegistros() {
         if (vistaActual.equals("RESIDENTES")) {
+            // MODIFICADO: Limpiar la tabla de residentes al regresar
+            if (panelResidentes != null) {
+                panelResidentes.limpiarTabla();
+            } else {
+                Menu menu =  new Menu();
+                menu.setVisible(true);
+                this.dispose();
+            }
+
             vistaActual = "REGISTROS";
             cardLayout.show(panelContenedor, "REGISTROS");
             actualizarBarraLateral();
@@ -247,26 +254,23 @@ public class VistaRegistros extends JFrame {
             // Recargar datos de registros y enfocar
             controlador.cargarTodosLosRegistros();
             panelRegistros.requestFocusInWindow();
-        } else {
-            Menu menu = new Menu();
-            menu.setVisible(true);
-            this.dispose();
         }
     }
 
     private void actualizarBarraLateral() {
         if (vistaActual.equals("REGISTROS")) {
-            iconoBarra.setText("R"); // Cambiado para mejor distinción visual
-            tituloBarra.setText("<html>E<br>G<br>I<br>S<br>T<br>R<br>O<br>S</html>");
+            iconoBarra.setText("R");
+            tituloBarra.setText("<html>R<br>E<br>G<br>I<br>S<br>T<br>R<br>O<br>S</html>");
         } else {
-            iconoBarra.setText("R"); // Icono de casa para residentes
-            tituloBarra.setText("<html>E<br>S<br>I<br>D<br>E<br>N<br>T<br>E<br>S</html>");
+            iconoBarra.setText("R");
+            tituloBarra.setText("<html>R<br>E<br>S<br>I<br>D<br>E<br>N<br>T<br>E<br>S</html>");
         }
 
         // Forzar repintado de la barra lateral
         iconoBarra.repaint();
         tituloBarra.repaint();
     }
+
     private JPanel crearHeader() {
         JPanel header = new JPanel(new BorderLayout()) {
             @Override
@@ -351,10 +355,10 @@ public class VistaRegistros extends JFrame {
     }
 
     private void configurarTabla() {
-        // Definir columnas (SIN columna de acciones)
+        // MODIFICADO: Definir columnas SIN CARRERA E ID PROYECTO
         String[] columnas = {
                 "No. Control", "Nombre", "Apellido P.", "Apellido M.",
-                "Carrera", "Semestre", "Correo", "Telefono", "ID Proyecto"
+                "Semestre", "Correo", "Telefono"
         };
 
         // Crear modelo de tabla
@@ -366,7 +370,8 @@ public class VistaRegistros extends JFrame {
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 0 || columnIndex == 5 || columnIndex == 8) {
+                // MODIFICADO: Ajustar índices - ahora Semestre es columna 4
+                if (columnIndex == 0 || columnIndex == 4) {
                     return Integer.class;
                 }
                 return String.class;
@@ -451,15 +456,14 @@ public class VistaRegistros extends JFrame {
     }
 
     private void configurarAnchoColumnas() {
-        candidatos.getColumnModel().getColumn(0).setPreferredWidth(100); // No. Control
-        candidatos.getColumnModel().getColumn(1).setPreferredWidth(120); // Nombre
-        candidatos.getColumnModel().getColumn(2).setPreferredWidth(120); // Apellido P.
-        candidatos.getColumnModel().getColumn(3).setPreferredWidth(120); // Apellido M.
-        candidatos.getColumnModel().getColumn(4).setPreferredWidth(180); // Carrera
-        candidatos.getColumnModel().getColumn(5).setPreferredWidth(80);  // Semestre
-        candidatos.getColumnModel().getColumn(6).setPreferredWidth(200); // Correo
-        candidatos.getColumnModel().getColumn(7).setPreferredWidth(120); // Telefono
-        candidatos.getColumnModel().getColumn(8).setPreferredWidth(100); // ID Proyecto
+        // MODIFICADO: Configurar anchos sin carrera e ID proyecto - más espacio para cada columna
+        candidatos.getColumnModel().getColumn(0).setPreferredWidth(120); // No. Control
+        candidatos.getColumnModel().getColumn(1).setPreferredWidth(150); // Nombre
+        candidatos.getColumnModel().getColumn(2).setPreferredWidth(150); // Apellido P.
+        candidatos.getColumnModel().getColumn(3).setPreferredWidth(150); // Apellido M.
+        candidatos.getColumnModel().getColumn(4).setPreferredWidth(100); // Semestre
+        candidatos.getColumnModel().getColumn(5).setPreferredWidth(250); // Correo
+        candidatos.getColumnModel().getColumn(6).setPreferredWidth(150); // Telefono
     }
 
     private JPanel crearPanelBotones() {
@@ -609,16 +613,17 @@ public class VistaRegistros extends JFrame {
         modeloTabla.setRowCount(0);
 
         for (ModeloResidente residente : residentes) {
+            // MODIFICADO: Fila sin carrera e ID proyecto
             Object[] fila = {
                     residente.getNumeroControl(),
                     residente.getNombre(),
                     residente.getApellidoPaterno(),
                     residente.getApellidoMaterno(),
-                    residente.getCarrera(),
+                    // ELIMINADO: residente.getCarrera(),
                     residente.getSemestre(),
                     residente.getCorreo(),
-                    residente.getTelefono(),
-                    residente.getIdProyecto()
+                    residente.getTelefono()
+                    // ELIMINADO: residente.getIdProyecto()
             };
             modeloTabla.addRow(fila);
         }
@@ -632,6 +637,7 @@ public class VistaRegistros extends JFrame {
         if (textoBusqueda.isEmpty() || textoBusqueda.equals("Buscar por nombre o numero de control...")) {
             sorter.setRowFilter(null);
         } else {
+            // MODIFICADO: Filtrar solo por No. Control (0), Nombre (1), Apellido P. (2), Apellido M. (3)
             RowFilter<DefaultTableModel, Object> filtro = RowFilter.regexFilter(
                     "(?i)" + textoBusqueda, 0, 1, 2, 3
             );
@@ -675,14 +681,21 @@ public class VistaRegistros extends JFrame {
                         "• Actualizar: Recarga todos los registros desde la base de datos\n" +
                         "• Limpiar: Borra el filtro de busqueda\n" +
                         "• Nuevo Alumno: Cambia a la vista para registrar nuevos alumnos\n" +
-                        "• ESC: Atajo para limpiar la busqueda" :
+                        "• ESC: Atajo para limpiar la busqueda\n\n" +
+                        "⚠️ NOTA: Todos los residentes tienen asignada automáticamente\n" +
+                        "la carrera 'Ingeniería en Sistemas Computacionales'" :
 
                 "Sistema de Gestion de Residentes SIREP\n\n" +
                         "• Cargar Excel: Carga residentes desde archivo Excel\n" +
-                        "• Importar Excel: Guarda los datos cargados en la base de datos\n" +
+                        "• Importar: Guarda los datos cargados en la base de datos\n" +
                         "• Agregar Manual: Agrega un residente manualmente\n" +
-                        "• Flecha izquierda: Regresa a la vista de registros\n" +
-                        "• La tabla muestra todos los residentes activos";
+                        "• Limpiar Tabla: Limpia todos los datos de la tabla temporal\n" +
+                        "• Flecha izquierda: Regresa a la vista de registros\n\n" +
+                        "⚠️ IMPORTANTE:\n" +
+                        "• La carrera se asigna automáticamente como:\n" +
+                        "  'Ingeniería en Sistemas Computacionales'\n" +
+                        "• Los archivos Excel NO deben incluir columna 'Carrera'\n" +
+                        "• La tabla muestra solo información esencial";
 
         JOptionPane.showMessageDialog(this, ayuda, "Ayuda - Sistema SIREP", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -770,6 +783,11 @@ public class VistaRegistros extends JFrame {
 
     public void limpiarTablaResidentes() {
         panelResidentes.limpiarTabla();
+    }
+
+    // AGREGADO: Método para acceder a la vista de residentes
+    public VistaResidente getVistaResidente() {
+        return panelResidentes;
     }
 
     public static void main(String[] args) {

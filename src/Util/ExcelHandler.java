@@ -15,13 +15,17 @@ import java.util.ArrayList;
 
 /**
  * Clase para manejar la importación/exportación de archivos Excel
+ * MODIFICADO: Carrera automática "Ingeniería en Sistemas Computacionales"
  */
 public class ExcelHandler {
 
-    // Nombres esperados de las columnas en el archivo Excel
+    // CARRERA FIJA PARA TODOS LOS RESIDENTES
+    private static final String CARRERA_FIJA = "Ingeniería en Sistemas Computacionales";
+
+    // Nombres esperados de las columnas en el archivo Excel - SIN CARRERA
     private static final String[] COLUMNAS_ESPERADAS = {
             "Número de Control", "Nombre", "Apellido Paterno", "Apellido Materno",
-            "Carrera", "Semestre", "Correo", "Teléfono"
+            "Semestre", "Correo", "Teléfono"
     };
 
     /**
@@ -73,7 +77,8 @@ public class ExcelHandler {
             // Mostrar resultado
             String mensaje = "Importación completada:\n" +
                     "- Registros importados: " + residentes.size() + "\n" +
-                    "- Filas con errores: " + filasConError;
+                    "- Filas con errores: " + filasConError + "\n" +
+                    "- Carrera asignada: " + CARRERA_FIJA;
 
             if (filasConError > 0) {
                 mensaje += "\n\nRevisa la consola para detalles de los errores.";
@@ -110,9 +115,9 @@ public class ExcelHandler {
     }
 
     /**
-     * Validar que los encabezados del archivo Excel sean correctos
+     * Formatear texto con primera letra mayúscula y demás en minúscula
      */
-    private String formatearTexto(String texto) {
+    private static String formatearTexto(String texto) {
         if (texto == null || texto.trim().isEmpty()) {
             return texto;
         }
@@ -140,6 +145,10 @@ public class ExcelHandler {
 
         return resultado.toString();
     }
+
+    /**
+     * Validar que los encabezados del archivo Excel sean correctos - SIN CARRERA
+     */
     private static boolean validarEncabezados(Sheet sheet) {
         Row headerRow = sheet.getRow(0);
         if (headerRow == null) {
@@ -174,10 +183,12 @@ public class ExcelHandler {
             for (String error : errores) {
                 mensaje.append("• ").append(error).append("\n");
             }
-            mensaje.append("\nEncabezados esperados:\n");
+            mensaje.append("\nEncabezados esperados (SIN incluir Carrera):\n");
             for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
                 mensaje.append((i + 1)).append(". ").append(COLUMNAS_ESPERADAS[i]).append("\n");
             }
+            mensaje.append("\n⚠️ NOTA: La carrera se asigna automáticamente como:\n");
+            mensaje.append("\"").append(CARRERA_FIJA).append("\"");
 
             JOptionPane.showMessageDialog(null, mensaje.toString(),
                     "Error en encabezados", JOptionPane.ERROR_MESSAGE);
@@ -204,19 +215,20 @@ public class ExcelHandler {
     }
 
     /**
-     * Procesar una fila y crear un objeto ModeloResidente
+     * Procesar una fila y crear un objeto ModeloResidente - CON CARRERA AUTOMÁTICA
      */
     private static ModeloResidente procesarFila(Row fila, int numeroFila) throws Exception {
         try {
-            // Obtener valores de las celdas
+            // Obtener valores de las celdas - SIN CARRERA
             int numeroControl = obtenerValorEntero(fila.getCell(0), "Número de Control", numeroFila);
-            String nombre = obtenerValorTexto(fila.getCell(1), "Nombre", numeroFila);
-            String apellidoPaterno = obtenerValorTexto(fila.getCell(2), "Apellido Paterno", numeroFila);
-            String apellidoMaterno = obtenerValorTexto(fila.getCell(3), "Apellido Materno", numeroFila);
-            String carrera = obtenerValorTexto(fila.getCell(4), "Carrera", numeroFila);
-            int semestre = obtenerValorEntero(fila.getCell(5), "Semestre", numeroFila);
-            String correo = obtenerValorTexto(fila.getCell(6), "Correo", numeroFila);
-            String telefono = obtenerValorTexto(fila.getCell(7), "Teléfono", numeroFila);
+            String nombre = formatearTexto(obtenerValorTexto(fila.getCell(1), "Nombre", numeroFila));
+            String apellidoPaterno = formatearTexto(obtenerValorTexto(fila.getCell(2), "Apellido Paterno", numeroFila));
+            String apellidoMaterno = formatearTexto(obtenerValorTexto(fila.getCell(3), "Apellido Materno", numeroFila));
+            // CARRERA AUTOMÁTICA - NO SE LEE DEL EXCEL
+            String carrera = CARRERA_FIJA;
+            int semestre = obtenerValorEntero(fila.getCell(4), "Semestre", numeroFila);
+            String correo = obtenerValorTexto(fila.getCell(5), "Correo", numeroFila).toLowerCase();
+            String telefono = obtenerValorTexto(fila.getCell(6), "Teléfono", numeroFila);
 
             // Validaciones básicas
             if (nombre.isEmpty() || apellidoPaterno.isEmpty()) {
@@ -227,9 +239,9 @@ public class ExcelHandler {
                 throw new Exception("Semestre debe estar entre 1 y 12");
             }
 
-            // Crear y retornar el objeto ModeloResidente
+            // Crear y retornar el objeto ModeloResidente CON CARRERA AUTOMÁTICA
             return new ModeloResidente(numeroControl, nombre, apellidoPaterno,
-                    apellidoMaterno, carrera, semestre, correo, telefono, 0);
+                    apellidoMaterno, carrera, semestre, correo, telefono, 1);
 
         } catch (Exception e) {
             throw new Exception("Fila " + numeroFila + ": " + e.getMessage());
@@ -309,13 +321,13 @@ public class ExcelHandler {
     }
 
     /**
-     * Método para exportar residentes a un archivo Excel
+     * Método para exportar residentes a un archivo Excel - CON CARRERA AUTOMÁTICA
      */
     public static void exportarAExcel(List<ModeloResidente> residentes, File archivo) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Residentes");
 
-            // Crear fila de encabezados
+            // Crear fila de encabezados - SIN CARRERA
             Row headerRow = sheet.createRow(0);
             for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -329,7 +341,7 @@ public class ExcelHandler {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Crear filas de datos
+            // Crear filas de datos - SIN CARRERA
             int rowNum = 1;
             for (ModeloResidente residente : residentes) {
                 Row row = sheet.createRow(rowNum++);
@@ -337,10 +349,10 @@ public class ExcelHandler {
                 row.createCell(1).setCellValue(residente.getNombre());
                 row.createCell(2).setCellValue(residente.getApellidoPaterno());
                 row.createCell(3).setCellValue(residente.getApellidoMaterno());
-                row.createCell(4).setCellValue(residente.getCarrera());
-                row.createCell(5).setCellValue(residente.getSemestre());
-                row.createCell(6).setCellValue(residente.getCorreo());
-                row.createCell(7).setCellValue(residente.getTelefono());
+                // ELIMINADO: carrera - no se exporta
+                row.createCell(4).setCellValue(residente.getSemestre());
+                row.createCell(5).setCellValue(residente.getCorreo());
+                row.createCell(6).setCellValue(residente.getTelefono());
             }
 
             // Autoajustar columnas
@@ -354,7 +366,8 @@ public class ExcelHandler {
             }
 
             JOptionPane.showMessageDialog(null,
-                    "Archivo Excel exportado exitosamente:\n" + archivo.getAbsolutePath(),
+                    "Archivo Excel exportado exitosamente:\n" + archivo.getAbsolutePath() +
+                            "\n\n⚠️ NOTA: Todos los residentes tienen asignada la carrera:\n\"" + CARRERA_FIJA + "\"",
                     "Exportación exitosa", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (IOException e) {
@@ -370,7 +383,7 @@ public class ExcelHandler {
     public static File seleccionarArchivoExcel() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setDialogTitle("Seleccionar archivo Excel");
+        fileChooser.setDialogTitle("Seleccionar archivo Excel (SIN columna Carrera)");
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
 
         // Filtro para archivos Excel
@@ -391,9 +404,9 @@ public class ExcelHandler {
     public static File seleccionarUbicacionGuardar() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setDialogTitle("Guardar archivo Excel");
+        fileChooser.setDialogTitle("Guardar archivo Excel (SIN columna Carrera)");
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-        fileChooser.setSelectedFile(new File("residentes.xlsx"));
+        fileChooser.setSelectedFile(new File("residentes_sistemas.xlsx"));
 
         // Filtro para archivos Excel
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -415,10 +428,38 @@ public class ExcelHandler {
      * Método completo para importar Excel con selección de archivo
      */
     public static List<ModeloResidente> importarExcelCompleto() {
-        File archivo = seleccionarArchivoExcel();
-        if (archivo != null) {
-            return importarDesdeExcel(archivo);
+        // Mostrar información sobre el formato esperado
+        String mensaje = "📋 Formato de archivo Excel esperado:\n\n" +
+                "Columnas requeridas (en este orden):\n" +
+                "1. Número de Control\n" +
+                "2. Nombre\n" +
+                "3. Apellido Paterno\n" +
+                "4. Apellido Materno\n" +
+                "5. Semestre\n" +
+                "6. Correo\n" +
+                "7. Teléfono\n\n" +
+                "⚠️ IMPORTANTE:\n" +
+                "• NO incluya columna 'Carrera' en el Excel\n" +
+                "• La carrera se asigna automáticamente como:\n" +
+                "  \"" + CARRERA_FIJA + "\"\n\n" +
+                "¿Continuar con la importación?";
+
+        int opcion = JOptionPane.showConfirmDialog(null, mensaje,
+                "Información de Importación", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+
+        if (opcion == JOptionPane.YES_OPTION) {
+            File archivo = seleccionarArchivoExcel();
+            if (archivo != null) {
+                return importarDesdeExcel(archivo);
+            }
         }
         return new ArrayList<>();
+    }
+
+    /**
+     * Obtener la carrera fija que se asigna automáticamente
+     */
+    public static String getCarreraFija() {
+        return CARRERA_FIJA;
     }
 }
