@@ -241,10 +241,6 @@ public class VistaRegistros extends JFrame {
             // MODIFICADO: Limpiar la tabla de residentes al regresar
             if (panelResidentes != null) {
                 panelResidentes.limpiarTabla();
-            } else {
-                Menu menu =  new Menu();
-                menu.setVisible(true);
-                this.dispose();
             }
 
             vistaActual = "REGISTROS";
@@ -254,6 +250,10 @@ public class VistaRegistros extends JFrame {
             // Recargar datos de registros y enfocar
             controlador.cargarTodosLosRegistros();
             panelRegistros.requestFocusInWindow();
+        } else {
+            Menu menu = new Menu();
+            menu.setVisible(true);
+            this.dispose();
         }
     }
 
