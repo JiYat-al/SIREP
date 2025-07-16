@@ -11,8 +11,8 @@ public class Conexion_bd {
     private Connection conexion;
 
     private final String user = "postgres";
-    private final String password = "yahalon.098";
-    private final String base = "sirep";
+    private final String password = "hola";
+    private final String base = "SIREP";
     private final String host = "localhost";
     private final String port = "5432";
     private final String url = "jdbc:postgresql://" + host + ":" + port + "/" + base;
@@ -51,4 +51,5 @@ public class Conexion_bd {
         return getInstancia().getConexion();
     }
 }
+
 

@@ -14,24 +14,20 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Clase para manejar la importación/exportación de archivos Excel
- * MODIFICADO: Carrera automática "Ingeniería en Sistemas Computacionales"
+ * ExcelHandler mejorado - Corrige inserción de solo una fila
+ * Incluye validación de teléfonos y tooltips de errores
  */
 public class ExcelHandler {
 
-    // CARRERA FIJA PARA TODOS LOS RESIDENTES
     private static final String CARRERA_FIJA = "Ingeniería en Sistemas Computacionales";
 
-    // Nombres esperados de las columnas en el archivo Excel - SIN CARRERA
     private static final String[] COLUMNAS_ESPERADAS = {
             "Número de Control", "Nombre", "Apellido Paterno", "Apellido Materno",
             "Semestre", "Correo", "Teléfono"
     };
 
     /**
-     * Método para importar residentes desde un archivo Excel
-     * @param archivo El archivo Excel a importar
-     * @return Lista de residentes importados
+     * CORREGIDO: Importar residentes desde Excel - Ahora procesa TODAS las filas
      */
     public static List<ModeloResidente> importarDesdeExcel(File archivo) {
         List<ModeloResidente> residentes = new ArrayList<>();
@@ -39,70 +35,98 @@ public class ExcelHandler {
         try (FileInputStream fis = new FileInputStream(archivo);
              Workbook workbook = crearWorkbook(archivo, fis)) {
 
-            // Obtener la primera hoja
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Verificar que el archivo tenga datos
             if (sheet.getPhysicalNumberOfRows() < 2) {
                 JOptionPane.showMessageDialog(null,
-                        "El archivo Excel debe tener al menos una fila de encabezados y una fila de datos.",
+                        "El archivo debe tener encabezados y al menos una fila de datos.",
                         "Error", JOptionPane.ERROR_MESSAGE);
                 return residentes;
             }
 
-            // Validar encabezados
             if (!validarEncabezados(sheet)) {
-                return residentes; // El método validarEncabezados ya muestra el error
+                return residentes;
             }
 
-            // Procesar las filas de datos
+            // CORREGIDO: Procesar TODAS las filas SIN fallar por errores de validación
+            int totalFilas = sheet.getLastRowNum();
+            int filasExitosas = 0;
             int filasConError = 0;
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            List<String> erroresDetallados = new ArrayList<>();
+
+            System.out.println("DEBUG: Procesando desde fila 1 hasta " + totalFilas);
+
+            for (int i = 1; i <= totalFilas; i++) {
                 Row fila = sheet.getRow(i);
-                if (fila == null || esFilaVacia(fila)) {
-                    continue; // Saltar filas vacías
+
+                if (fila == null) {
+                    System.out.println("DEBUG: Fila " + (i + 1) + " es null, saltando...");
+                    continue;
                 }
 
-                try {
-                    ModeloResidente residente = procesarFila(fila, i + 1);
-                    if (residente != null) {
-                        residentes.add(residente);
+                if (esFilaVacia(fila)) {
+                    System.out.println("DEBUG: Fila " + (i + 1) + " está vacía, saltando...");
+                    continue;
+                }
+
+                // IMPORTANTE: SIEMPRE agregar el residente, sin importar si tiene errores
+                ModeloResidente residente = procesarFila(fila, i + 1);
+                if (residente != null) {
+                    residentes.add(residente);
+
+                    // Verificar si tiene errores para el conteo
+                    if (residente.getErroresValidacion().isEmpty()) {
+                        filasExitosas++;
+                        System.out.println("DEBUG: Fila " + (i + 1) + " procesada exitosamente: " +
+                                residente.getNombre() + " " + residente.getApellidoPaterno());
+                    } else {
+                        filasConError++;
+                        System.out.println("DEBUG: Fila " + (i + 1) + " tiene errores pero se agregó para previsualización: " +
+                                residente.getNombre() + " " + residente.getApellidoPaterno());
                     }
-                } catch (Exception e) {
-                    filasConError++;
-                    System.err.println("Error en fila " + (i + 1) + ": " + e.getMessage());
                 }
             }
 
-            // Mostrar resultado
-            String mensaje = "Importación completada:\n" +
-                    "- Registros importados: " + residentes.size() + "\n" +
-                    "- Filas con errores: " + filasConError + "\n" +
-                    "- Carrera asignada: " + CARRERA_FIJA;
-
-            if (filasConError > 0) {
-                mensaje += "\n\nRevisa la consola para detalles de los errores.";
-            }
-
-            JOptionPane.showMessageDialog(null, mensaje,
-                    "Importación Excel", JOptionPane.INFORMATION_MESSAGE);
+            // Mostrar resumen mejorado
+            mostrarResumenImportacion(filasExitosas, filasConError, erroresDetallados);
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null,
-                    "Error al leer el archivo Excel: " + e.getMessage(),
+                    "Error al leer el archivo: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null,
-                    "Error inesperado al procesar el archivo: " + e.getMessage(),
+                    "Error inesperado: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
 
+        System.out.println("DEBUG: Total de residentes importados: " + residentes.size());
         return residentes;
     }
 
     /**
-     * Crear el workbook apropiado según la extensión del archivo
+     * NUEVO: Mostrar resumen actualizado
      */
+    private static void mostrarResumenImportacion(int exitosas, int errores, List<String> erroresDetallados) {
+        StringBuilder mensaje = new StringBuilder();
+        mensaje.append("📊 Carga de Excel completada\n\n");
+        mensaje.append("📋 Total registros cargados: ").append(exitosas + errores).append("\n");
+        mensaje.append("✅ Registros válidos: ").append(exitosas).append("\n");
+        mensaje.append("❌ Registros con errores: ").append(errores).append("\n\n");
+
+        if (errores > 0) {
+            mensaje.append("💡 TODOS los registros se muestran en la tabla\n");
+            mensaje.append("🔍 Pase el mouse sobre ❌ para ver errores\n");
+            mensaje.append("✏️ Doble click para editar registros\n");
+            mensaje.append("📥 Solo los válidos ✅ se importarán a la BD");
+        } else {
+            mensaje.append("🎉 Todos los registros son válidos y están listos para importar");
+        }
+
+        JOptionPane.showMessageDialog(null, mensaje.toString(),
+                "Carga completada", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     private static Workbook crearWorkbook(File archivo, FileInputStream fis) throws IOException {
         String nombreArchivo = archivo.getName().toLowerCase();
         if (nombreArchivo.endsWith(".xlsx")) {
@@ -110,12 +134,12 @@ public class ExcelHandler {
         } else if (nombreArchivo.endsWith(".xls")) {
             return new HSSFWorkbook(fis);
         } else {
-            throw new IOException("Formato de archivo no soportado. Use .xlsx o .xls");
+            throw new IOException("Formato no soportado. Use .xlsx o .xls");
         }
     }
 
     /**
-     * Formatear texto con primera letra mayúscula y demás en minúscula
+     * Formatear texto con capitalización correcta
      */
     private static String formatearTexto(String texto) {
         if (texto == null || texto.trim().isEmpty()) {
@@ -123,13 +147,10 @@ public class ExcelHandler {
         }
 
         String textoLimpio = texto.trim();
-
-        // Si es una sola palabra
         if (!textoLimpio.contains(" ")) {
             return textoLimpio.substring(0, 1).toUpperCase() + textoLimpio.substring(1).toLowerCase();
         }
 
-        // Si son múltiples palabras, formatear cada una
         String[] palabras = textoLimpio.split("\\s+");
         StringBuilder resultado = new StringBuilder();
 
@@ -147,51 +168,46 @@ public class ExcelHandler {
     }
 
     /**
-     * Validar que los encabezados del archivo Excel sean correctos - SIN CARRERA
+     * MEJORADO: Validación de encabezados más concisa
      */
     private static boolean validarEncabezados(Sheet sheet) {
         Row headerRow = sheet.getRow(0);
         if (headerRow == null) {
             JOptionPane.showMessageDialog(null,
-                    "El archivo no tiene fila de encabezados.",
+                    "El archivo no tiene encabezados.",
                     "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        // Verificar que tenga el número correcto de columnas
         if (headerRow.getPhysicalNumberOfCells() < COLUMNAS_ESPERADAS.length) {
             JOptionPane.showMessageDialog(null,
-                    "El archivo debe tener al menos " + COLUMNAS_ESPERADAS.length + " columnas.",
+                    "Se requieren " + COLUMNAS_ESPERADAS.length + " columnas.",
                     "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        // Verificar nombres de columnas
         List<String> errores = new ArrayList<>();
         for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
             Cell cell = headerRow.getCell(i);
             String valorCelda = cell != null ? cell.getStringCellValue().trim() : "";
 
             if (!COLUMNAS_ESPERADAS[i].equalsIgnoreCase(valorCelda)) {
-                errores.add("Columna " + (i + 1) + ": Se esperaba '" + COLUMNAS_ESPERADAS[i] +
-                        "' pero se encontró '" + valorCelda + "'");
+                errores.add("Col " + (i + 1) + ": '" + COLUMNAS_ESPERADAS[i] + "' ≠ '" + valorCelda + "'");
             }
         }
 
         if (!errores.isEmpty()) {
-            StringBuilder mensaje = new StringBuilder("Los encabezados del archivo no son correctos:\n\n");
+            StringBuilder mensaje = new StringBuilder("Encabezados incorrectos:\n\n");
             for (String error : errores) {
                 mensaje.append("• ").append(error).append("\n");
             }
-            mensaje.append("\nEncabezados esperados (SIN incluir Carrera):\n");
+            mensaje.append("\n📋 Formato esperado:\n");
             for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
                 mensaje.append((i + 1)).append(". ").append(COLUMNAS_ESPERADAS[i]).append("\n");
             }
-            mensaje.append("\n⚠️ NOTA: La carrera se asigna automáticamente como:\n");
-            mensaje.append("\"").append(CARRERA_FIJA).append("\"");
 
             JOptionPane.showMessageDialog(null, mensaje.toString(),
-                    "Error en encabezados", JOptionPane.ERROR_MESSAGE);
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
@@ -199,9 +215,11 @@ public class ExcelHandler {
     }
 
     /**
-     * Verificar si una fila está vacía
+     * MEJORADO: Verificación de fila vacía más robusta
      */
     private static boolean esFilaVacia(Row fila) {
+        if (fila == null) return true;
+
         for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
             Cell cell = fila.getCell(i);
             if (cell != null && cell.getCellType() != CellType.BLANK) {
@@ -215,43 +233,135 @@ public class ExcelHandler {
     }
 
     /**
-     * Procesar una fila y crear un objeto ModeloResidente - CON CARRERA AUTOMÁTICA
+     * CORREGIDO: Procesamiento de fila - SIEMPRE retorna residente para previsualización
      */
     private static ModeloResidente procesarFila(Row fila, int numeroFila) throws Exception {
         try {
-            // Obtener valores de las celdas - SIN CARRERA
-            int numeroControl = obtenerValorEntero(fila.getCell(0), "Número de Control", numeroFila);
-            String nombre = formatearTexto(obtenerValorTexto(fila.getCell(1), "Nombre", numeroFila));
-            String apellidoPaterno = formatearTexto(obtenerValorTexto(fila.getCell(2), "Apellido Paterno", numeroFila));
-            String apellidoMaterno = formatearTexto(obtenerValorTexto(fila.getCell(3), "Apellido Materno", numeroFila));
-            // CARRERA AUTOMÁTICA - NO SE LEE DEL EXCEL
+            // Obtener valores básicos SIN validar para permitir TODOS los registros
+            int numeroControl = 0;
+            String nombre = "";
+            String apellidoPaterno = "";
+            String apellidoMaterno = "";
             String carrera = CARRERA_FIJA;
-            int semestre = obtenerValorEntero(fila.getCell(4), "Semestre", numeroFila);
-            String correo = obtenerValorTexto(fila.getCell(5), "Correo", numeroFila).toLowerCase();
-            String telefono = obtenerValorTexto(fila.getCell(6), "Teléfono", numeroFila);
+            int semestre = 9; // Valor por defecto
+            String correo = "";
+            String telefono = "";
 
-            // Validaciones básicas
-            if (nombre.isEmpty() || apellidoPaterno.isEmpty()) {
-                throw new Exception("Nombre y apellido paterno son obligatorios");
+            // Obtener datos de forma segura (sin lanzar excepciones)
+            try {
+                numeroControl = obtenerValorEnteroSeguro(fila.getCell(0));
+            } catch (Exception e) {
+                numeroControl = 0; // Valor inválido que se detectará en validación
             }
 
-            if (semestre < 1 || semestre > 12) {
-                throw new Exception("Semestre debe estar entre 1 y 12");
+            nombre = formatearTexto(obtenerValorTextoSeguro(fila.getCell(1)));
+            apellidoPaterno = formatearTexto(obtenerValorTextoSeguro(fila.getCell(2)));
+            apellidoMaterno = formatearTexto(obtenerValorTextoSeguro(fila.getCell(3)));
+
+            try {
+                semestre = obtenerValorEnteroSeguro(fila.getCell(4));
+            } catch (Exception e) {
+                semestre = 0; // Valor inválido que se detectará en validación
             }
 
-            // Crear y retornar el objeto ModeloResidente CON CARRERA AUTOMÁTICA
-            return new ModeloResidente(numeroControl, nombre, apellidoPaterno,
+            correo = obtenerValorTextoSeguro(fila.getCell(5)).toLowerCase();
+            telefono = obtenerValorTextoSeguro(fila.getCell(6));
+
+            // CREAR SIEMPRE EL RESIDENTE (aunque tenga datos inválidos)
+            ModeloResidente residente = new ModeloResidente(numeroControl, nombre, apellidoPaterno,
                     apellidoMaterno, carrera, semestre, correo, telefono, 1);
 
+            // Validar y almacenar errores (pero NO lanzar excepción)
+            List<String> errores = validarResidenteCompleto(residente);
+            if (!errores.isEmpty()) {
+                residente.setErroresValidacion(errores);
+            }
+
+            return residente;
+
         } catch (Exception e) {
-            throw new Exception("Fila " + numeroFila + ": " + e.getMessage());
+            // Si hay error grave, crear un residente "vacío" con el error
+            ModeloResidente residente = new ModeloResidente(0, "", "", "", CARRERA_FIJA, 9, "", "", 1);
+            List<String> errores = new ArrayList<>();
+            errores.add("Error en fila " + numeroFila + ": " + e.getMessage());
+            residente.setErroresValidacion(errores);
+            return residente;
         }
     }
 
     /**
-     * Obtener valor de texto de una celda
+     * NUEVA: Validación completa de teléfono
      */
-    private static String obtenerValorTexto(Cell cell, String nombreColumna, int numeroFila) throws Exception {
+    private static boolean validarTelefono(String telefono) {
+        if (telefono == null || telefono.trim().isEmpty()) {
+            return true; // Teléfono es opcional
+        }
+
+        // Limpiar teléfono de caracteres no numéricos
+        String telefonoLimpio = telefono.replaceAll("[^0-9]", "");
+
+        // Verificar longitud
+        if (telefonoLimpio.length() < 8 || telefonoLimpio.length() > 15) {
+            return false;
+        }
+
+        // Verificar patrones sospechosos
+        if (telefonoLimpio.matches("(\\d)\\1{7,}")) { // 8+ dígitos iguales
+            return false;
+        }
+
+        if (telefonoLimpio.matches("12345678.*") || telefonoLimpio.matches("87654321.*")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * NUEVA: Validación completa que retorna lista de errores
+     */
+    private static List<String> validarResidenteCompleto(ModeloResidente residente) {
+        List<String> errores = new ArrayList<>();
+
+        // Validar número de control
+        String numStr = String.valueOf(residente.getNumeroControl());
+        if (numStr.length() != 8) {
+            errores.add("Número de control debe tener 8 dígitos");
+        }
+
+        // Validar campos obligatorios
+        if (residente.getNombre() == null || residente.getNombre().trim().length() < 2) {
+            errores.add("Nombre debe tener al menos 2 caracteres");
+        }
+
+        if (residente.getApellidoPaterno() == null || residente.getApellidoPaterno().trim().length() < 2) {
+            errores.add("Apellido paterno debe tener al menos 2 caracteres");
+        }
+
+        // Validar semestre
+        if (residente.getSemestre() < 9 || residente.getSemestre() > 15) {
+            errores.add("Semestre debe estar entre 9 y 15");
+        }
+
+        // Validar correo
+        if (!residente.getCorreo().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+            errores.add("Formato de correo inválido");
+        }
+
+        // Validar teléfono
+        if (residente.getTelefono() != null && !residente.getTelefono().isEmpty()) {
+            if (!validarTelefono(residente.getTelefono())) {
+                errores.add("Formato de teléfono inválido");
+            }
+        }
+
+        return errores;
+    }
+
+    /**
+     * NUEVO: Obtener valores de forma segura sin lanzar excepciones
+     */
+    private static String obtenerValorTextoSeguro(Cell cell) {
         if (cell == null) {
             return "";
         }
@@ -259,16 +369,16 @@ public class ExcelHandler {
         try {
             return obtenerValorCelda(cell).trim();
         } catch (Exception e) {
-            throw new Exception("Error en columna '" + nombreColumna + "': " + e.getMessage());
+            return "";
         }
     }
 
     /**
-     * Obtener valor entero de una celda
+     * NUEVO: Obtener entero de forma segura sin lanzar excepciones
      */
-    private static int obtenerValorEntero(Cell cell, String nombreColumna, int numeroFila) throws Exception {
+    private static int obtenerValorEnteroSeguro(Cell cell) {
         if (cell == null) {
-            throw new Exception("La columna '" + nombreColumna + "' no puede estar vacía");
+            return 0;
         }
 
         try {
@@ -277,20 +387,17 @@ public class ExcelHandler {
             } else if (cell.getCellType() == CellType.STRING) {
                 String valor = cell.getStringCellValue().trim();
                 if (valor.isEmpty()) {
-                    throw new Exception("La columna '" + nombreColumna + "' no puede estar vacía");
+                    return 0;
                 }
                 return Integer.parseInt(valor);
             } else {
-                throw new Exception("La columna '" + nombreColumna + "' debe ser un número");
+                return 0;
             }
-        } catch (NumberFormatException e) {
-            throw new Exception("Error en columna '" + nombreColumna + "': no es un número válido");
+        } catch (Exception e) {
+            return 0;
         }
     }
 
-    /**
-     * Obtener el valor de una celda como String
-     */
     private static String obtenerValorCelda(Cell cell) {
         if (cell == null) {
             return "";
@@ -303,7 +410,6 @@ public class ExcelHandler {
                 if (DateUtil.isCellDateFormatted(cell)) {
                     return cell.getDateCellValue().toString();
                 } else {
-                    // Para números enteros, no mostrar decimales
                     double valor = cell.getNumericCellValue();
                     if (valor == (int) valor) {
                         return String.valueOf((int) valor);
@@ -321,19 +427,18 @@ public class ExcelHandler {
     }
 
     /**
-     * Método para exportar residentes a un archivo Excel - CON CARRERA AUTOMÁTICA
+     * MEJORADO: Exportación con mensajes más concisos
      */
     public static void exportarAExcel(List<ModeloResidente> residentes, File archivo) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Residentes");
 
-            // Crear fila de encabezados - SIN CARRERA
+            // Crear encabezados
             Row headerRow = sheet.createRow(0);
             for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(COLUMNAS_ESPERADAS[i]);
 
-                // Estilo para encabezados
                 CellStyle headerStyle = workbook.createCellStyle();
                 Font font = workbook.createFont();
                 font.setBold(true);
@@ -341,7 +446,7 @@ public class ExcelHandler {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Crear filas de datos - SIN CARRERA
+            // Crear filas de datos
             int rowNum = 1;
             for (ModeloResidente residente : residentes) {
                 Row row = sheet.createRow(rowNum++);
@@ -349,7 +454,6 @@ public class ExcelHandler {
                 row.createCell(1).setCellValue(residente.getNombre());
                 row.createCell(2).setCellValue(residente.getApellidoPaterno());
                 row.createCell(3).setCellValue(residente.getApellidoMaterno());
-                // ELIMINADO: carrera - no se exporta
                 row.createCell(4).setCellValue(residente.getSemestre());
                 row.createCell(5).setCellValue(residente.getCorreo());
                 row.createCell(6).setCellValue(residente.getTelefono());
@@ -366,27 +470,22 @@ public class ExcelHandler {
             }
 
             JOptionPane.showMessageDialog(null,
-                    "Archivo Excel exportado exitosamente:\n" + archivo.getAbsolutePath() +
-                            "\n\n⚠️ NOTA: Todos los residentes tienen asignada la carrera:\n\"" + CARRERA_FIJA + "\"",
-                    "Exportación exitosa", JOptionPane.INFORMATION_MESSAGE);
+                    "✅ Archivo exportado exitosamente\n📁 " + archivo.getAbsolutePath(),
+                    "Exportación completada", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null,
-                    "Error al exportar archivo Excel: " + e.getMessage(),
+                    "❌ Error al exportar: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    /**
-     * Método para seleccionar un archivo Excel para importar
-     */
     public static File seleccionarArchivoExcel() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setDialogTitle("Seleccionar archivo Excel (SIN columna Carrera)");
+        fileChooser.setDialogTitle("Seleccionar archivo Excel");
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
 
-        // Filtro para archivos Excel
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "Archivos Excel (*.xlsx, *.xls)", "xlsx", "xls");
         fileChooser.setFileFilter(filter);
@@ -398,17 +497,13 @@ public class ExcelHandler {
         return null;
     }
 
-    /**
-     * Método para seleccionar ubicación para guardar archivo Excel
-     */
     public static File seleccionarUbicacionGuardar() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setDialogTitle("Guardar archivo Excel (SIN columna Carrera)");
+        fileChooser.setDialogTitle("Guardar archivo Excel");
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
         fileChooser.setSelectedFile(new File("residentes_sistemas.xlsx"));
 
-        // Filtro para archivos Excel
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "Archivos Excel (*.xlsx)", "xlsx");
         fileChooser.setFileFilter(filter);
@@ -425,27 +520,17 @@ public class ExcelHandler {
     }
 
     /**
-     * Método completo para importar Excel con selección de archivo
+     * MEJORADO: Método completo con información más concisa
      */
     public static List<ModeloResidente> importarExcelCompleto() {
-        // Mostrar información sobre el formato esperado
-        String mensaje = "📋 Formato de archivo Excel esperado:\n\n" +
-                "Columnas requeridas (en este orden):\n" +
-                "1. Número de Control\n" +
-                "2. Nombre\n" +
-                "3. Apellido Paterno\n" +
-                "4. Apellido Materno\n" +
-                "5. Semestre\n" +
-                "6. Correo\n" +
-                "7. Teléfono\n\n" +
-                "⚠️ IMPORTANTE:\n" +
-                "• NO incluya columna 'Carrera' en el Excel\n" +
-                "• La carrera se asigna automáticamente como:\n" +
-                "  \"" + CARRERA_FIJA + "\"\n\n" +
-                "¿Continuar con la importación?";
+        String mensaje = "📋 Formato requerido:\n" +
+                "1. Número de Control | 2. Nombre | 3. Apellido Paterno\n" +
+                "4. Apellido Materno | 5. Semestre (9-15) | 6. Correo | 7. Teléfono\n\n" +
+                "🎓 La carrera se asigna automáticamente\n" +
+                "¿Continuar?";
 
         int opcion = JOptionPane.showConfirmDialog(null, mensaje,
-                "Información de Importación", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                "Importar Excel", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (opcion == JOptionPane.YES_OPTION) {
             File archivo = seleccionarArchivoExcel();
@@ -456,9 +541,6 @@ public class ExcelHandler {
         return new ArrayList<>();
     }
 
-    /**
-     * Obtener la carrera fija que se asigna automáticamente
-     */
     public static String getCarreraFija() {
         return CARRERA_FIJA;
     }

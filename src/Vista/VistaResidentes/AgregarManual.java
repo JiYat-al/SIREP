@@ -10,8 +10,7 @@ public class AgregarManual extends JDialog {
     private JTextField txtNombre;
     private JTextField txtApellidoPaterno;
     private JTextField txtApellidoMaterno;
-    // ELIMINADO: private JTextField txtCarrera;
-    private JSpinner spnSemestre;
+    private JSpinner spnSemestre; // MODIFICADO: Rango 9-15
     private JTextField txtCorreo;
     private JTextField txtTelefono;
     private JButton btnGuardar;
@@ -22,6 +21,9 @@ public class AgregarManual extends JDialog {
     private boolean guardado = false;
     private ControladorAgrManual controlador;
     private final Color colorPrincipal = new Color(92, 93, 169);
+    private final Color colorExito = new Color(76, 175, 80);
+    private final Color colorError = new Color(244, 67, 54);
+    private final Color colorAdvertencia = new Color(255, 152, 0);
 
     // CARRERA FIJA PARA TODOS LOS RESIDENTES
     private final String CARRERA_FIJA = "Ingeniería en Sistemas Computacionales";
@@ -32,7 +34,7 @@ public class AgregarManual extends JDialog {
         // Inicializar controlador
         controlador = new ControladorAgrManual(this);
 
-        setSize(650, 650); // REDUCIDO EL TAMAÑO al quitar campo carrera
+        setSize(650, 650);
         setLocationRelativeTo(parent);
         setResizable(false);
         setLayout(new BorderLayout());
@@ -105,10 +107,10 @@ public class AgregarManual extends JDialog {
 
         mainPanel.add(panelBotones, BorderLayout.SOUTH);
 
-        // Nota sobre campos obligatorios
+        // Nota sobre campos obligatorios y carrera
         JPanel panelNota = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelNota.setBackground(Color.WHITE);
-        JLabel lblNota = new JLabel("⚠️ * Campos obligatorios - 🎓 Carrera: " + CARRERA_FIJA);
+        JLabel lblNota = new JLabel("⚠️ * Campos obligatorios - 🎓 Carrera: " + CARRERA_FIJA + " - 📚 Semestre: 9-15");
         lblNota.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblNota.setForeground(new Color(150, 150, 150));
         panelNota.add(lblNota);
@@ -158,19 +160,17 @@ public class AgregarManual extends JDialog {
         txtApellidoMaterno.setToolTipText("Opcional. Solo letras, espacios y acentos");
         panel.add(txtApellidoMaterno, gbc);
 
-        // ELIMINADO: Campo Carrera - ahora es automático
-
-        // Semestre
+        // Semestre - MODIFICADO: Rango 9-15
         gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
         panel.add(crearEtiqueta("* Semestre"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
-        spnSemestre = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
+        spnSemestre = new JSpinner(new SpinnerNumberModel(9, 9, 15, 1)); // Rango 9-15
         spnSemestre.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         spnSemestre.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(colorPrincipal, 2, true),
                 BorderFactory.createEmptyBorder(8, 12, 8, 12)
         ));
-        spnSemestre.setToolTipText("Semestre actual del estudiante (1-12)");
+        spnSemestre.setToolTipText("Semestre actual del estudiante (9-15)");
         ((JSpinner.DefaultEditor) spnSemestre.getEditor()).getTextField().setEditable(false);
         panel.add(spnSemestre, gbc);
 
@@ -257,20 +257,20 @@ public class AgregarManual extends JDialog {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Color colorLimpiar = new Color(158, 158, 158);
                 // Sombra
-                g2.setColor(new Color(60,60,100,60));
-                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 35, 35);
+                g2.setColor(new Color(0, 0, 0, 30));
+                g2.fillRoundRect(3, 5, getWidth()-6, getHeight()-3, 25, 25);
                 // Gradiente
                 GradientPaint grad = new GradientPaint(0, 0, hover ? colorLimpiar.darker() : colorLimpiar,
-                        getWidth(), getHeight(), colorLimpiar.brighter());
+                        0, getHeight(), colorLimpiar.brighter());
                 g2.setPaint(grad);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 35, 35);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
                 super.paintComponent(g);
                 g2.dispose();
             }
         };
 
-        // Botón Guardar
-        btnGuardar = new JButton("💾 Guardar") {
+        // Botón Guardar - MEJORADO
+        btnGuardar = new JButton("💾 Guardar en BD") {
             private boolean hover = false;
             {
                 setContentAreaFilled(false);
@@ -288,15 +288,14 @@ public class AgregarManual extends JDialog {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color colorGuardar = new Color(46, 125, 50);
                 // Sombra
-                g2.setColor(new Color(60,60,100,60));
-                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 40, 40);
+                g2.setColor(new Color(0, 0, 0, 30));
+                g2.fillRoundRect(3, 5, getWidth()-6, getHeight()-3, 25, 25);
                 // Gradiente
-                GradientPaint grad = new GradientPaint(0, 0, hover ? colorGuardar.darker() : colorGuardar,
-                        getWidth(), getHeight(), colorGuardar.brighter());
+                GradientPaint grad = new GradientPaint(0, 0, hover ? colorExito.darker() : colorExito,
+                        0, getHeight(), colorExito.brighter());
                 g2.setPaint(grad);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
                 super.paintComponent(g);
                 g2.dispose();
             }
@@ -321,15 +320,14 @@ public class AgregarManual extends JDialog {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color colorCancelar = new Color(211, 47, 47);
                 // Sombra
-                g2.setColor(new Color(60,60,100,60));
-                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 40, 40);
+                g2.setColor(new Color(0, 0, 0, 30));
+                g2.fillRoundRect(3, 5, getWidth()-6, getHeight()-3, 25, 25);
                 // Gradiente
-                GradientPaint grad = new GradientPaint(0, 0, hover ? colorCancelar.darker() : colorCancelar,
-                        getWidth(), getHeight(), colorCancelar.brighter());
+                GradientPaint grad = new GradientPaint(0, 0, hover ? colorError.darker() : colorError,
+                        0, getHeight(), colorError.brighter());
                 g2.setPaint(grad);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
                 super.paintComponent(g);
                 g2.dispose();
             }
@@ -341,7 +339,7 @@ public class AgregarManual extends JDialog {
     }
 
     private void configurarEventos() {
-        btnGuardar.addActionListener(e -> guardarResidente());
+        btnGuardar.addActionListener(e -> guardarResidenteDirectoABD());
         btnCancelar.addActionListener(e -> cancelar());
         btnLimpiar.addActionListener(e -> limpiarFormulario());
 
@@ -367,9 +365,6 @@ public class AgregarManual extends JDialog {
         });
     }
 
-    /**
-     * Configurar validación en tiempo real para mejora de UX
-     */
     private void configurarValidacionTiempoReal() {
         // Validación del número de control en tiempo real
         txtNumeroControl.addKeyListener(new KeyAdapter() {
@@ -489,21 +484,21 @@ public class AgregarManual extends JDialog {
 
     private void mostrarBordeExito(JTextField campo) {
         campo.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(76, 175, 80), 2, true),
+                BorderFactory.createLineBorder(colorExito, 2, true),
                 BorderFactory.createEmptyBorder(8, 12, 8, 12)
         ));
     }
 
     private void mostrarBordeError(JTextField campo) {
         campo.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(244, 67, 54), 2, true),
+                BorderFactory.createLineBorder(colorError, 2, true),
                 BorderFactory.createEmptyBorder(8, 12, 8, 12)
         ));
     }
 
     private void mostrarBordeAdvertencia(JTextField campo) {
         campo.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 152, 0), 2, true),
+                BorderFactory.createLineBorder(colorAdvertencia, 2, true),
                 BorderFactory.createEmptyBorder(8, 12, 8, 12)
         ));
     }
@@ -515,9 +510,9 @@ public class AgregarManual extends JDialog {
         ));
     }
 
-    // ==================== MÉTODOS DE INTERFAZ - SOLO DELEGACIÓN ====================
+    // ==================== MÉTODOS DE INTERFAZ - GUARDADO DIRECTO A BD ====================
 
-    private void guardarResidente() {
+    private void guardarResidenteDirectoABD() {
         // Restaurar bordes normales antes de validar
         restaurarTodosLosBordes();
 
@@ -531,8 +526,8 @@ public class AgregarManual extends JDialog {
         String correo = txtCorreo.getText().trim();
         String telefono = txtTelefono.getText().trim();
 
-        // DELEGAR AL CONTROLADOR
-        boolean resultado = controlador.guardarResidente(
+        // LLAMAR AL CONTROLADOR PARA GUARDAR DIRECTAMENTE EN BD
+        boolean resultado = controlador.guardarResidenteDirectoEnBD(
                 numeroControl, nombre, apellidoPaterno, apellidoMaterno,
                 carrera, semestre, correo, telefono
         );
@@ -582,7 +577,6 @@ public class AgregarManual extends JDialog {
         restaurarBordeNormal(txtNombre);
         restaurarBordeNormal(txtApellidoPaterno);
         restaurarBordeNormal(txtApellidoMaterno);
-        // ELIMINADO: restaurarBordeNormal(txtCarrera);
         restaurarBordeNormal(txtCorreo);
         restaurarBordeNormal(txtTelefono);
     }
@@ -594,8 +588,7 @@ public class AgregarManual extends JDialog {
                 !txtNombre.getText().trim().isEmpty() ||
                 !txtApellidoPaterno.getText().trim().isEmpty() ||
                 !txtApellidoMaterno.getText().trim().isEmpty() ||
-                // ELIMINADO: !txtCarrera.getText().trim().isEmpty() ||
-                !((Integer) spnSemestre.getValue()).equals(1) ||
+                !((Integer) spnSemestre.getValue()).equals(9) ||
                 !txtCorreo.getText().trim().isEmpty() ||
                 !txtTelefono.getText().trim().isEmpty();
     }
@@ -605,8 +598,7 @@ public class AgregarManual extends JDialog {
         txtNombre.setText("");
         txtApellidoPaterno.setText("");
         txtApellidoMaterno.setText("");
-        // ELIMINADO: txtCarrera.setText("");
-        spnSemestre.setValue(1);
+        spnSemestre.setValue(9); // Valor mínimo
         txtCorreo.setText("");
         txtTelefono.setText("");
     }
@@ -645,42 +637,6 @@ public class AgregarManual extends JDialog {
         return txtTelefono.getText().trim();
     }
 
-    // ==================== SETTERS PARA PRE-CARGAR DATOS ====================
-
-    public void setNumeroControl(String numeroControl) {
-        txtNumeroControl.setText(numeroControl);
-    }
-
-    public void setNombre(String nombre) {
-        txtNombre.setText(nombre);
-    }
-
-    public void setApellidoPaterno(String apellidoPaterno) {
-        txtApellidoPaterno.setText(apellidoPaterno);
-    }
-
-    public void setApellidoMaterno(String apellidoMaterno) {
-        txtApellidoMaterno.setText(apellidoMaterno);
-    }
-
-    // ELIMINADO: setCarrera() - ya no es necesario
-
-    public void setSemestre(String semestre) {
-        try {
-            spnSemestre.setValue(Integer.parseInt(semestre));
-        } catch (NumberFormatException e) {
-            spnSemestre.setValue(1);
-        }
-    }
-
-    public void setCorreo(String correo) {
-        txtCorreo.setText(correo);
-    }
-
-    public void setTelefono(String telefono) {
-        txtTelefono.setText(telefono);
-    }
-
     // ==================== MÉTODOS DE ESTADO ====================
 
     public boolean isGuardado() {
@@ -689,55 +645,5 @@ public class AgregarManual extends JDialog {
 
     public void setGuardado(boolean guardado) {
         this.guardado = guardado;
-    }
-
-    // ==================== MÉTODO PARA AUTOCOMPLETAR (MODIFICADO) ====================
-
-    public void autocompletarDatosPrueba() {
-        int opcion = JOptionPane.showConfirmDialog(this,
-                "¿Desea autocompletar con datos de prueba?",
-                "Autocompletar Datos",
-                JOptionPane.YES_NO_OPTION);
-
-        if (opcion == JOptionPane.YES_OPTION) {
-            // Generar número de control actual
-            int anioActual = java.time.Year.now().getValue() % 100;
-            String numeroControl = String.format("%02d", anioActual) + "160" +
-                    String.format("%03d", (int)(Math.random() * 999) + 1);
-
-            setNumeroControl(numeroControl);
-            setNombre("Juan Carlos");
-            setApellidoPaterno("García");
-            setApellidoMaterno("López");
-            // ELIMINADO: setCarrera() - carrera es automática
-            setSemestre("6");
-            setCorreo("juan.garcia@tecnm.mx");
-            setTelefono("4421234567");
-
-            JOptionPane.showMessageDialog(this,
-                    "Datos de prueba cargados correctamente\nCarrera: " + CARRERA_FIJA,
-                    "Autocompletado Exitoso",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    /**
-     * Configurar atajos de teclado
-     */
-    private void configurarAtajosTeclado() {
-        // Ctrl+T para autocompletar datos de prueba
-        KeyStroke ctrlT = KeyStroke.getKeyStroke("ctrl T");
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ctrlT, "AUTOCOMPLETE");
-        getRootPane().getActionMap().put("AUTOCOMPLETE", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                autocompletarDatosPrueba();
-            }
-        });
-    }
-
-    // Llamar este método en el constructor
-    {
-        SwingUtilities.invokeLater(() -> configurarAtajosTeclado());
     }
 }
