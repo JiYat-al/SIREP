@@ -26,12 +26,15 @@ public class DocenteDAO {
         }
         return false;
     }
-    /**Cargar tabla docentes*/
+    //Cargar tabla docentes
     public List<Docente> obtenerTodos() {
         List<Docente> lista = new ArrayList<>();
-        String sql="SELECT * FROM docente WHERE numero_tarjeta NOT IN (SELECT numero_tarjeta FROM usuario)";
+        String sql="SELECT numero_tarjeta,nombre,apellido_paterno,apellido_materno,correo FROM " +
+                "docente WHERE estatus = true AND" +
+                " numero_tarjeta NOT IN (SELECT numero_tarjeta FROM usuario);";
 
-        /**String sql = "SELECT * FROM docente";*/
+
+        //String sql = "SELECT * FROM docente";
 
         try (Connection con = Conexion_bd.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql);
@@ -120,7 +123,7 @@ public class DocenteDAO {
 
 
     public boolean eliminarDocente(int numeroTarjeta) {
-        String sql = "DELETE FROM public.docente WHERE numero_tarjeta = ?";
+        String sql = "UPDATE public.docente SET estatus=false WHERE numero_tarjeta = ?";
         try (Connection con = Conexion_bd.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 

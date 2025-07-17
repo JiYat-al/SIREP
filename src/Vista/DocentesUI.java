@@ -1,9 +1,7 @@
-
 package Vista;
 
 import Controlador.ControladorDocente;
 import Modelo.Docente;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -15,19 +13,37 @@ public class DocentesUI extends JFrame {
     private DefaultTableModel modelo;
     private JTable tabla;
     private final Color colorPrincipal = new Color(92, 93, 169);
-    private final Color colorFondo = new Color(245, 243, 255);
     private ArrayList<Docente> listaDocentes = new ArrayList<>();
     private ControladorDocente controlador = new ControladorDocente();
+    private JButton btnEditar;
+    private JButton btnDarBaja;
 
+
+    // Componentes principales
+    private JTextField textField1;
+    private JScrollPane scrollPane;
+    private JLabel lblBuscar;
+    private JLabel lblResultados;
+    private JButton btnActualizar;
+    private JButton btnLimpiarBusqueda;
+    private JButton btnNuevoDocente;
+
+    // Modelo de la tabla y filtros
+    private TableRowSorter<DefaultTableModel> sorter;
 
     public DocentesUI() {
-        /* cargarDesdeBD();*/
-        setTitle("Docentes");
+        setTitle("Sistema SIREP - Gestión de Docentes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setMinimumSize(new Dimension(900, 600));
+        setMinimumSize(new Dimension(1200, 700));
 
-        // Fondo degradado con líneas decorativas y detalles
+        configurarInterfaz();
+        configurarEventos();
+        cargarDatosIniciales();
+    }
+
+    private void configurarInterfaz() {
+        // Panel principal con fondo degradado
         JPanel mainPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -40,7 +56,7 @@ public class DocentesUI extends JFrame {
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, getWidth(), getHeight());
 
-                // Líneas curvas decorativas en la esquina superior izquierda
+                // Líneas curvas decorativas
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setStroke(new BasicStroke(3f));
                 g2.setColor(new Color(180, 170, 255, 80));
@@ -48,16 +64,51 @@ public class DocentesUI extends JFrame {
                 g2.setColor(new Color(140, 130, 220, 60));
                 g2.drawArc(-80, -80, 200, 200, 0, 360);
 
-                // Líneas curvas decorativas en la esquina inferior derecha
                 g2.setColor(new Color(180, 170, 255, 60));
                 g2.drawArc(getWidth() - 180, getHeight() - 180, 160, 160, 0, 360);
                 g2.setColor(new Color(140, 130, 220, 40));
                 g2.drawArc(getWidth() - 120, getHeight() - 120, 100, 100, 0, 360);
             }
         };
-        mainPanel.setBackground(colorFondo);
 
-        // Barra lateral mejorada
+        // Crear barra lateral
+        crearBarraLateral(mainPanel);
+
+        // Panel contenido principal
+        JPanel panelContenido = new JPanel(new BorderLayout());
+        panelContenido.setOpaque(false);
+
+        // Header
+        JPanel header = crearHeader();
+        panelContenido.add(header, BorderLayout.NORTH);
+
+        // Panel central con tabla
+        JPanel panelCentral = new JPanel(new BorderLayout());
+        panelCentral.setOpaque(false);
+        panelCentral.setBorder(BorderFactory.createEmptyBorder(0, 38, 20, 38));
+
+        // Panel de búsqueda
+        JPanel panelBusqueda = crearPanelBusqueda();
+        panelCentral.add(panelBusqueda, BorderLayout.NORTH);
+
+        // Configurar tabla
+        configurarTabla();
+        panelCentral.add(scrollPane, BorderLayout.CENTER);
+
+        // Panel de botones
+        JPanel panelBotones = crearPanelBotones();
+        panelCentral.add(panelBotones, BorderLayout.SOUTH);
+
+        panelContenido.add(panelCentral, BorderLayout.CENTER);
+
+        // Configurar botón regresar
+        crearBotonRegresar(mainPanel);
+
+        mainPanel.add(panelContenido, BorderLayout.CENTER);
+        setContentPane(mainPanel);
+    }
+
+    private void crearBarraLateral(JPanel mainPanel) {
         JPanel barraLateral = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -79,15 +130,15 @@ public class DocentesUI extends JFrame {
 
         GridBagConstraints gbcL = new GridBagConstraints();
         gbcL.gridx = 0; gbcL.gridy = 0;
-        gbcL.insets = new Insets(24, 0, 18, 0); // icono separado arriba
+        gbcL.insets = new Insets(24, 0, 18, 0);
         gbcL.anchor = GridBagConstraints.NORTH;
-        JLabel icono = new JLabel("\uD83D\uDC68\u200D\uD83C\uDF93", SwingConstants.CENTER); // Emoji maestro
+        JLabel icono = new JLabel("👨‍🎓", SwingConstants.CENTER);
         icono.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
         icono.setForeground(Color.WHITE);
         barraLateral.add(icono, gbcL);
 
         gbcL.gridy++;
-        gbcL.insets = new Insets(0, 0, 0, 0); // sin margen extra
+        gbcL.insets = new Insets(0, 0, 0, 0);
         JLabel verticalTitle = new JLabel("<html>D<br>O<br>C<br>E<br>N<br>T<br>E<br>S</html>");
         verticalTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         verticalTitle.setForeground(new Color(245, 243, 255, 200));
@@ -98,7 +149,7 @@ public class DocentesUI extends JFrame {
         gbcL.gridy++;
         gbcL.weighty = 1.0;
         gbcL.anchor = GridBagConstraints.SOUTH;
-        gbcL.insets = new Insets(0, 0, 24, 0); // margen abajo
+        gbcL.insets = new Insets(0, 0, 24, 0);
         JButton btnAyuda = new JButton("?");
         btnAyuda.setFont(new Font("Segoe UI", Font.BOLD, 22));
         btnAyuda.setForeground(colorPrincipal);
@@ -116,12 +167,9 @@ public class DocentesUI extends JFrame {
         barraLateral.add(btnAyuda, gbcL);
 
         mainPanel.add(barraLateral, BorderLayout.WEST);
+    }
 
-        // Panel contenido
-        JPanel panelContenido = new JPanel(new BorderLayout());
-        panelContenido.setOpaque(false);
-
-        // Encabezado con fondo blanco y borde inferior
+    private JPanel crearHeader() {
         JPanel header = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -135,14 +183,15 @@ public class DocentesUI extends JFrame {
         };
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+
         JLabel lblTitulo = new JLabel("Banco de Docentes");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 34));
         lblTitulo.setForeground(colorPrincipal);
         lblTitulo.setBorder(BorderFactory.createEmptyBorder(32, 38, 24, 0));
         header.add(lblTitulo, BorderLayout.WEST);
 
-        // Botón Registrar
-        JButton btnNuevo = new JButton("Registrar nuevo docente") {
+        // Botón Registrar nuevo
+        btnNuevoDocente = new JButton("Registrar nuevo docente") {
             private boolean hover = false;
             {
                 setContentAreaFilled(false);
@@ -161,8 +210,8 @@ public class DocentesUI extends JFrame {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 // Sombra
-                g2.setColor(new Color(60,60,100,60));
-                g2.fillRoundRect(4, 6, getWidth()-8, getHeight()-4, 40, 40);
+                g2.setColor(new Color(60, 60, 100, 60));
+                g2.fillRoundRect(4, 6, getWidth() - 8, getHeight() - 4, 40, 40);
                 // Gradiente
                 GradientPaint grad = new GradientPaint(0, 0, hover ? colorPrincipal.darker() : colorPrincipal,
                         getWidth(), getHeight(), colorPrincipal.brighter());
@@ -172,28 +221,120 @@ public class DocentesUI extends JFrame {
                 g2.dispose();
             }
         };
+
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 38, 20));
         btnPanel.setOpaque(false);
-        btnPanel.add(btnNuevo);
+        btnPanel.add(btnNuevoDocente);
         header.add(btnPanel, BorderLayout.EAST);
-        panelContenido.add(header, BorderLayout.NORTH);
 
-        // Tabla de docentes
-        String[] columnas = {
-                "No. Tarjeta", "Nombre", "Correo", ""
+        return header;
+    }
+
+    private JPanel crearPanelBusqueda() {
+        JPanel panelBusqueda = new JPanel();
+        panelBusqueda.setLayout(new BoxLayout(panelBusqueda, BoxLayout.Y_AXIS));
+        panelBusqueda.setOpaque(false);
+        panelBusqueda.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+
+        lblBuscar = new JLabel("Buscar docente:");
+        lblBuscar.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblBuscar.setForeground(colorPrincipal);
+        lblBuscar.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+
+        textField1 = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                super.paintComponent(g);
+                g2.dispose();
+            }
         };
+        textField1.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        textField1.setBackground(Color.WHITE);
+        textField1.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(2, 2, 2, 2),
+                BorderFactory.createEmptyBorder(8, 16, 8, 16)
+        ));
+        textField1.setPreferredSize(new Dimension(300, 40));
+
+        // Panel para el campo de búsqueda y botones
+        JPanel panelCampo = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        panelCampo.setOpaque(false);
+        panelCampo.add(textField1);
+
+        btnActualizar = crearBotonBusqueda("Buscar", "🔍");
+        btnLimpiarBusqueda = crearBotonBusqueda("Limpiar", "✖");
+
+        panelCampo.add(Box.createHorizontalStrut(10));
+        panelCampo.add(btnActualizar);
+        panelCampo.add(Box.createHorizontalStrut(10));
+        panelCampo.add(btnLimpiarBusqueda);
+
+        // Label de resultados
+        lblResultados = new JLabel("Mostrando todos los docentes");
+        lblResultados.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        lblResultados.setForeground(new Color(100, 100, 100));
+        lblResultados.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+
+        panelBusqueda.add(lblBuscar);
+        panelBusqueda.add(panelCampo);
+        panelBusqueda.add(lblResultados);
+
+        return panelBusqueda;
+    }
+
+    private JButton crearBotonBusqueda(String texto, String icono) {
+        JButton boton = new JButton(icono + " " + texto) {
+            private boolean hover = false;
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(colorPrincipal);
+                setFont(new Font("Segoe UI", Font.BOLD, 14));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
+                    public void mouseExited(MouseEvent e) { hover = false; repaint(); }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (hover) {
+                    g2.setColor(new Color(colorPrincipal.getRed(), colorPrincipal.getGreen(), colorPrincipal.getBlue(), 30));
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                }
+                g2.setColor(colorPrincipal);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, 20, 20);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+        return boton;
+    }
+
+    private void configurarTabla() {
+        String[] columnas = {"No. Tarjeta", "Nombre", "Correo"};
         modelo = new DefaultTableModel(null, columnas) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 3;
+                return false;
             }
         };
+
         tabla = new JTable(modelo) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return column == 3;
             }
         };
+
         tabla.setFont(new Font("Segoe UI", Font.PLAIN, 17));
         tabla.setRowHeight(36);
         tabla.setShowVerticalLines(false);
@@ -204,14 +345,16 @@ public class DocentesUI extends JFrame {
         tabla.getTableHeader().setForeground(colorPrincipal);
         ((DefaultTableCellRenderer) tabla.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.LEFT);
 
-        // Reemplaza el renderer/editor de la columna de acciones:
-        tabla.getColumnModel().getColumn(3).setCellRenderer(new BotonAccionesRenderer());
-        tabla.getColumnModel().getColumn(3).setCellEditor(new BotonAccionesEditor(new JCheckBox()));
+        // Configurar filtro de búsqueda
+        sorter = new TableRowSorter<>(modelo);
+        tabla.setRowSorter(sorter);
 
-        JScrollPane scrollTabla = new JScrollPane(tabla);
-        scrollTabla.setBorder(BorderFactory.createEmptyBorder(0, 38, 38, 38));
-        scrollTabla.getViewport().setBackground(Color.WHITE);
-        scrollTabla.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
+
+
+        scrollPane = new JScrollPane(tabla);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
             protected void configureScrollBarColors() {
                 this.thumbColor = colorPrincipal;
                 this.trackColor = new Color(235, 235, 250);
@@ -226,39 +369,147 @@ public class DocentesUI extends JFrame {
                 return jbutton;
             }
         });
-        panelContenido.add(scrollTabla, BorderLayout.CENTER);
+    }
 
-        mainPanel.add(panelContenido, BorderLayout.CENTER);
-        setContentPane(mainPanel);
+    private JPanel crearPanelBotones() {
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        panelBotones.setOpaque(false);
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 20));
 
-        // Docentes de ejemplo:
+        // Botones con los colores exactos de empresas
+        btnEditar = crearBotonAccion("Editar", new Color(108, 117, 202)); // Morado empresas
+        btnDarBaja = crearBotonAccion("Dar de baja", new Color(220, 53, 69)); // Rojo empresas
 
-        cargarTabla();
+        btnEditar.setEnabled(false);
+        btnDarBaja.setEnabled(false);
+
+        // Agregar listener para la selección de la tabla
+        btnDarBaja.addActionListener(e -> {
+            int filaSeleccionada = tabla.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                int modeloFila = tabla.convertRowIndexToModel(filaSeleccionada);
+                int numeroTarjeta = (int) modelo.getValueAt(modeloFila, 0);
+
+                int confirm = JOptionPane.showConfirmDialog(this,
+                        "¿Estás seguro de que deseas dar de baja a este docente?",
+                        "Confirmar baja",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    boolean exito = controlador.eliminarDocente(numeroTarjeta);
+                    if (exito) {
+                        JOptionPane.showMessageDialog(this, "Docente dado de baja exitosamente.");
+                        cargarDesdeBD();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "No se pudo dar de baja al docente.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
 
 
+        // Agregar acción al botón editar
+        btnEditar.addActionListener(e -> {
+            int filaSeleccionada = tabla.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                editarDocente(filaSeleccionada);
+            }
+        });
 
-        // ---- Evento del botón Registrar (Abre formulario) ----
-        btnNuevo.addActionListener(e -> {
-            RegistrarDocenteDialog dialog = new RegistrarDocenteDialog(this, colorPrincipal, null);
-            dialog.setVisible(true);
-            /**if (dialog.seRegistro) {
-             listaDocentes.add(dialog.docenteEditado);
-             cargarTabla();
-             }*/
-            if (dialog.seRegistro) {
-                boolean exito = controlador.agregarDocente(dialog.docenteEditado);
-                if (exito) {
-                    JOptionPane.showMessageDialog(this, "Docente registrado exitosamente.");
-                    cargarDesdeBD(); // Nuevo método que vuelve a consultar los docentes
+        // Agregar botones al panel
+        panelBotones.add(btnEditar);
+        panelBotones.add(btnDarBaja);
+
+        return panelBotones;
+    }
+
+    private JButton crearBotonAccion(String texto, Color color) {
+        JButton boton = new JButton(texto) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int width = getWidth();
+                int height = getHeight();
+
+                // Crear gradiente suave
+                GradientPaint gp;
+                if (isEnabled()) {
+                    gp = new GradientPaint(
+                            0, 0,
+                            color,
+                            0, height,
+                            color.brighter()
+                    );
                 } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo registrar el docente.", "Error", JOptionPane.ERROR_MESSAGE);
+                    Color colorDeshabilitado = color;
+                    gp = new GradientPaint(
+                            0, 0,
+                            colorDeshabilitado,
+                            0, height,
+                            colorDeshabilitado
+                    );
+                }
+
+                // Pintar fondo con bordes redondeados
+                g2d.setPaint(gp);
+                g2d.fillRoundRect(0, 0, width, height, 8, 8);
+
+                // Efecto de brillo superior sutil
+                if (isEnabled()) {
+                    g2d.setColor(new Color(255, 255, 255, 50));
+                    g2d.fillRoundRect(0, 0, width, height/2, 8, 8);
+                }
+
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        boton.setOpaque(false);
+        boton.setContentAreaFilled(false);
+        boton.setBorderPainted(false);
+        boton.setFocusPainted(false);
+        boton.setForeground(Color.WHITE);
+        boton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        boton.setPreferredSize(new Dimension(120, 35));
+
+        // Efectos hover más sutiles
+        boton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (boton.isEnabled()) {
+                    boton.setFont(boton.getFont().deriveFont(Font.BOLD, 14.0f));
                 }
             }
 
+            @Override
+            public void mouseExited(MouseEvent e) {
+                boton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (boton.isEnabled()) {
+                    boton.setFont(boton.getFont().deriveFont(Font.BOLD, 13.5f));
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (boton.isEnabled()) {
+                    boton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                }
+            }
         });
 
-        // Botón Regresar
-        JButton btnRegresar = new JButton("\u2190"); // Flecha izquierda Unicode
+        return boton;
+    }
+
+    private void crearBotonRegresar(JPanel mainPanel) {
+        JButton btnRegresar = new JButton("←");
         btnRegresar.setFont(new Font("Segoe UI", Font.BOLD, 24));
         btnRegresar.setForeground(colorPrincipal);
         btnRegresar.setBackground(Color.WHITE);
@@ -267,24 +518,80 @@ public class DocentesUI extends JFrame {
         btnRegresar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRegresar.addActionListener(e -> {
             dispose();
-            /**  new Menu().setVisible(true);*/
         });
 
-        // Panel superior para el botón
         JPanel panelTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         panelTop.setOpaque(false);
         panelTop.add(btnRegresar);
 
-        // Agrega el panelTop al principio del BorderLayout.NORTH de tu ventana principal
         mainPanel.add(panelTop, BorderLayout.NORTH);
+    }
+
+    private void configurarEventos() {
+        // Evento del botón Registrar nuevo docente
+        btnNuevoDocente.addActionListener(e -> {
+            RegistrarDocenteDialog dialog = new RegistrarDocenteDialog(this, colorPrincipal, null);
+            dialog.setVisible(true);
+            if (dialog.seRegistro) {
+                boolean exito = controlador.agregarDocente(dialog.docenteEditado);
+                if (exito) {
+                    JOptionPane.showMessageDialog(this, "Docente registrado exitosamente.");
+                    cargarDesdeBD();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo registrar el docente.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        tabla.getSelectionModel().addListSelectionListener(e -> {
+            boolean filaSeleccionada = tabla.getSelectedRow() != -1;
+            btnEditar.setEnabled(filaSeleccionada);
+            btnDarBaja.setEnabled(filaSeleccionada);
+        });
+
+
+        // Evento del botón buscar
+        btnActualizar.addActionListener(e -> buscarDocente());
+
+        // Evento del botón limpiar búsqueda
+        btnLimpiarBusqueda.addActionListener(e -> limpiarBusqueda());
+
+        // Evento de búsqueda en tiempo real
+        textField1.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                buscarDocente();
+            }
+        });
+    }
+
+    private void buscarDocente() {
+        String texto = textField1.getText().trim();
+        if (texto.isEmpty()) {
+            sorter.setRowFilter(null);
+            lblResultados.setText("Mostrando todos los docentes");
+        } else {
+            RowFilter<DefaultTableModel, Object> filter = RowFilter.regexFilter("(?i)" + texto);
+            sorter.setRowFilter(filter);
+            int resultados = tabla.getRowCount();
+            lblResultados.setText("Mostrando " + resultados + " resultado(s) para: \"" + texto + "\"");
+        }
+    }
+
+    private void limpiarBusqueda() {
+        textField1.setText("");
+        sorter.setRowFilter(null);
+        lblResultados.setText("Mostrando todos los docentes");
+    }
+
+    private void cargarDatosIniciales() {
         cargarDesdeBD();
     }
+
     private void cargarDesdeBD() {
         listaDocentes = new ArrayList<>(controlador.obtenerDocentes());
         cargarTabla();
     }
-
-
 
     private void cargarTabla() {
         modelo.setRowCount(0);
@@ -296,129 +603,10 @@ public class DocentesUI extends JFrame {
             modelo.addRow(new Object[]{
                     d.getNumeroTarjeta(),
                     nombreCompleto.trim(),
-                    d.getCorreo() != null ? d.getCorreo() : "",
-                    ""
+                    d.getCorreo() != null ? d.getCorreo() : ""
             });
         }
     }
-
-    /**momoooooooooooooooooo2*/
-
-    // Botón Editar y Eliminar bonito en la tabla
-    class BotonAccionesRenderer extends JPanel implements TableCellRenderer {
-        private final JButton btnEditar;
-        private final JButton btnEliminar;
-
-        public BotonAccionesRenderer() {
-            // Cambia el FlowLayout a CENTER y ajusta el margen izquierdo
-            setLayout(new FlowLayout(FlowLayout.CENTER, 16, 0));
-            setOpaque(false);
-
-            btnEditar = new JButton("Editar");
-            btnEditar.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            btnEditar.setForeground(Color.WHITE); // Letras blancas
-            btnEditar.setBackground(colorPrincipal);
-            btnEditar.setFocusPainted(false);
-            btnEditar.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
-            btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            btnEditar.setOpaque(true);
-
-            btnEliminar = new JButton("Eliminar");
-            btnEliminar.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            btnEliminar.setForeground(Color.WHITE); // Letras blancas
-            btnEliminar.setBackground(new Color(200, 60, 60));
-            btnEliminar.setFocusPainted(false);
-            btnEliminar.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
-            btnEliminar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            btnEliminar.setOpaque(true);
-            add(btnEditar);
-            add(btnEliminar);
-        }
-
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus,
-                                                       int row, int column) {
-            return this;
-        }
-    }
-
-    class BotonAccionesEditor extends DefaultCellEditor {
-        private JPanel panel;
-        private JButton btnEditar;
-        private JButton btnEliminar;
-        private int selectedRow;
-
-        public BotonAccionesEditor(JCheckBox checkBox) {
-            super(checkBox);
-            // Cambia el FlowLayout a CENTER y ajusta el margen izquierdo
-            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 0));
-            panel.setOpaque(false);
-
-            btnEditar = new JButton("Editar");
-            btnEditar.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            btnEditar.setForeground(Color.WHITE);
-            btnEditar.setBackground(colorPrincipal);
-            btnEditar.setFocusPainted(false);
-            btnEditar.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
-            btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            btnEditar.setOpaque(true);
-
-            btnEliminar = new JButton("Eliminar");
-            btnEliminar.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            btnEliminar.setForeground(Color.WHITE);
-            btnEliminar.setBackground(new Color(200, 60, 60));
-            btnEliminar.setFocusPainted(false);
-            btnEliminar.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
-            btnEliminar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            btnEliminar.setOpaque(true);
-
-            btnEditar.addActionListener(e -> {
-                DocentesUI.this.editarDocente(selectedRow);
-            });
-
-            btnEliminar.addActionListener(e -> {
-
-                int filaSeleccionada = tabla.getSelectedRow();
-                if (filaSeleccionada >= 0) {
-                    int numeroTarjeta = (int) tabla.getValueAt(filaSeleccionada, 0);
-                    int opcion = JOptionPane.showConfirmDialog(
-                            null,
-                            "¿Seguro que quieres eliminar al docente?",
-                            "Confirmar eliminación",
-                            JOptionPane.YES_NO_OPTION
-                    );
-                    if (opcion == JOptionPane.YES_OPTION) {
-                        boolean eliminado = controlador.eliminarDocente(numeroTarjeta);
-                        if (eliminado) {
-                            JOptionPane.showMessageDialog(null, "Docente eliminado correctamente.");
-                            cargarDesdeBD(); // Actualizar tabla después de eliminar
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Error al eliminar docente.", "Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                }
-                /**listaDocentes.remove(selectedRow);*/
-                cargarTabla();
-                // -----------------------------------------------
-            });
-
-            panel.add(btnEditar);
-            panel.add(btnEliminar);
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                                                     boolean isSelected, int row, int column) {
-            selectedRow = row;
-            return panel;
-        }
-    }
-
-    // Método para eliminar docente de la base de datos (implementa según tu sistema)
-    // private void eliminarDocenteDeBaseDeDatos(Docente docente) {
-    //     // TODO: Conectar y eliminar el registro en la base de datos
-    // }
 
     // Método para editar un docente
     private void editarDocente(int row) {
@@ -434,29 +622,16 @@ public class DocentesUI extends JFrame {
                 } else {
                     JOptionPane.showMessageDialog(this, "No se pudo actualizar el docente.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
-                /**listaDocentes.set(row, dialog.docenteEditado);
-                 cargarTabla();*/
             }
         }
     }
 
-    public void mostrarDocentesEnTabla(java.util.List<Modelo.Docente> lista) {
-        modelo.setRowCount(0);
-        for (Modelo.Docente d : lista) {
-            modelo.addRow(new Object[]{
-                    d.getNumeroTarjeta(),
-                    d.getNombre() != null ? d.getNombre() : "",
-                    d.getApellidoPaterno() != null ? d.getApellidoPaterno() : "",
-                    d.getApellidoMaterno() != null ? d.getApellidoMaterno() : "",
-                    d.getCorreo() != null ? d.getCorreo() : ""
-            });
-        }
-    }   /**MOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO*/
 
 
     public static class RegistrarDocenteDialog extends JDialog {
         public boolean seRegistro = false;
         public Docente docenteEditado;
+
         public RegistrarDocenteDialog(JFrame parent, Color colorPrincipal, Docente docente) {
             super(parent, (docente == null ? "Registrar" : "Editar") + " docente", true);
             setSize(500, 380);
@@ -468,10 +643,10 @@ public class DocentesUI extends JFrame {
             panel.setBackground(Color.WHITE);
             panel.setBorder(BorderFactory.createEmptyBorder(28, 38, 28, 38));
             GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(18, 10, 0, 10); // MÁS espacio arriba de cada campo
+            gbc.insets = new Insets(18, 10, 0, 10);
             gbc.anchor = GridBagConstraints.WEST;
 
-            // Etiquetas alineadas a la derecha
+            // Etiquetas
             gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
             panel.add(labelField("No. Tarjeta", colorPrincipal, SwingConstants.RIGHT), gbc);
             gbc.gridy++;
@@ -483,7 +658,7 @@ public class DocentesUI extends JFrame {
             gbc.gridy++;
             panel.add(labelField("Correo", colorPrincipal, SwingConstants.RIGHT), gbc);
 
-            // Campos alineados a la izquierda y más anchos
+            // Campos
             gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
             JTextField txtNumTarjeta = new JTextField(18);
             estilizaCampo(txtNumTarjeta, colorPrincipal);
@@ -509,8 +684,10 @@ public class DocentesUI extends JFrame {
             estilizaCampo(txtCorreo, colorPrincipal);
             panel.add(txtCorreo, gbc);
 
-            // Botón guardar centrado
-            gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2; gbc.weightx = 0; gbc.anchor = GridBagConstraints.CENTER; gbc.insets = new Insets(28, 4, 4, 4); gbc.fill = GridBagConstraints.NONE;
+            // Botón guardar
+            gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2; gbc.weightx = 0;
+            gbc.anchor = GridBagConstraints.CENTER; gbc.insets = new Insets(28, 4, 4, 4);
+            gbc.fill = GridBagConstraints.NONE;
             JButton btnGuardar = new JButton(docente == null ? "Guardar" : "Actualizar");
             btnGuardar.setBackground(colorPrincipal);
             btnGuardar.setForeground(Color.WHITE);
@@ -524,23 +701,15 @@ public class DocentesUI extends JFrame {
             add(panel, BorderLayout.CENTER);
 
             // Si es edición, llena los campos
-            /** VIEJOO
-             *  if (docente != null) {
-             txtNumTarjeta.setText(String.valueOf(docente.getNumeroTarjeta()));
-             String[] partes = docente.getNombre().split(" ");
-             txtNombre.setText(partes.length > 0 ? partes[0] : "");
-             txtApellidoPaterno.setText(partes.length > 1 ? partes[1] : "");
-             txtApellidoMaterno.setText(partes.length > 2 ? partes[2] : "");
-             txtCorreo.setText(docente.getCorreo());
-             }*/
             if (docente != null) {
                 txtNumTarjeta.setText(String.valueOf(docente.getNumeroTarjeta()));
+                txtNumTarjeta.setEditable(false);
+                txtNumTarjeta.setBackground(new Color(240, 240, 240)); // color gris claro para indicar campo bloqueado
                 txtNombre.setText(docente.getNombre() != null ? docente.getNombre() : "");
                 txtApellidoPaterno.setText(docente.getApellidoPaterno() != null ? docente.getApellidoPaterno() : "");
                 txtApellidoMaterno.setText(docente.getApellidoMaterno() != null ? docente.getApellidoMaterno() : "");
                 txtCorreo.setText(docente.getCorreo() != null ? docente.getCorreo() : "");
             }
-
 
             btnGuardar.addActionListener(ev -> {
                 String numTarjetaString = txtNumTarjeta.getText().trim();
@@ -569,19 +738,21 @@ public class DocentesUI extends JFrame {
                     JOptionPane.showMessageDialog(this, "El correo no puede estar vacío.", "Validación", JOptionPane.WARNING_MESSAGE);
                     txtCorreo.requestFocus(); return;
                 }
-
+                if (!correo.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+                    JOptionPane.showMessageDialog(this, "Ingresa un correo electrónico válido.", "Validación", JOptionPane.WARNING_MESSAGE);
+                    txtCorreo.requestFocus(); return;
+                }
 
 
                 try{
                     int numTarjetaInt = Integer.parseInt(numTarjetaString);
-                    docenteEditado = new Docente(numTarjetaInt, nombre, apellidoPaterno, apellidoMaterno,correo);
+                    docenteEditado = new Docente(numTarjetaInt, nombre, apellidoPaterno, apellidoMaterno, correo);
                     seRegistro = true;
                     dispose();
                 }catch (NumberFormatException nfe){
                     JOptionPane.showMessageDialog(this, "El numero de tarjeta debe ser numerico.", "Validación", JOptionPane.WARNING_MESSAGE);
                     txtNumTarjeta.requestFocus(); return;
                 }
-
             });
         }
 

@@ -27,7 +27,7 @@ public class Conexion_bd {
         }
     }
 
-    public static synchronized Conexion_bd getInstancia() {
+    public static synchronized Conexion_bd  getInstancia() {
         if (instancia == null) {
             instancia = new Conexion_bd();
         } else {

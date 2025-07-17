@@ -164,7 +164,7 @@ public class AgregarManual extends JDialog {
         gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
         panel.add(crearEtiqueta("* Semestre"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
-        spnSemestre = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
+        spnSemestre = new JSpinner(new SpinnerNumberModel(9, 9, 12, 1));
         spnSemestre.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         spnSemestre.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(colorPrincipal, 2, true),

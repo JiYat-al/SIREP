@@ -12,7 +12,7 @@ public class ConsultasEmpresa{
         PreparedStatement ps = null;
         Connection conn = Conexion_bd.getInstancia().getConexion();
 
-        String sql = "INSERT INTO empresa (nombre, direccion, responsable, telefono, correo) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO empresa (nombre, direccion, responsable, telefono, correo, rfc) VALUES (?, ?, ?, ?, ?, ?)";
 
         try {
 
@@ -22,6 +22,7 @@ public class ConsultasEmpresa{
             ps.setString(3, empresas.getResponsable());
             ps.setString(4, empresas.getTelefono());
             ps.setString(5, empresas.getCorreo());
+            ps.setString(6, empresas.getRfc());
             ps.execute();
             return true;
 
@@ -44,7 +45,7 @@ public class ConsultasEmpresa{
         ResultSet rs = null;
         Connection conn = Conexion_bd.getInstancia().getConexion();
 
-        String  sql = "SELECT * FROM empresa";
+        String  sql = "SELECT * FROM empresa WHERE estatus_activo = true";
 
         try {
             ps = conn.prepareStatement(sql);
@@ -58,6 +59,7 @@ public class ConsultasEmpresa{
                 empresa.setResponsable(rs.getString("responsable"));
                 empresa.setTelefono(rs.getString("telefono"));
                 empresa.setCorreo(rs.getString("correo"));
+                empresa.setRfc(rs.getString("rfc"));
                 empresas.add(empresa);
             }
 
@@ -79,7 +81,7 @@ public class ConsultasEmpresa{
         ResultSet rs = null;
         Connection conn = Conexion_bd.getInstancia().getConexion();
 
-        String  sql = "UPDATE empresa SET nombre = ?, direccion = ?, responsable = ?, telefono = ?, correo = ? WHERE id_empresa = ?;";
+        String  sql = "UPDATE empresa SET nombre = ?, direccion = ?, responsable = ?, telefono = ?, correo = ?, rfc = ? WHERE id_empresa = ?;";
 
         try {
             ps = conn.prepareStatement(sql);
@@ -89,7 +91,8 @@ public class ConsultasEmpresa{
             ps.setString(3, empresa.getResponsable());
             ps.setString(4, empresa.getTelefono());
             ps.setString(5, empresa.getCorreo());
-            ps.setInt(6, empresa.getId());
+            ps.setString(6, empresa.getRfc());
+            ps.setInt(7, empresa.getId());
             ps.execute();
             return true;
 
@@ -100,6 +103,31 @@ public class ConsultasEmpresa{
             try{
                 conn.close();
             } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+    }
+
+    public static boolean cambiarEstatus(int id_empresa) {
+        PreparedStatement ps = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "UPDATE empresa SET estatus_activo = false WHERE id_empresa = ?;";
+
+        try {
+            ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, id_empresa);
+            ps.execute();
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println(e);
+            return false;
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
                 System.err.println(e);
             }
         }
