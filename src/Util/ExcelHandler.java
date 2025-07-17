@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * ExcelHandler mejorado - Corrige inserción de solo una fila
- * Incluye validación de teléfonos y tooltips de errores
+ * ExcelHandler SIMPLIFICADO - Solo carga datos, sin validaciones
+ * La validación se hace ÚNICAMENTE en VistaResidente
  */
 public class ExcelHandler {
 
@@ -27,7 +27,7 @@ public class ExcelHandler {
     };
 
     /**
-     * CORREGIDO: Importar residentes desde Excel - Ahora procesa TODAS las filas
+     * SIMPLIFICADO: Solo carga datos del Excel SIN validar
      */
     public static List<ModeloResidente> importarDesdeExcel(File archivo) {
         List<ModeloResidente> residentes = new ArrayList<>();
@@ -48,11 +48,9 @@ public class ExcelHandler {
                 return residentes;
             }
 
-            // CORREGIDO: Procesar TODAS las filas SIN fallar por errores de validación
+            // SIMPLIFICADO: Solo cargar datos, sin validaciones
             int totalFilas = sheet.getLastRowNum();
-            int filasExitosas = 0;
-            int filasConError = 0;
-            List<String> erroresDetallados = new ArrayList<>();
+            int filasLeidas = 0;
 
             System.out.println("DEBUG: Procesando desde fila 1 hasta " + totalFilas);
 
@@ -69,26 +67,19 @@ public class ExcelHandler {
                     continue;
                 }
 
-                // IMPORTANTE: SIEMPRE agregar el residente, sin importar si tiene errores
+                // SIMPLIFICADO: Solo procesar y agregar, sin validar
                 ModeloResidente residente = procesarFila(fila, i + 1);
                 if (residente != null) {
                     residentes.add(residente);
-
-                    // Verificar si tiene errores para el conteo
-                    if (residente.getErroresValidacion().isEmpty()) {
-                        filasExitosas++;
-                        System.out.println("DEBUG: Fila " + (i + 1) + " procesada exitosamente: " +
-                                residente.getNombre() + " " + residente.getApellidoPaterno());
-                    } else {
-                        filasConError++;
-                        System.out.println("DEBUG: Fila " + (i + 1) + " tiene errores pero se agregó para previsualización: " +
-                                residente.getNombre() + " " + residente.getApellidoPaterno());
-                    }
+                    filasLeidas++;
+                    System.out.println("DEBUG: Fila " + (i + 1) + " cargada: " +
+                            residente.getNumeroControl() + " - " +
+                            residente.getNombre() + " " + residente.getApellidoPaterno());
                 }
             }
 
-            // Mostrar resumen mejorado
-            mostrarResumenImportacion(filasExitosas, filasConError, erroresDetallados);
+            // SIMPLIFICADO: Mostrar solo resumen de carga
+            mostrarResumenCarga(filasLeidas);
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null,
@@ -100,30 +91,22 @@ public class ExcelHandler {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
 
-        System.out.println("DEBUG: Total de residentes importados: " + residentes.size());
+        System.out.println("DEBUG: Total de residentes cargados: " + residentes.size());
         return residentes;
     }
 
     /**
-     * NUEVO: Mostrar resumen actualizado
+     * SIMPLIFICADO: Solo mostrar resumen de carga
      */
-    private static void mostrarResumenImportacion(int exitosas, int errores, List<String> erroresDetallados) {
-        StringBuilder mensaje = new StringBuilder();
-        mensaje.append("📊 Carga de Excel completada\n\n");
-        mensaje.append("📋 Total registros cargados: ").append(exitosas + errores).append("\n");
-        mensaje.append("✅ Registros válidos: ").append(exitosas).append("\n");
-        mensaje.append("❌ Registros con errores: ").append(errores).append("\n\n");
+    private static void mostrarResumenCarga(int totalCargados) {
+        String mensaje = "📊 Carga de Excel completada\n\n" +
+                "📋 Total registros cargados: " + totalCargados + "\n\n" +
+                "💡 Los registros se mostrarán en la tabla\n" +
+                "🔍 La validación se hará automáticamente\n" +
+                "✏️ Doble click para editar cualquier registro\n" +
+                "📥 Solo los válidos ✅ se podrán importar a la BD";
 
-        if (errores > 0) {
-            mensaje.append("💡 TODOS los registros se muestran en la tabla\n");
-            mensaje.append("🔍 Pase el mouse sobre ❌ para ver errores\n");
-            mensaje.append("✏️ Doble click para editar registros\n");
-            mensaje.append("📥 Solo los válidos ✅ se importarán a la BD");
-        } else {
-            mensaje.append("🎉 Todos los registros son válidos y están listos para importar");
-        }
-
-        JOptionPane.showMessageDialog(null, mensaje.toString(),
+        JOptionPane.showMessageDialog(null, mensaje,
                 "Carga completada", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -167,9 +150,6 @@ public class ExcelHandler {
         return resultado.toString();
     }
 
-    /**
-     * MEJORADO: Validación de encabezados más concisa
-     */
     private static boolean validarEncabezados(Sheet sheet) {
         Row headerRow = sheet.getRow(0);
         if (headerRow == null) {
@@ -214,9 +194,6 @@ public class ExcelHandler {
         return true;
     }
 
-    /**
-     * MEJORADO: Verificación de fila vacía más robusta
-     */
     private static boolean esFilaVacia(Row fila) {
         if (fila == null) return true;
 
@@ -233,133 +210,38 @@ public class ExcelHandler {
     }
 
     /**
-     * CORREGIDO: Procesamiento de fila - SIEMPRE retorna residente para previsualización
+     * SIMPLIFICADO: Solo procesa datos SIN validar
      */
-    private static ModeloResidente procesarFila(Row fila, int numeroFila) throws Exception {
+    private static ModeloResidente procesarFila(Row fila, int numeroFila) {
         try {
-            // Obtener valores básicos SIN validar para permitir TODOS los registros
-            int numeroControl = 0;
-            String nombre = "";
-            String apellidoPaterno = "";
-            String apellidoMaterno = "";
+            // Obtener valores de forma segura
+            int numeroControl = obtenerValorEnteroSeguro(fila.getCell(0));
+            String nombre = formatearTexto(obtenerValorTextoSeguro(fila.getCell(1)));
+            String apellidoPaterno = formatearTexto(obtenerValorTextoSeguro(fila.getCell(2)));
+            String apellidoMaterno = formatearTexto(obtenerValorTextoSeguro(fila.getCell(3)));
             String carrera = CARRERA_FIJA;
-            int semestre = 9; // Valor por defecto
-            String correo = "";
-            String telefono = "";
+            int semestre = obtenerValorEnteroSeguro(fila.getCell(4));
+            String correo = obtenerValorTextoSeguro(fila.getCell(5)).toLowerCase();
+            String telefono = obtenerValorTextoSeguro(fila.getCell(6));
 
-            // Obtener datos de forma segura (sin lanzar excepciones)
-            try {
-                numeroControl = obtenerValorEnteroSeguro(fila.getCell(0));
-            } catch (Exception e) {
-                numeroControl = 0; // Valor inválido que se detectará en validación
-            }
-
-            nombre = formatearTexto(obtenerValorTextoSeguro(fila.getCell(1)));
-            apellidoPaterno = formatearTexto(obtenerValorTextoSeguro(fila.getCell(2)));
-            apellidoMaterno = formatearTexto(obtenerValorTextoSeguro(fila.getCell(3)));
-
-            try {
-                semestre = obtenerValorEnteroSeguro(fila.getCell(4));
-            } catch (Exception e) {
-                semestre = 0; // Valor inválido que se detectará en validación
-            }
-
-            correo = obtenerValorTextoSeguro(fila.getCell(5)).toLowerCase();
-            telefono = obtenerValorTextoSeguro(fila.getCell(6));
-
-            // CREAR SIEMPRE EL RESIDENTE (aunque tenga datos inválidos)
+            // CREAR RESIDENTE SIN VALIDAR - La validación se hace en Vista
             ModeloResidente residente = new ModeloResidente(numeroControl, nombre, apellidoPaterno,
                     apellidoMaterno, carrera, semestre, correo, telefono, 1);
 
-            // Validar y almacenar errores (pero NO lanzar excepción)
-            List<String> errores = validarResidenteCompleto(residente);
-            if (!errores.isEmpty()) {
-                residente.setErroresValidacion(errores);
-            }
+            // *** CORRECCIÓN CLAVE: NO validar aquí - dejar que Vista valide ***
+            // La Vista se encargará de toda la validación
 
             return residente;
 
         } catch (Exception e) {
-            // Si hay error grave, crear un residente "vacío" con el error
-            ModeloResidente residente = new ModeloResidente(0, "", "", "", CARRERA_FIJA, 9, "", "", 1);
-            List<String> errores = new ArrayList<>();
-            errores.add("Error en fila " + numeroFila + ": " + e.getMessage());
-            residente.setErroresValidacion(errores);
-            return residente;
+            System.out.println("DEBUG: Error procesando fila " + numeroFila + ": " + e.getMessage());
+            // Crear residente con datos mínimos
+            return new ModeloResidente(0, "Error", "Fila " + numeroFila, "", CARRERA_FIJA, 9, "error@error.com", "", 1);
         }
     }
 
     /**
-     * NUEVA: Validación completa de teléfono
-     */
-    private static boolean validarTelefono(String telefono) {
-        if (telefono == null || telefono.trim().isEmpty()) {
-            return true; // Teléfono es opcional
-        }
-
-        // Limpiar teléfono de caracteres no numéricos
-        String telefonoLimpio = telefono.replaceAll("[^0-9]", "");
-
-        // Verificar longitud
-        if (telefonoLimpio.length() < 8 || telefonoLimpio.length() > 15) {
-            return false;
-        }
-
-        // Verificar patrones sospechosos
-        if (telefonoLimpio.matches("(\\d)\\1{7,}")) { // 8+ dígitos iguales
-            return false;
-        }
-
-        if (telefonoLimpio.matches("12345678.*") || telefonoLimpio.matches("87654321.*")) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * NUEVA: Validación completa que retorna lista de errores
-     */
-    private static List<String> validarResidenteCompleto(ModeloResidente residente) {
-        List<String> errores = new ArrayList<>();
-
-        // Validar número de control
-        String numStr = String.valueOf(residente.getNumeroControl());
-        if (numStr.length() != 8) {
-            errores.add("Número de control debe tener 8 dígitos");
-        }
-
-        // Validar campos obligatorios
-        if (residente.getNombre() == null || residente.getNombre().trim().length() < 2) {
-            errores.add("Nombre debe tener al menos 2 caracteres");
-        }
-
-        if (residente.getApellidoPaterno() == null || residente.getApellidoPaterno().trim().length() < 2) {
-            errores.add("Apellido paterno debe tener al menos 2 caracteres");
-        }
-
-        // Validar semestre
-        if (residente.getSemestre() < 9 || residente.getSemestre() > 15) {
-            errores.add("Semestre debe estar entre 9 y 15");
-        }
-
-        // Validar correo
-        if (!residente.getCorreo().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
-            errores.add("Formato de correo inválido");
-        }
-
-        // Validar teléfono
-        if (residente.getTelefono() != null && !residente.getTelefono().isEmpty()) {
-            if (!validarTelefono(residente.getTelefono())) {
-                errores.add("Formato de teléfono inválido");
-            }
-        }
-
-        return errores;
-    }
-
-    /**
-     * NUEVO: Obtener valores de forma segura sin lanzar excepciones
+     * Obtener valores de forma segura sin lanzar excepciones
      */
     private static String obtenerValorTextoSeguro(Cell cell) {
         if (cell == null) {
@@ -374,7 +256,7 @@ public class ExcelHandler {
     }
 
     /**
-     * NUEVO: Obtener entero de forma segura sin lanzar excepciones
+     * Obtener entero de forma segura sin lanzar excepciones
      */
     private static int obtenerValorEnteroSeguro(Cell cell) {
         if (cell == null) {
@@ -426,14 +308,10 @@ public class ExcelHandler {
         }
     }
 
-    /**
-     * MEJORADO: Exportación con mensajes más concisos
-     */
     public static void exportarAExcel(List<ModeloResidente> residentes, File archivo) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Residentes");
 
-            // Crear encabezados
             Row headerRow = sheet.createRow(0);
             for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -446,7 +324,6 @@ public class ExcelHandler {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Crear filas de datos
             int rowNum = 1;
             for (ModeloResidente residente : residentes) {
                 Row row = sheet.createRow(rowNum++);
@@ -459,12 +336,10 @@ public class ExcelHandler {
                 row.createCell(6).setCellValue(residente.getTelefono());
             }
 
-            // Autoajustar columnas
             for (int i = 0; i < COLUMNAS_ESPERADAS.length; i++) {
                 sheet.autoSizeColumn(i);
             }
 
-            // Guardar archivo
             try (FileOutputStream fileOut = new FileOutputStream(archivo)) {
                 workbook.write(fileOut);
             }
@@ -519,14 +394,12 @@ public class ExcelHandler {
         return null;
     }
 
-    /**
-     * MEJORADO: Método completo con información más concisa
-     */
     public static List<ModeloResidente> importarExcelCompleto() {
         String mensaje = "📋 Formato requerido:\n" +
                 "1. Número de Control | 2. Nombre | 3. Apellido Paterno\n" +
                 "4. Apellido Materno | 5. Semestre (9-15) | 6. Correo | 7. Teléfono\n\n" +
                 "🎓 La carrera se asigna automáticamente\n" +
+                "✅ La validación se hace en la interfaz\n" +
                 "¿Continuar?";
 
         int opcion = JOptionPane.showConfirmDialog(null, mensaje,

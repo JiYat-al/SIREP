@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ModeloResidente {
-    private int numeroControl;
+    // *** CAMBIO: Nueva estructura con id_residente y estatus ***
+    private int idResidente;           // Nueva PK SERIAL
+    private int numeroControl;         // Mantener INT para compatibilidad
     private String nombre;
     private String apellidoPaterno;
     private String apellidoMaterno;
@@ -14,12 +16,20 @@ public class ModeloResidente {
     private String correo;
     private String telefono;
     private int idProyecto;
+    private boolean estatus = true;    // Campo estatus para dar de baja
 
-    // NUEVO: Lista para almacenar errores de validación para tooltips
+    // Campos para manejar validación (usados por la Vista)
+    private boolean esValido = true;
+    private String motivoInvalido = "";
     private List<String> erroresValidacion = new ArrayList<>();
 
+    // ==================== CONSTRUCTORES ====================
+
     public ModeloResidente() {
-        // Constructor vacío
+        this.estatus = true;
+        this.esValido = true;
+        this.motivoInvalido = "";
+        this.erroresValidacion = new ArrayList<>();
     }
 
     public ModeloResidente(int numeroControl, String nombre, String apellidoPaterno, String apellidoMaterno,
@@ -33,9 +43,16 @@ public class ModeloResidente {
         this.correo = correo;
         this.telefono = telefono;
         this.idProyecto = idProyecto;
+        this.estatus = true;
+
+        // Inicializar campos de validación
+        this.esValido = true;
+        this.motivoInvalido = "";
+        this.erroresValidacion = new ArrayList<>();
     }
 
     public ModeloResidente(ModeloResidente otro) {
+        this.idResidente = otro.idResidente;
         this.numeroControl = otro.numeroControl;
         this.nombre = otro.nombre;
         this.apellidoPaterno = otro.apellidoPaterno;
@@ -45,247 +62,43 @@ public class ModeloResidente {
         this.correo = otro.correo;
         this.telefono = otro.telefono;
         this.idProyecto = otro.idProyecto;
+        this.estatus = otro.estatus;
+        this.esValido = otro.esValido;
+        this.motivoInvalido = otro.motivoInvalido;
         this.erroresValidacion = new ArrayList<>(otro.erroresValidacion);
     }
 
-    // ==================== VALIDACIÓN COMPLETA ====================
+    // ==================== MÉTODOS DE VALIDACIÓN BÁSICA ====================
 
-    /**
-     * NUEVO: Valida todos los campos y almacena errores para tooltips
-     * IMPORTANTE: Siempre retorna un resultado, nunca falla
-     */
-    public boolean validarDatos() {
-        erroresValidacion.clear();
-        boolean esValido = true;
+    public boolean validarCamposBasicos() {
+        boolean valido = (this.numeroControl > 0 &&
+                this.nombre != null && !this.nombre.trim().isEmpty() &&
+                this.apellidoPaterno != null && !this.apellidoPaterno.trim().isEmpty() &&
+                this.correo != null && !this.correo.trim().isEmpty());
 
-        // Validar número de control
-        if (!validarNumeroControl()) esValido = false;
-
-        // Validar nombre
-        if (!validarNombre()) esValido = false;
-
-        // Validar apellidos
-        if (!validarApellidos()) esValido = false;
-
-        // Validar semestre
-        if (!validarSemestre()) esValido = false;
-
-        // Validar correo
-        if (!validarCorreo()) esValido = false;
-
-        // Validar teléfono
-        if (!validarTelefono()) esValido = false;
-
-        // Validar que no exista en BD (solo para nuevos registros)
-        if (esValido && existe(numeroControl)) {
-            erroresValidacion.add("❌ Ya existe un residente con este número de control");
-            esValido = false;
-        }
-
-        return esValido;
-    }
-
-    private boolean validarNumeroControl() {
-        if (numeroControl <= 0) {
-            erroresValidacion.add("❌ Número de control inválido o vacío");
-            return false;
-        }
-
-        String numStr = String.valueOf(numeroControl);
-        if (numStr.length() != 8) {
-            erroresValidacion.add("❌ Debe tener exactamente 8 dígitos (tiene " + numStr.length() + ")");
-            return false;
-        }
-
-        // Validar año (primeros 2 dígitos) - NO PERMITIR AÑOS FUTUROS
-        try {
-            int anio = Integer.parseInt(numStr.substring(0, 2));
-            int anioActual = java.time.Year.now().getValue() % 100; // Ejemplo: 2025 → 25
-
-            // NUEVA VALIDACIÓN: No permitir años futuros
-            if (anio > anioActual) {
-                int anioCompleto = 2000 + anio;
-                erroresValidacion.add("❌ Año futuro no permitido (" + anioCompleto + ")");
-                return false;
-            }
-
-            // Validar rango de años válidos (20 años hacia atrás desde año actual)
-            int anioMinimo = (anioActual - 20 + 100) % 100;
-
-            boolean anioValido = false;
-            if (anioMinimo <= anioActual) {
-                anioValido = (anio >= anioMinimo && anio <= anioActual);
-            } else {
-                // Manejar cambio de siglo
-                anioValido = (anio >= anioMinimo || anio <= anioActual);
-            }
-
-            if (!anioValido) {
-                int anioCompleto = anio <= anioActual ? 2000 + anio : 1900 + anio;
-                erroresValidacion.add("⚠️ Año del número de control fuera de rango válido (" + anioCompleto + ")");
-                return false;
-            }
-        } catch (Exception e) {
-            erroresValidacion.add("❌ Error al validar número de control");
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean validarNombre() {
-        if (nombre == null || nombre.trim().isEmpty()) {
-            erroresValidacion.add("❌ Nombre es obligatorio");
-            return false;
-        }
-
-        if (nombre.trim().length() < 2) {
-            erroresValidacion.add("❌ Nombre debe tener al menos 2 caracteres");
-            return false;
-        }
-
-        if (!nombre.trim().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
-            erroresValidacion.add("❌ Nombre contiene caracteres inválidos");
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean validarApellidos() {
-        boolean valido = true;
-
-        if (apellidoPaterno == null || apellidoPaterno.trim().isEmpty()) {
-            erroresValidacion.add("❌ Apellido paterno es obligatorio");
-            valido = false;
-        } else if (apellidoPaterno.trim().length() < 2) {
-            erroresValidacion.add("❌ Apellido paterno muy corto");
-            valido = false;
-        } else if (!apellidoPaterno.trim().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
-            erroresValidacion.add("❌ Apellido paterno contiene caracteres inválidos");
-            valido = false;
-        }
-
-        // Apellido materno es opcional
-        if (apellidoMaterno != null && !apellidoMaterno.trim().isEmpty()) {
-            if (apellidoMaterno.trim().length() < 2) {
-                erroresValidacion.add("⚠️ Apellido materno muy corto");
-                valido = false;
-            } else if (!apellidoMaterno.trim().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
-                erroresValidacion.add("❌ Apellido materno contiene caracteres inválidos");
-                valido = false;
-            }
+        this.esValido = valido;
+        if (!valido) {
+            this.motivoInvalido = "Campos básicos incompletos";
+        } else {
+            this.motivoInvalido = "";
         }
 
         return valido;
     }
 
-    private boolean validarSemestre() {
-        if (semestre < 9 || semestre > 15) {
-            erroresValidacion.add("❌ Semestre debe estar entre 9 y 15");
-            return false;
-        }
-        return true;
+    public void marcarComoInvalido(String motivo) {
+        this.esValido = false;
+        this.motivoInvalido = motivo;
     }
 
-    private boolean validarCorreo() {
-        if (correo == null || correo.trim().isEmpty()) {
-            erroresValidacion.add("❌ Correo es obligatorio");
-            return false;
-        }
-
-        if (!correo.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
-            erroresValidacion.add("❌ Formato de correo inválido");
-            return false;
-        }
-
-        if (correo.length() > 254) {
-            erroresValidacion.add("❌ Correo demasiado largo");
-            return false;
-        }
-
-        return true;
+    public void revalidar() {
+        this.esValido = true;
+        this.motivoInvalido = "";
+        this.erroresValidacion.clear();
     }
 
-    private boolean validarTelefono() {
-        // Teléfono es opcional
-        if (telefono == null || telefono.trim().isEmpty()) {
-            return true;
-        }
+    // ==================== MÉTODOS DE CONEXIÓN ====================
 
-        // Limpiar teléfono de caracteres especiales
-        String telefonoLimpio = telefono.replaceAll("[^0-9]", "");
-
-        if (telefonoLimpio.length() < 8) {
-            erroresValidacion.add("❌ Teléfono debe tener al menos 8 dígitos");
-            return false;
-        }
-
-        if (telefonoLimpio.length() > 15) {
-            erroresValidacion.add("❌ Teléfono demasiado largo");
-            return false;
-        }
-
-        // Detectar patrones sospechosos
-        if (telefonoLimpio.matches("(\\d)\\1{7,}")) {
-            erroresValidacion.add("⚠️ Teléfono parece tener dígitos repetidos");
-            return false;
-        }
-
-        if (telefonoLimpio.matches("12345678.*") || telefonoLimpio.matches("87654321.*")) {
-            erroresValidacion.add("⚠️ Teléfono parece ser secuencial");
-            return false;
-        }
-
-        return true;
-    }
-
-    // ==================== MÉTODOS DE TOOLTIPS ====================
-
-    /**
-     * NUEVO: Obtener errores de validación para mostrar en tooltips
-     */
-    public String getErroresTooltip() {
-        if (erroresValidacion.isEmpty()) {
-            return null;
-        }
-
-        StringBuilder tooltip = new StringBuilder("<html>");
-        tooltip.append("<div style='padding: 5px; max-width: 300px;'>");
-        tooltip.append("<b style='color: #d32f2f;'>⚠️ Errores encontrados:</b><br><br>");
-
-        for (String error : erroresValidacion) {
-            tooltip.append("• ").append(error).append("<br>");
-        }
-
-        tooltip.append("<br><i style='color: #666;'>💡 Haga doble click para editar</i>");
-        tooltip.append("</div></html>");
-
-        return tooltip.toString();
-    }
-
-    /**
-     * NUEVO: Verificar si tiene errores de validación
-     */
-    public boolean tieneErrores() {
-        return !erroresValidacion.isEmpty();
-    }
-
-    /**
-     * NUEVO: Obtener lista de errores
-     */
-    public List<String> getErroresValidacion() {
-        return new ArrayList<>(erroresValidacion);
-    }
-
-    /**
-     * NUEVO: Establecer errores de validación (usado por ExcelHandler)
-     */
-    public void setErroresValidacion(List<String> errores) {
-        this.erroresValidacion = new ArrayList<>(errores);
-    }
-
-    // Método para obtener conexión usando el Singleton
     private static Connection getConnection() {
         return Conexion_bd.getInstancia().getConexion();
     }
@@ -300,7 +113,7 @@ public class ModeloResidente {
         }
     }
 
-    // ==================== MÉTODOS DE BASE DE DATOS ====================
+    // ==================== MÉTODOS DE BASE DE DATOS ACTUALIZADOS ====================
 
     public boolean guardarEnBaseDatos() {
         try {
@@ -318,15 +131,17 @@ public class ModeloResidente {
         }
     }
 
+    // *** CAMBIO: Insertar con nueva estructura ***
     public boolean insertar() {
         String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
-                "carrera, semestre, correo, telefono, id_proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "carrera, semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             Connection conn = getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-            stmt.setInt(1, this.numeroControl);
+            // BD usa VARCHAR(9) internamente pero objeto mantiene int
+            stmt.setString(1, String.valueOf(this.numeroControl));
             stmt.setString(2, this.nombre);
             stmt.setString(3, this.apellidoPaterno);
             stmt.setString(4, this.apellidoMaterno);
@@ -335,9 +150,19 @@ public class ModeloResidente {
             stmt.setString(7, this.correo);
             stmt.setString(8, this.telefono);
             stmt.setInt(9, this.idProyecto);
+            stmt.setBoolean(10, true); // estatus = true por defecto
 
             int filasAfectadas = stmt.executeUpdate();
-            return filasAfectadas > 0;
+
+            if (filasAfectadas > 0) {
+                // Obtener el ID generado
+                ResultSet generatedKeys = stmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    this.idResidente = generatedKeys.getInt(1);
+                }
+                return true;
+            }
+            return false;
 
         } catch (SQLException e) {
             System.err.println("Error al insertar residente: " + e.getMessage());
@@ -345,24 +170,26 @@ public class ModeloResidente {
         }
     }
 
+    // *** CAMBIO: Actualizar con nueva PK ***
     public boolean actualizar() {
-        String sql = "UPDATE residente SET nombre = ?, apellido_paterno = ?, apellido_materno = ?, " +
+        String sql = "UPDATE residente SET numero_control = ?, nombre = ?, apellido_paterno = ?, apellido_materno = ?, " +
                 "carrera = ?, semestre = ?, correo = ?, telefono = ?, id_proyecto = ? " +
-                "WHERE numero_control = ?";
+                "WHERE id_residente = ?";
 
         try {
             Connection conn = getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setString(1, this.nombre);
-            stmt.setString(2, this.apellidoPaterno);
-            stmt.setString(3, this.apellidoMaterno);
-            stmt.setString(4, this.carrera);
-            stmt.setInt(5, this.semestre);
-            stmt.setString(6, this.correo);
-            stmt.setString(7, this.telefono);
-            stmt.setInt(8, this.idProyecto);
-            stmt.setInt(9, this.numeroControl);
+            stmt.setString(1, String.valueOf(this.numeroControl));
+            stmt.setString(2, this.nombre);
+            stmt.setString(3, this.apellidoPaterno);
+            stmt.setString(4, this.apellidoMaterno);
+            stmt.setString(5, this.carrera);
+            stmt.setInt(6, this.semestre);
+            stmt.setString(7, this.correo);
+            stmt.setString(8, this.telefono);
+            stmt.setInt(9, this.idProyecto);
+            stmt.setInt(10, this.idResidente); // Usar nueva PK
 
             int filasAfectadas = stmt.executeUpdate();
             return filasAfectadas > 0;
@@ -373,58 +200,97 @@ public class ModeloResidente {
         }
     }
 
+    // *** CAMBIO: Eliminar cambiado por "dar de baja" ***
     public boolean eliminar() {
-        String sql = "DELETE FROM residente WHERE numero_control = ?";
+        return darDeBaja();
+    }
+
+    // *** NUEVO: Método darDeBaja ***
+    public boolean darDeBaja() {
+        String sql = "UPDATE residente SET estatus = FALSE WHERE id_residente = ?";
 
         try {
             Connection conn = getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setInt(1, this.numeroControl);
+            stmt.setInt(1, this.idResidente);
 
             int filasAfectadas = stmt.executeUpdate();
-            return filasAfectadas > 0;
+            if (filasAfectadas > 0) {
+                this.estatus = false; // Actualizar el objeto
+                return true;
+            }
+            return false;
 
         } catch (SQLException e) {
-            System.err.println("Error al eliminar residente: " + e.getMessage());
+            System.err.println("Error al dar de baja residente: " + e.getMessage());
             return false;
         }
     }
 
-    public static ModeloResidente buscarPorNumeroControl(int numeroControl) {
-        String sql = "SELECT * FROM residente WHERE numero_control = ?";
+    // *** NUEVO: Método reactivar ***
+    public boolean reactivar() {
+        String sql = "UPDATE residente SET estatus = TRUE WHERE id_residente = ?";
 
         try {
             Connection conn = getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setInt(1, numeroControl);
+            stmt.setInt(1, this.idResidente);
+
+            int filasAfectadas = stmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                this.estatus = true;
+                return true;
+            }
+            return false;
+
+        } catch (SQLException e) {
+            System.err.println("Error al reactivar residente: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // *** CAMBIO: Buscar solo activos ***
+    public static ModeloResidente buscarPorNumeroControl(int numeroControl) {
+        String sql = "SELECT * FROM residente WHERE numero_control = ? AND estatus = TRUE";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, String.valueOf(numeroControl));
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return new ModeloResidente(
-                        rs.getInt("numero_control"),
-                        rs.getString("nombre"),
-                        rs.getString("apellido_paterno"),
-                        rs.getString("apellido_materno"),
-                        rs.getString("carrera"),
-                        rs.getInt("semestre"),
-                        rs.getString("correo"),
-                        rs.getString("telefono"),
-                        rs.getInt("id_proyecto")
-                );
+                ModeloResidente residente = new ModeloResidente();
+                residente.setIdResidente(rs.getInt("id_residente"));
+                residente.setNumeroControl(Integer.parseInt(rs.getString("numero_control")));
+                residente.setNombre(rs.getString("nombre"));
+                residente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                residente.setApellidoMaterno(rs.getString("apellido_materno"));
+                residente.setCarrera(rs.getString("carrera"));
+                residente.setSemestre(rs.getInt("semestre"));
+                residente.setCorreo(rs.getString("correo"));
+                residente.setTelefono(rs.getString("telefono"));
+                residente.setIdProyecto(rs.getInt("id_proyecto"));
+                residente.setEstatus(rs.getBoolean("estatus"));
+                return residente;
             }
 
         } catch (SQLException e) {
             System.err.println("Error al buscar residente: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.err.println("Error al convertir numero_control: " + e.getMessage());
         }
 
         return null;
     }
 
+    // *** CAMBIO: Obtener solo activos ***
     public static List<ModeloResidente> obtenerTodos() {
         List<ModeloResidente> residentes = new ArrayList<>();
-        String sql = "SELECT * FROM residente ORDER BY numero_control";
+        String sql = "SELECT * FROM residente WHERE estatus = TRUE ORDER BY numero_control";
 
         try {
             Connection conn = getConnection();
@@ -432,35 +298,39 @@ public class ModeloResidente {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                ModeloResidente residente = new ModeloResidente(
-                        rs.getInt("numero_control"),
-                        rs.getString("nombre"),
-                        rs.getString("apellido_paterno"),
-                        rs.getString("apellido_materno"),
-                        rs.getString("carrera"),
-                        rs.getInt("semestre"),
-                        rs.getString("correo"),
-                        rs.getString("telefono"),
-                        rs.getInt("id_proyecto")
-                );
+                ModeloResidente residente = new ModeloResidente();
+                residente.setIdResidente(rs.getInt("id_residente"));
+                residente.setNumeroControl(Integer.parseInt(rs.getString("numero_control")));
+                residente.setNombre(rs.getString("nombre"));
+                residente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                residente.setApellidoMaterno(rs.getString("apellido_materno"));
+                residente.setCarrera(rs.getString("carrera"));
+                residente.setSemestre(rs.getInt("semestre"));
+                residente.setCorreo(rs.getString("correo"));
+                residente.setTelefono(rs.getString("telefono"));
+                residente.setIdProyecto(rs.getInt("id_proyecto"));
+                residente.setEstatus(rs.getBoolean("estatus"));
                 residentes.add(residente);
             }
 
         } catch (SQLException e) {
             System.err.println("Error al obtener residentes: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.err.println("Error al convertir numero_control: " + e.getMessage());
         }
 
         return residentes;
     }
 
+    // *** CAMBIO: Verificar existencia solo activos ***
     public static boolean existe(int numeroControl) {
-        String sql = "SELECT COUNT(*) FROM residente WHERE numero_control = ?";
+        String sql = "SELECT COUNT(*) FROM residente WHERE numero_control = ? AND estatus = TRUE";
 
         try {
             Connection conn = getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setInt(1, numeroControl);
+            stmt.setString(1, String.valueOf(numeroControl));
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -474,6 +344,132 @@ public class ModeloResidente {
         return false;
     }
 
+    // ==================== IMPORTACIÓN ACTUALIZADA ====================
+
+    public static ResultadoImportacion importarResidentes(List<ModeloResidente> residentes) {
+        int exitosos = 0;
+        int fallidos = 0;
+        int duplicados = 0;
+        List<String> errores = new ArrayList<>();
+
+        System.out.println("DEBUG: === INICIANDO IMPORTACIÓN ===");
+        System.out.println("DEBUG: Residentes recibidos: " + residentes.size());
+
+        if (!probarConexion()) {
+            errores.add("No se puede conectar a la base de datos");
+            return new ResultadoImportacion(0, residentes.size(), 0, errores);
+        }
+
+        asegurarProyectosPorDefecto();
+
+        // *** CAMBIO: SQL actualizado para nueva estructura ***
+        String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
+                "carrera, semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)";
+
+        try {
+            Connection conn = getConnection();
+            conn.setAutoCommit(false);
+
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            for (ModeloResidente residente : residentes) {
+                try {
+                    if (residente.getIdProyecto() <= 0) {
+                        residente.setIdProyecto(1);
+                    }
+
+                    System.out.println("DEBUG: Procesando residente " + residente.getNumeroControl() +
+                            " - " + residente.getNombre() + " " + residente.getApellidoPaterno());
+
+                    if (existe(residente.getNumeroControl())) {
+                        System.out.println("DEBUG: ❌ Ya existe en BD: " + residente.getNumeroControl());
+                        duplicados++;
+                        errores.add("Ya existe: " + residente.getNumeroControl() + " - " + residente.getNombre());
+                        continue;
+                    }
+
+                    if (residente.getNumeroControl() <= 0) {
+                        System.out.println("DEBUG: ❌ Número control inválido: " + residente.getNumeroControl());
+                        fallidos++;
+                        errores.add("Número control inválido: " + residente.getNumeroControl());
+                        continue;
+                    }
+
+                    if (residente.getNombre() == null || residente.getNombre().trim().isEmpty()) {
+                        System.out.println("DEBUG: ❌ Nombre vacío: " + residente.getNumeroControl());
+                        fallidos++;
+                        errores.add("Nombre vacío: " + residente.getNumeroControl());
+                        continue;
+                    }
+
+                    if (residente.getApellidoPaterno() == null || residente.getApellidoPaterno().trim().isEmpty()) {
+                        System.out.println("DEBUG: ❌ Apellido paterno vacío: " + residente.getNumeroControl());
+                        fallidos++;
+                        errores.add("Apellido paterno vacío: " + residente.getNumeroControl());
+                        continue;
+                    }
+
+                    if (residente.getCorreo() == null || residente.getCorreo().trim().isEmpty()) {
+                        System.out.println("DEBUG: ❌ Correo vacío: " + residente.getNumeroControl());
+                        fallidos++;
+                        errores.add("Correo vacío: " + residente.getNumeroControl());
+                        continue;
+                    }
+
+                    // Preparar inserción (mantener int → String para BD)
+                    stmt.setString(1, String.valueOf(residente.getNumeroControl()));
+                    stmt.setString(2, residente.getNombre().trim());
+                    stmt.setString(3, residente.getApellidoPaterno().trim());
+                    stmt.setString(4, residente.getApellidoMaterno() != null ? residente.getApellidoMaterno().trim() : null);
+                    stmt.setString(5, residente.getCarrera());
+                    stmt.setInt(6, residente.getSemestre());
+                    stmt.setString(7, residente.getCorreo().trim());
+                    stmt.setString(8, residente.getTelefono() != null ? residente.getTelefono().trim() : null);
+                    stmt.setInt(9, residente.getIdProyecto());
+
+                    int filasAfectadas = stmt.executeUpdate();
+
+                    if (filasAfectadas > 0) {
+                        exitosos++;
+                        System.out.println("DEBUG: ✅ Insertado exitosamente: " + residente.getNumeroControl());
+                    } else {
+                        fallidos++;
+                        errores.add("No se pudo insertar: " + residente.getNumeroControl());
+                    }
+
+                } catch (SQLException e) {
+                    System.out.println("DEBUG: ❌ Error SQL para " + residente.getNumeroControl() + ": " + e.getMessage());
+
+                    if (e.getMessage().toLowerCase().contains("duplicate") ||
+                            e.getMessage().toLowerCase().contains("unique constraint")) {
+                        duplicados++;
+                        errores.add("Duplicado: " + residente.getNumeroControl() + " - " + residente.getNombre());
+                    } else {
+                        fallidos++;
+                        errores.add("Error: " + residente.getNumeroControl() + " - " + e.getMessage());
+                    }
+                }
+            }
+
+            conn.commit();
+            conn.setAutoCommit(true);
+
+            System.out.println("DEBUG: === RESUMEN IMPORTACIÓN ===");
+            System.out.println("DEBUG: Exitosos: " + exitosos);
+            System.out.println("DEBUG: Fallidos: " + fallidos);
+            System.out.println("DEBUG: Duplicados: " + duplicados);
+
+        } catch (SQLException e) {
+            System.err.println("Error de conexión en importación: " + e.getMessage());
+            errores.add("Error de conexión: " + e.getMessage());
+            return new ResultadoImportacion(0, residentes.size(), 0, errores);
+        }
+
+        return new ResultadoImportacion(exitosos, fallidos, duplicados, errores);
+    }
+
+    // ==================== MÉTODOS DE PROYECTOS ====================
+
     public static void asegurarProyectosPorDefecto() {
         String sqlCheck = "SELECT COUNT(*) FROM proyecto WHERE id_proyecto IN (0, 1)";
         String sqlInsert0 = "INSERT INTO proyecto (id_proyecto, nombre, descripcion, duracion, n_alumnos, estatus, origen) " +
@@ -485,12 +481,10 @@ public class ModeloResidente {
 
         try {
             Connection conn = getConnection();
-
             PreparedStatement checkStmt = conn.prepareStatement(sqlCheck);
             ResultSet rs = checkStmt.executeQuery();
             if (rs.next()) {
                 int count = rs.getInt(1);
-
                 if (count < 2) {
                     try {
                         PreparedStatement stmt0 = conn.prepareStatement(sqlInsert0);
@@ -500,7 +494,6 @@ public class ModeloResidente {
                             System.err.println("Error creando proyecto ID=0: " + e.getMessage());
                         }
                     }
-
                     try {
                         PreparedStatement stmt1 = conn.prepareStatement(sqlInsert1);
                         stmt1.executeUpdate();
@@ -511,124 +504,9 @@ public class ModeloResidente {
                     }
                 }
             }
-
         } catch (SQLException e) {
             System.err.println("Error al asegurar proyectos por defecto: " + e.getMessage());
         }
-    }
-
-    /**
-     * MEJORADO: Importar con mensajes más concisos
-     */
-    public static ResultadoImportacion importarResidentes(List<ModeloResidente> residentes) {
-        final int TAMAÑO_LOTE = 50;
-
-        int exitosos = 0;
-        int fallidos = 0;
-        int duplicados = 0;
-        List<String> errores = new ArrayList<>();
-
-        if (!probarConexion()) {
-            errores.add("No se puede conectar a la base de datos");
-            return new ResultadoImportacion(0, residentes.size(), 0, errores);
-        }
-
-        asegurarProyectosPorDefecto();
-
-        for (ModeloResidente residente : residentes) {
-            if (residente.getIdProyecto() <= 0) {
-                residente.setIdProyecto(1);
-            }
-        }
-
-        String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
-                "carrera, semestre, correo, telefono, id_proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (numero_control) DO UPDATE SET " +
-                "nombre = EXCLUDED.nombre, " +
-                "apellido_paterno = EXCLUDED.apellido_paterno, " +
-                "apellido_materno = EXCLUDED.apellido_materno, " +
-                "carrera = EXCLUDED.carrera, " +
-                "semestre = EXCLUDED.semestre, " +
-                "correo = EXCLUDED.correo, " +
-                "telefono = EXCLUDED.telefono, " +
-                "id_proyecto = EXCLUDED.id_proyecto";
-
-        try {
-            Connection conn = getConnection();
-            conn.setAutoCommit(false);
-
-            PreparedStatement stmt = conn.prepareStatement(sql);
-
-            for (int i = 0; i < residentes.size(); i += TAMAÑO_LOTE) {
-                int finLote = Math.min(i + TAMAÑO_LOTE, residentes.size());
-                List<ModeloResidente> loteActual = residentes.subList(i, finLote);
-
-                try {
-                    for (ModeloResidente residente : loteActual) {
-                        try {
-                            if (residente.getNumeroControl() <= 0) {
-                                errores.add("Número de control inválido: " + residente.getNumeroControl());
-                                fallidos++;
-                                continue;
-                            }
-
-                            if (residente.getNombre() == null || residente.getNombre().trim().isEmpty()) {
-                                errores.add("Nombre vacío para residente: " + residente.getNumeroControl());
-                                fallidos++;
-                                continue;
-                            }
-
-                            stmt.setInt(1, residente.getNumeroControl());
-                            stmt.setString(2, residente.getNombre());
-                            stmt.setString(3, residente.getApellidoPaterno());
-                            stmt.setString(4, residente.getApellidoMaterno());
-                            stmt.setString(5, residente.getCarrera());
-                            stmt.setInt(6, residente.getSemestre());
-                            stmt.setString(7, residente.getCorreo());
-                            stmt.setString(8, residente.getTelefono());
-                            stmt.setInt(9, residente.getIdProyecto());
-
-                            stmt.addBatch();
-                        } catch (SQLException e) {
-                            errores.add("Error preparando residente " + residente.getNumeroControl() + ": " + e.getMessage());
-                            fallidos++;
-                        }
-                    }
-
-                    int[] resultados = stmt.executeBatch();
-                    conn.commit();
-
-                    for (int resultado : resultados) {
-                        if (resultado > 0) {
-                            exitosos++;
-                        } else if (resultado == 0) {
-                            duplicados++;
-                        }
-                    }
-
-                    stmt.clearBatch();
-
-                } catch (SQLException e) {
-                    try {
-                        conn.rollback();
-                    } catch (SQLException rollbackEx) {
-                        errores.add("Error en rollback: " + rollbackEx.getMessage());
-                    }
-
-                    fallidos += loteActual.size();
-                    errores.add("Error en lote " + (i/TAMAÑO_LOTE + 1) + ": " + e.getMessage());
-                }
-            }
-
-            conn.setAutoCommit(true);
-
-        } catch (SQLException e) {
-            System.err.println("Error en importación masiva: " + e.getMessage());
-            errores.add("Error de conexión: " + e.getMessage());
-            return new ResultadoImportacion(0, residentes.size(), 0, errores);
-        }
-
-        return new ResultadoImportacion(exitosos, fallidos, duplicados, errores);
     }
 
     public static void crearProyectoDefecto() {
@@ -672,7 +550,10 @@ public class ModeloResidente {
         public int getTotal() { return exitosos + fallidos + duplicados; }
     }
 
-    // ==================== GETTERS Y SETTERS ====================
+    // ==================== GETTERS Y SETTERS ACTUALIZADOS ====================
+
+    public int getIdResidente() { return idResidente; }
+    public void setIdResidente(int idResidente) { this.idResidente = idResidente; }
 
     public int getNumeroControl() { return numeroControl; }
     public void setNumeroControl(int numeroControl) { this.numeroControl = numeroControl; }
@@ -701,10 +582,24 @@ public class ModeloResidente {
     public int getIdProyecto() { return idProyecto; }
     public void setIdProyecto(int idProyecto) { this.idProyecto = idProyecto; }
 
+    public boolean isEstatus() { return estatus; }
+    public void setEstatus(boolean estatus) { this.estatus = estatus; }
+
+    // Getters y setters para validación
+    public boolean isEsValido() { return esValido; }
+    public void setEsValido(boolean esValido) { this.esValido = esValido; }
+
+    public String getMotivoInvalido() { return motivoInvalido; }
+    public void setMotivoInvalido(String motivoInvalido) { this.motivoInvalido = motivoInvalido; }
+
+    public List<String> getErroresValidacion() { return new ArrayList<>(erroresValidacion); }
+    public void setErroresValidacion(List<String> errores) { this.erroresValidacion = new ArrayList<>(errores); }
+
     @Override
     public String toString() {
         return "ModeloResidente{" +
-                "numeroControl=" + numeroControl +
+                "idResidente=" + idResidente +
+                ", numeroControl=" + numeroControl +
                 ", nombre='" + nombre + '\'' +
                 ", apellidoPaterno='" + apellidoPaterno + '\'' +
                 ", apellidoMaterno='" + apellidoMaterno + '\'' +
@@ -713,67 +608,8 @@ public class ModeloResidente {
                 ", correo='" + correo + '\'' +
                 ", telefono='" + telefono + '\'' +
                 ", idProyecto=" + idProyecto +
+                ", estatus=" + estatus +
+                ", esValido=" + esValido +
                 '}';
-    }
-    // Agregar estos métodos a tu clase ModeloResidente
-
-    // Campos para manejar validación
-    private boolean esValido = true;
-    private String motivoInvalido = "";
-
-    // Getters y setters para validación
-    public boolean isEsValido() {
-        return esValido;
-    }
-
-    public void setEsValido(boolean esValido) {
-        this.esValido = esValido;
-    }
-
-    public String getMotivoInvalido() {
-        return motivoInvalido;
-    }
-
-    public void setMotivoInvalido(String motivoInvalido) {
-        this.motivoInvalido = motivoInvalido;
-    }
-
-    // Método para marcar como inválido
-    public void marcarComoInvalido(String motivo) {
-        this.esValido = false;
-        this.motivoInvalido = motivo;
-    }
-
-    // Método para revalidar (limpiar estado de invalidez)
-    public void revalidar() {
-        this.esValido = true;
-        this.motivoInvalido = "";
-    }
-
-    // Método para validar campos básicos
-    public boolean validarCamposBasicos() {
-        if (this.numeroControl <= 0) {
-            marcarComoInvalido("Número de control inválido");
-            return false;
-        }
-
-        if (this.nombre == null || this.nombre.trim().isEmpty()) {
-            marcarComoInvalido("Nombre es obligatorio");
-            return false;
-        }
-
-        if (this.apellidoPaterno == null || this.apellidoPaterno.trim().isEmpty()) {
-            marcarComoInvalido("Apellido paterno es obligatorio");
-            return false;
-        }
-
-        if (this.correo == null || this.correo.trim().isEmpty()) {
-            marcarComoInvalido("Correo es obligatorio");
-            return false;
-        }
-
-        // Si llegamos aquí, todo está bien
-        revalidar();
-        return true;
     }
 }
