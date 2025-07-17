@@ -22,7 +22,7 @@ public class VistaRegistros extends JFrame {
 
     // Componentes principales
     private JTable candidatos;
-    private JButton eliminar;
+    private JButton darDeBaja; // *** CAMBIO: eliminar → darDeBaja ***
     private JButton editar;
     private JTextField textField1;
     private JScrollPane scrollPane;
@@ -260,10 +260,10 @@ public class VistaRegistros extends JFrame {
     private void actualizarBarraLateral() {
         if (vistaActual.equals("REGISTROS")) {
             iconoBarra.setText("R");
-            tituloBarra.setText("<html>R<br>E<br>G<br>I<br>S<br>T<br>R<br>O<br>S</html>");
+            tituloBarra.setText("<html>E<br>G<br>I<br>S<br>T<br>R<br>O<br>S</html>");
         } else {
             iconoBarra.setText("R");
-            tituloBarra.setText("<html>R<br>E<br>S<br>I<br>D<br>E<br>N<br>T<br>E<br>S</html>");
+            tituloBarra.setText("<html>E<br>S<br>I<br>D<br>E<br>N<br>T<br>E<br>S</html>");
         }
 
         // Forzar repintado de la barra lateral
@@ -425,7 +425,23 @@ public class VistaRegistros extends JFrame {
         candidatos.getTableHeader().setBackground(new Color(220, 219, 245));
         candidatos.getTableHeader().setForeground(colorPrincipal);
         candidatos.getTableHeader().setPreferredSize(new Dimension(0, 40));
-        ((DefaultTableCellRenderer) candidatos.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.LEFT);
+        ((DefaultTableCellRenderer) candidatos.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
+
+        // *** FIX: Configurar alineación de celdas hacia la derecha ***
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        // Aplicar renderizadores por columna
+        candidatos.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // No. Control - centrado
+        candidatos.getColumnModel().getColumn(1).setCellRenderer(rightRenderer);  // Nombre - derecha
+        candidatos.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);  // Apellido P. - derecha
+        candidatos.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);  // Apellido M. - derecha
+        candidatos.getColumnModel().getColumn(4).setCellRenderer(centerRenderer); // Semestre - centrado
+        candidatos.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);  // Correo - derecha
+        candidatos.getColumnModel().getColumn(6).setCellRenderer(centerRenderer); // Telefono - centrado
 
         // Configurar anchos de columna
         configurarAnchoColumnas();
@@ -476,15 +492,16 @@ public class VistaRegistros extends JFrame {
 
         // Botones de acción
         editar = crearBotonAccion("Editar", new Color(25, 118, 210));
-        eliminar = crearBotonAccion("Eliminar", new Color(211, 47, 47));
+        // *** CAMBIO: Eliminar → Dar de baja ***
+        darDeBaja = crearBotonAccion("Dar de baja", new Color(211, 47, 47));
 
         // Deshabilitar hasta que se seleccione
         editar.setEnabled(false);
-        eliminar.setEnabled(false);
+        darDeBaja.setEnabled(false);
 
         panelBotonesIzq.add(editar);
         panelBotonesIzq.add(Box.createHorizontalStrut(15));
-        panelBotonesIzq.add(eliminar);
+        panelBotonesIzq.add(darDeBaja);
 
         panelBotones.add(panelBotonesIzq, BorderLayout.WEST);
 
@@ -580,8 +597,8 @@ public class VistaRegistros extends JFrame {
             }
         });
 
-        // Eventos de botones
-        eliminar.addActionListener(e -> controlador.eliminarRegistroSeleccionado());
+        // *** CAMBIO: Eventos de botones actualizados ***
+        darDeBaja.addActionListener(e -> controlador.darDeBajaRegistroSeleccionado());
         editar.addActionListener(e -> controlador.editarRegistroSeleccionado());
         btnActualizar.addActionListener(e -> controlador.cargarTodosLosRegistros());
         btnLimpiarBusqueda.addActionListener(e -> limpiarBusqueda());
@@ -590,7 +607,7 @@ public class VistaRegistros extends JFrame {
         candidatos.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 boolean haySeleccion = candidatos.getSelectedRow() != -1;
-                eliminar.setEnabled(haySeleccion);
+                darDeBaja.setEnabled(haySeleccion); // *** CAMBIO: eliminar → darDeBaja ***
                 editar.setEnabled(haySeleccion);
             }
         });
@@ -677,25 +694,18 @@ public class VistaRegistros extends JFrame {
                 "Sistema de Registros de Residentes SIREP\n\n" +
                         "• Busqueda: Escriba para filtrar por nombre o numero de control\n" +
                         "• Editar: Seleccione un registro y haga clic en Editar\n" +
-                        "• Eliminar: Seleccione un registro y haga clic en Eliminar\n" +
+                        "• Dar de baja: Seleccione un registro y haga clic en Dar de baja\n" +
                         "• Actualizar: Recarga todos los registros desde la base de datos\n" +
                         "• Limpiar: Borra el filtro de busqueda\n" +
                         "• Nuevo Alumno: Cambia a la vista para registrar nuevos alumnos\n" +
-                        "• ESC: Atajo para limpiar la busqueda\n\n" +
-                        "⚠️ NOTA: Todos los residentes tienen asignada automáticamente\n" +
-                        "la carrera 'Ingeniería en Sistemas Computacionales'" :
+                        "• ESC: Atajo para limpiar la busqueda\n\n":
 
                 "Sistema de Gestion de Residentes SIREP\n\n" +
                         "• Cargar Excel: Carga residentes desde archivo Excel\n" +
                         "• Importar: Guarda los datos cargados en la base de datos\n" +
                         "• Agregar Manual: Agrega un residente manualmente\n" +
                         "• Limpiar Tabla: Limpia todos los datos de la tabla temporal\n" +
-                        "• Flecha izquierda: Regresa a la vista de registros\n\n" +
-                        "⚠️ IMPORTANTE:\n" +
-                        "• La carrera se asigna automáticamente como:\n" +
-                        "  'Ingeniería en Sistemas Computacionales'\n" +
-                        "• Los archivos Excel NO deben incluir columna 'Carrera'\n" +
-                        "• La tabla muestra solo información esencial";
+                        "• Flecha izquierda: Regresa a la vista de registros\n\n";
 
         JOptionPane.showMessageDialog(this, ayuda, "Ayuda - Sistema SIREP", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -790,7 +800,416 @@ public class VistaRegistros extends JFrame {
         return panelResidentes;
     }
 
+    // *** NUEVO: Método para abrir diálogo de edición desde el controlador ***
+    public void abrirDialogoEdicion(ModeloResidente residente) {
+        try {
+            // Crear diálogo de edición
+            DialogoEdicion dialogo = new DialogoEdicion(
+                    (Frame) SwingUtilities.getWindowAncestor(this),
+                    residente
+            );
+
+            dialogo.setVisible(true);
+
+            // Si se confirmó la edición, actualizar tabla
+            if (dialogo.isGuardado()) {
+                actualizarTabla();
+            }
+
+        } catch (Exception e) {
+            mostrarMensaje(
+                    "❌ Error al abrir el editor:\n" + e.getMessage(),
+                    "Error de edición",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            System.err.println("Error al editar registro: " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new VistaRegistros().setVisible(true));
+    }
+}
+
+// ==================== CLASE DIÁLOGO DE EDICIÓN ACTUALIZADA ====================
+
+class DialogoEdicion extends JDialog {
+    // *** CAMBIO: Quitar campo ID Proyecto ***
+    private JTextField txtNumeroControl;
+    private JTextField txtNombre;
+    private JTextField txtApellidoPaterno;
+    private JTextField txtApellidoMaterno;
+    private JTextField txtCarrera;
+    private JSpinner spnSemestre;
+    private JTextField txtCorreo;
+    private JTextField txtTelefono;
+    // *** ELIMINADO: private JSpinner spnIdProyecto; ***
+    private JButton btnGuardar;
+    private JButton btnCancelar;
+
+    private boolean guardado = false;
+    private ModeloResidente residente;
+
+    public DialogoEdicion(Frame parent, ModeloResidente residente) {
+        super(parent, "✏️ Editar Residente", true);
+        this.residente = residente;
+
+        initComponents();
+        cargarDatos();
+        setupLayout();
+        setupEvents();
+
+        // *** FIX: Tamaño original con scroll ***
+        setSize(450, 400); // Tamaño original
+        setLocationRelativeTo(parent);
+        setResizable(true);
+        setMinimumSize(new Dimension(450, 400));
+    }
+
+    private void initComponents() {
+        // *** FIX: Campo numero_control igual que los demás ***
+        txtNumeroControl = new JTextField(15);
+        txtNumeroControl.setEditable(true);
+        txtNumeroControl.setEnabled(true);
+        txtNumeroControl.setBackground(Color.WHITE);
+        txtNumeroControl.setForeground(Color.BLACK);
+
+        txtNombre = new JTextField(15);
+        txtApellidoPaterno = new JTextField(15);
+        txtApellidoMaterno = new JTextField(15);
+        txtCarrera = new JTextField(15);
+        spnSemestre = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
+        txtCorreo = new JTextField(15);
+        txtTelefono = new JTextField(15);
+        // *** ELIMINADO: spnIdProyecto ***
+
+        btnGuardar = new JButton("💾 Guardar Cambios");
+        btnCancelar = new JButton("❌ Cancelar");
+
+        // Configurar colores
+        btnGuardar.setBackground(new Color(46, 125, 50));
+        btnGuardar.setForeground(Color.WHITE);
+        btnGuardar.setFocusPainted(false);
+
+        btnCancelar.setBackground(new Color(211, 47, 47));
+        btnCancelar.setForeground(Color.WHITE);
+        btnCancelar.setFocusPainted(false);
+    }
+
+    private void cargarDatos() {
+        txtNumeroControl.setText(String.valueOf(residente.getNumeroControl()));
+        txtNombre.setText(residente.getNombre());
+        txtApellidoPaterno.setText(residente.getApellidoPaterno());
+        txtApellidoMaterno.setText(residente.getApellidoMaterno() != null ? residente.getApellidoMaterno() : "");
+        txtCarrera.setText(residente.getCarrera());
+        spnSemestre.setValue(residente.getSemestre());
+        txtCorreo.setText(residente.getCorreo());
+        txtTelefono.setText(residente.getTelefono() != null ? residente.getTelefono() : "");
+        // *** ELIMINADO: spnIdProyecto.setValue(residente.getIdProyecto()); ***
+    }
+
+    private void setupLayout() {
+        setLayout(new BorderLayout());
+
+        // Panel principal con campos
+        JPanel panelCampos = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Título
+        JLabel lblTitulo = new JLabel("✏️ Editar Información del Residente");
+        lblTitulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // *** FIX: Sin etiqueta especial, igual que los demás y sin ID Proyecto ***
+        agregarCampo(panelCampos, "* Número de Control:", txtNumeroControl, gbc, 0);
+        agregarCampo(panelCampos, "* Nombre:", txtNombre, gbc, 1);
+        agregarCampo(panelCampos, "* Apellido Paterno:", txtApellidoPaterno, gbc, 2);
+        agregarCampo(panelCampos, "Apellido Materno:", txtApellidoMaterno, gbc, 3);
+        agregarCampo(panelCampos, "* Carrera:", txtCarrera, gbc, 4);
+        agregarCampo(panelCampos, "* Semestre:", spnSemestre, gbc, 5);
+        agregarCampo(panelCampos, "* Correo:", txtCorreo, gbc, 6);
+        agregarCampo(panelCampos, "Teléfono:", txtTelefono, gbc, 7);
+        // *** ELIMINADO: agregarCampo(panelCampos, "ID Proyecto:", spnIdProyecto, gbc, 8); ***
+
+        // *** FIX: Scroll para los campos ***
+        JScrollPane scrollCampos = new JScrollPane(panelCampos);
+        scrollCampos.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollCampos.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollCampos.setBorder(BorderFactory.createEmptyBorder());
+
+        // Nota sobre campos obligatorios
+        JLabel lblNota = new JLabel("* Campos obligatorios");
+        lblNota.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 11));
+        lblNota.setForeground(Color.GRAY);
+
+        // Panel de botones
+        JPanel panelBotones = new JPanel(new FlowLayout());
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnCancelar);
+
+        // Panel superior con título
+        JPanel panelSuperior = new JPanel(new BorderLayout());
+        panelSuperior.add(lblTitulo, BorderLayout.CENTER);
+        panelSuperior.setBorder(BorderFactory.createEmptyBorder(10, 10, 15, 10));
+
+        // Panel inferior con nota y botones
+        JPanel panelInferior = new JPanel(new BorderLayout());
+        panelInferior.add(lblNota, BorderLayout.NORTH);
+        panelInferior.add(panelBotones, BorderLayout.CENTER);
+        panelInferior.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Agregar todo al diálogo
+        add(panelSuperior, BorderLayout.NORTH);
+        add(scrollCampos, BorderLayout.CENTER); // *** FIX: Scroll en el centro ***
+        add(panelInferior, BorderLayout.SOUTH);
+
+        // Borde general
+        ((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+    }
+
+    private void agregarCampo(JPanel panel, String etiqueta, JComponent campo, GridBagConstraints gbc, int fila) {
+        gbc.gridx = 0;
+        gbc.gridy = fila;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+
+        JLabel label = new JLabel(etiqueta);
+        if (etiqueta.startsWith("*")) {
+            label.setForeground(new Color(211, 47, 47)); // Rojo para obligatorios
+        }
+        panel.add(label, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        panel.add(campo, gbc);
+    }
+
+    private void setupEvents() {
+        btnGuardar.addActionListener(e -> guardarCambios());
+        btnCancelar.addActionListener(e -> cancelar());
+
+        // *** FIX: Asegurar que txtNumeroControl sea focusable ***
+        txtNumeroControl.addFocusListener(new java.awt.event.FocusListener() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                txtNumeroControl.selectAll(); // Seleccionar todo al enfocar
+                System.out.println("DEBUG: Campo número de control enfocado");
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                System.out.println("DEBUG: Campo número de control perdió el foco. Valor: " + txtNumeroControl.getText());
+            }
+        });
+
+        // Enter para guardar
+        getRootPane().setDefaultButton(btnGuardar);
+
+        // Escape para cancelar
+        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke("ESCAPE");
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
+        getRootPane().getActionMap().put("ESCAPE", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cancelar();
+            }
+        });
+    }
+
+    private void guardarCambios() {
+        // Validar campos obligatorios
+        if (!validarCampos()) {
+            return;
+        }
+
+        // Confirmar guardado
+        int opcion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de guardar los cambios?\n" +
+                        "Nombre: " + txtNombre.getText().trim() + " " + txtApellidoPaterno.getText().trim(),
+                "Confirmar cambios",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (opcion == JOptionPane.YES_OPTION) {
+            try {
+                // Cambiar cursor a espera
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                // *** CAMBIO: Actualizar datos del residente SIN id_proyecto ***
+                residente.setNumeroControl(Integer.parseInt(txtNumeroControl.getText().trim()));
+                residente.setNombre(txtNombre.getText().trim());
+                residente.setApellidoPaterno(txtApellidoPaterno.getText().trim());
+                residente.setApellidoMaterno(txtApellidoMaterno.getText().trim().isEmpty() ? null : txtApellidoMaterno.getText().trim());
+                residente.setCarrera(txtCarrera.getText().trim());
+                residente.setSemestre((Integer) spnSemestre.getValue());
+                residente.setCorreo(txtCorreo.getText().trim());
+                residente.setTelefono(txtTelefono.getText().trim().isEmpty() ? null : txtTelefono.getText().trim());
+                // *** ELIMINADO: residente.setIdProyecto((Integer) spnIdProyecto.getValue()); ***
+
+                // Guardar en la base de datos
+                boolean actualizado = residente.actualizar();
+
+                if (actualizado) {
+                    guardado = true;
+                    JOptionPane.showMessageDialog(this,
+                            "✅ Cambios guardados exitosamente\n" +
+                                    "📝 Número de Control: " + residente.getNumeroControl(),
+                            "Actualización exitosa",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "❌ No se pudieron guardar los cambios\n" +
+                                    "Verifique que el registro aún existe en la base de datos",
+                            "Error de actualización",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "❌ Error al guardar los cambios:\n" + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                System.err.println("Error al actualizar residente: " + e.getMessage());
+            } finally {
+                setCursor(Cursor.getDefaultCursor());
+            }
+        }
+    }
+
+    private boolean validarCampos() {
+        // *** CAMBIO: Validar número de control ***
+        String numeroControlTexto = txtNumeroControl.getText().trim();
+        if (numeroControlTexto.isEmpty()) {
+            mostrarError("El número de control es obligatorio", txtNumeroControl);
+            return false;
+        }
+
+        try {
+            int numeroControl = Integer.parseInt(numeroControlTexto);
+            if (numeroControl <= 0) {
+                mostrarError("El número de control debe ser un número positivo", txtNumeroControl);
+                return false;
+            }
+            if (numeroControlTexto.length() != 8) {
+                mostrarError("El número de control debe tener exactamente 8 dígitos", txtNumeroControl);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            mostrarError("El número de control debe ser un número válido", txtNumeroControl);
+            return false;
+        }
+
+        // Validar nombre
+        if (txtNombre.getText().trim().isEmpty()) {
+            mostrarError("El nombre es obligatorio", txtNombre);
+            return false;
+        }
+
+        if (txtNombre.getText().trim().length() < 2) {
+            mostrarError("El nombre debe tener al menos 2 caracteres", txtNombre);
+            return false;
+        }
+
+        // Validar apellido paterno
+        if (txtApellidoPaterno.getText().trim().isEmpty()) {
+            mostrarError("El apellido paterno es obligatorio", txtApellidoPaterno);
+            return false;
+        }
+
+        if (txtApellidoPaterno.getText().trim().length() < 2) {
+            mostrarError("El apellido paterno debe tener al menos 2 caracteres", txtApellidoPaterno);
+            return false;
+        }
+
+        // Validar carrera
+        if (txtCarrera.getText().trim().isEmpty()) {
+            mostrarError("La carrera es obligatoria", txtCarrera);
+            return false;
+        }
+
+        // Validar correo
+        String correo = txtCorreo.getText().trim();
+        if (correo.isEmpty()) {
+            mostrarError("El correo es obligatorio", txtCorreo);
+            return false;
+        }
+
+        if (!validarFormatoCorreo(correo)) {
+            mostrarError("El formato del correo no es válido\nEjemplo: usuario@dominio.com", txtCorreo);
+            return false;
+        }
+
+        // Validar teléfono (opcional, pero si se proporciona debe ser válido)
+        String telefono = txtTelefono.getText().trim();
+        if (!telefono.isEmpty() && !validarFormatoTelefono(telefono)) {
+            mostrarError("El formato del teléfono no es válido\nDebe contener solo números y tener entre 8 y 15 dígitos", txtTelefono);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validarFormatoCorreo(String correo) {
+        return correo.contains("@") &&
+                correo.contains(".") &&
+                correo.indexOf("@") > 0 &&
+                correo.indexOf("@") < correo.lastIndexOf(".") &&
+                correo.lastIndexOf(".") < correo.length() - 1;
+    }
+
+    private boolean validarFormatoTelefono(String telefono) {
+        String telefonoLimpio = telefono.replaceAll("[^0-9]", "");
+        return telefonoLimpio.length() >= 8 && telefonoLimpio.length() <= 15;
+    }
+
+    private void mostrarError(String mensaje, JTextField campo) {
+        JOptionPane.showMessageDialog(this,
+                mensaje,
+                "Error de validación",
+                JOptionPane.ERROR_MESSAGE);
+        campo.requestFocus();
+        campo.selectAll();
+    }
+
+    private void cancelar() {
+        if (hayCambios()) {
+            int opcion = JOptionPane.showConfirmDialog(this,
+                    "¿Está seguro de cancelar?\nSe perderán todos los cambios realizados.",
+                    "Confirmar cancelación",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
+            if (opcion == JOptionPane.YES_OPTION) {
+                guardado = false;
+                dispose();
+            }
+        } else {
+            guardado = false;
+            dispose();
+        }
+    }
+
+    private boolean hayCambios() {
+        try {
+            return !txtNumeroControl.getText().equals(String.valueOf(residente.getNumeroControl())) ||
+                    !txtNombre.getText().equals(residente.getNombre()) ||
+                    !txtApellidoPaterno.getText().equals(residente.getApellidoPaterno()) ||
+                    !txtApellidoMaterno.getText().equals(residente.getApellidoMaterno() != null ? residente.getApellidoMaterno() : "") ||
+                    !txtCarrera.getText().equals(residente.getCarrera()) ||
+                    !spnSemestre.getValue().equals(residente.getSemestre()) ||
+                    !txtCorreo.getText().equals(residente.getCorreo()) ||
+                    !txtTelefono.getText().equals(residente.getTelefono() != null ? residente.getTelefono() : "");
+            // *** ELIMINADO: !spnIdProyecto.getValue().equals(residente.getIdProyecto()); ***
+        } catch (Exception e) {
+            return true; // Si hay error, asumir que hay cambios
+        }
+    }
+
+    public boolean isGuardado() {
+        return guardado;
     }
 }

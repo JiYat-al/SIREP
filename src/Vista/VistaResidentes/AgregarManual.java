@@ -128,12 +128,12 @@ public class AgregarManual extends JDialog {
     }
 
     private void crearCamposFormulario(JPanel panel, GridBagConstraints gbc) {
-        // Número de Control
+        // *** FIX: Número de Control - AHORA ACEPTA VARCHAR(9) ***
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
         panel.add(crearEtiqueta("* Número de Control"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
         txtNumeroControl = crearCampoTexto();
-        txtNumeroControl.setToolTipText("Formato: AACCCCCC (8 dígitos) - Ej: 22161063");
+        txtNumeroControl.setToolTipText("Formato: máximo 9 caracteres - Ej: 22161063");
         panel.add(txtNumeroControl, gbc);
 
         // Nombre
@@ -342,6 +342,7 @@ public class AgregarManual extends JDialog {
         btnGuardar.addActionListener(e -> guardarResidenteDirectoABD());
         btnCancelar.addActionListener(e -> cancelar());
         btnLimpiar.addActionListener(e -> limpiarFormulario());
+        btnAyuda.addActionListener(e -> mostrarAyuda()); // *** FIX: Agregar evento de ayuda ***
 
         // Enter para guardar
         getRootPane().setDefaultButton(btnGuardar);
@@ -366,7 +367,7 @@ public class AgregarManual extends JDialog {
     }
 
     private void configurarValidacionTiempoReal() {
-        // Validación del número de control en tiempo real
+        // *** FIX: Validación del número de control para VARCHAR(9) ***
         txtNumeroControl.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -426,10 +427,24 @@ public class AgregarManual extends JDialog {
 
     // ==================== MÉTODOS DE VALIDACIÓN VISUAL ====================
 
+    // *** FIX: Validación actualizada para VARCHAR(9) ***
     private void validarNumeroControlVisual(String numeroControl) {
         String numLimpio = numeroControl.replaceAll("[\\s-]", "");
 
-        if (numLimpio.matches("\\d{8}")) {
+        // Validar longitud máxima de 9 caracteres
+        if (numLimpio.length() > 9) {
+            mostrarBordeError(txtNumeroControl);
+            return;
+        }
+
+        // Validar que solo contenga números
+        if (!numLimpio.matches("\\d+")) {
+            mostrarBordeError(txtNumeroControl);
+            return;
+        }
+
+        // Si tiene 8 dígitos, aplicar validación tradicional
+        if (numLimpio.length() == 8) {
             // Validar año
             int anio = Integer.parseInt(numLimpio.substring(0, 2));
             int anioActual = java.time.Year.now().getValue() % 100;
@@ -448,7 +463,11 @@ public class AgregarManual extends JDialog {
             } else {
                 mostrarBordeAdvertencia(txtNumeroControl);
             }
+        } else if (numLimpio.length() >= 6 && numLimpio.length() <= 9) {
+            // Para números de 6-9 dígitos, mostrar como válido
+            mostrarBordeExito(txtNumeroControl);
         } else {
+            // Muy corto o muy largo
             mostrarBordeError(txtNumeroControl);
         }
     }
@@ -570,6 +589,27 @@ public class AgregarManual extends JDialog {
                     "Información",
                     JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    // *** FIX: Agregar método mostrarAyuda ***
+    private void mostrarAyuda() {
+        String ayuda = "📋 Formato del Número de Control\n\n" +
+                "🔢 Estructura actualizada:\n" +
+                "• Máximo 9 caracteres\n" +
+                "• Solo números\n" +
+                "• Ejemplos válidos:\n" +
+                "  - 22161063 (8 dígitos tradicional)\n" +
+                "  - 221610631 (9 dígitos)\n" +
+                "  - 2216106 (7 dígitos)\n\n" +
+                "📝 Otros campos:\n" +
+                "• Semestre: 9-15 (residencia)\n" +
+                "• Carrera: Automática\n" +
+                "• Teléfono: Opcional, 8-15 dígitos\n" +
+                "• Correo: Formato estándar\n\n" +
+                "⚠️ El sistema valida duplicados automáticamente";
+
+        JOptionPane.showMessageDialog(this, ayuda,
+                "Ayuda - Formato de Datos", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void restaurarTodosLosBordes() {

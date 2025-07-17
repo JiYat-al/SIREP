@@ -15,13 +15,13 @@ public class ControladorAgrManual {
     }
 
     /**
-     * MEJORADO: Validar todos los campos con validación de teléfono mejorada
+     * *** FIX: Validar todos los campos con nueva estructura VARCHAR(9) ***
      */
     public boolean validarCampos(String numeroControl, String nombre, String apellidoPaterno,
                                  String apellidoMaterno, String carrera, String semestre,
                                  String correo, String telefono) {
 
-        // ==================== VALIDAR NÚMERO DE CONTROL ====================
+        // ==================== VALIDAR NÚMERO DE CONTROL (VARCHAR(9)) ====================
         if (numeroControl.trim().isEmpty()) {
             mostrarError("El número de control es obligatorio");
             return false;
@@ -34,36 +34,51 @@ public class ControladorAgrManual {
             return false;
         }
 
-        if (numControlLimpio.length() != 8) {
-            mostrarError("El número de control debe tener exactamente 8 dígitos");
+        // *** FIX: Validar longitud máxima de 9 caracteres ***
+        if (numControlLimpio.length() > 9) {
+            mostrarError("El número de control no puede tener más de 9 dígitos");
+            return false;
+        }
+
+        // *** FIX: Validar longitud mínima más flexible ***
+        if (numControlLimpio.length() < 6) {
+            mostrarError("El número de control debe tener al menos 6 dígitos");
             return false;
         }
 
         try {
-            long numControl = Long.parseLong(numControlLimpio);
-            int anio = Integer.parseInt(numControlLimpio.substring(0, 2));
-            int anioActual = java.time.Year.now().getValue() % 100;
-            int anioMinimo = (anioActual - 20 + 100) % 100;
-            int anioMaximo = (anioActual + 2) % 100;
+            // *** FIX: Validar como String (no convertir a int para evitar overflow) ***
+            // Si tiene 8 dígitos, aplicar validación tradicional del año
+            if (numControlLimpio.length() == 8) {
+                int anio = Integer.parseInt(numControlLimpio.substring(0, 2));
+                int anioActual = java.time.Year.now().getValue() % 100;
+                int anioMinimo = (anioActual - 20 + 100) % 100;
+                int anioMaximo = (anioActual + 2) % 100;
 
-            boolean anioValido = false;
-            if (anioMinimo <= anioMaximo) {
-                anioValido = (anio >= anioMinimo && anio <= anioMaximo);
-            } else {
-                anioValido = (anio >= anioMinimo || anio <= anioMaximo);
+                boolean anioValido = false;
+                if (anioMinimo <= anioMaximo) {
+                    anioValido = (anio >= anioMinimo && anio <= anioMaximo);
+                } else {
+                    anioValido = (anio >= anioMinimo || anio <= anioMaximo);
+                }
+
+                if (!anioValido) {
+                    mostrarError("El año en el número de control no es válido para formato de 8 dígitos");
+                    return false;
+                }
+
+                String consecutivo = numControlLimpio.substring(2);
+                if (consecutivo.equals("000000")) {
+                    mostrarError("El número consecutivo del control no puede ser 000000");
+                    return false;
+                }
             }
-
-            if (!anioValido) {
-                mostrarError("El año en el número de control no es válido");
-                return false;
-            }
-
-            String consecutivo = numControlLimpio.substring(2);
-            int numConsecutivo = Integer.parseInt(consecutivo);
-
-            if (numConsecutivo == 0) {
-                mostrarError("El número consecutivo del control no puede ser 000000");
-                return false;
+            // Para otros formatos (6, 7, 9 dígitos), solo verificar que no sean todos ceros
+            else {
+                if (numControlLimpio.matches("0+")) {
+                    mostrarError("El número de control no puede ser solo ceros");
+                    return false;
+                }
             }
 
         } catch (NumberFormatException e) {
@@ -82,8 +97,8 @@ public class ControladorAgrManual {
             return false;
         }
 
-        if (nombre.trim().length() > 50) {
-            mostrarError("El nombre no puede exceder 50 caracteres");
+        if (nombre.trim().length() > 100) { // *** FIX: Aumentado límite a 100 ***
+            mostrarError("El nombre no puede exceder 100 caracteres");
             return false;
         }
 
@@ -103,8 +118,8 @@ public class ControladorAgrManual {
             return false;
         }
 
-        if (apellidoPaterno.trim().length() > 50) {
-            mostrarError("El apellido paterno no puede exceder 50 caracteres");
+        if (apellidoPaterno.trim().length() > 100) { // *** FIX: Aumentado límite a 100 ***
+            mostrarError("El apellido paterno no puede exceder 100 caracteres");
             return false;
         }
 
@@ -120,8 +135,8 @@ public class ControladorAgrManual {
                 return false;
             }
 
-            if (apellidoMaterno.trim().length() > 50) {
-                mostrarError("El apellido materno no puede exceder 50 caracteres");
+            if (apellidoMaterno.trim().length() > 100) { // *** FIX: Aumentado límite a 100 ***
+                mostrarError("El apellido materno no puede exceder 100 caracteres");
                 return false;
             }
 
@@ -257,60 +272,170 @@ public class ControladorAgrManual {
                 JOptionPane.ERROR_MESSAGE);
     }
 
-    public boolean existeResidente(int numeroControl) {
-        return ModeloResidente.existe(numeroControl);
+    // *** FIX: Verificar existencia con número de control como String ***
+    public boolean existeResidente(String numeroControl) {
+        try {
+            // *** FIX: Convertir String a int solo para la verificación ***
+            int numControl = Integer.parseInt(numeroControl.trim());
+            return ModeloResidente.existe(numControl);
+        } catch (NumberFormatException e) {
+            return false; // Si no se puede convertir, asumir que no existe
+        }
     }
 
     /**
-     * MEJORADO: Guardar residente directamente en BD con mensajes concisos
+     * *** FIX: Guardar residente con validación y debug mejorado ***
      */
     public boolean guardarResidenteDirectoEnBD(String numeroControl, String nombre, String apellidoPaterno,
                                                String apellidoMaterno, String carrera, String semestre,
                                                String correo, String telefono) {
         try {
+            System.out.println("DEBUG: === INICIANDO GUARDADO MANUAL ===");
+            System.out.println("DEBUG: Datos recibidos:");
+            System.out.println("  - numeroControl: '" + numeroControl + "'");
+            System.out.println("  - nombre: '" + nombre + "'");
+            System.out.println("  - apellidoPaterno: '" + apellidoPaterno + "'");
+            System.out.println("  - apellidoMaterno: '" + apellidoMaterno + "'");
+            System.out.println("  - carrera: '" + carrera + "'");
+            System.out.println("  - semestre: '" + semestre + "'");
+            System.out.println("  - correo: '" + correo + "'");
+            System.out.println("  - telefono: '" + telefono + "'");
+
             if (!validarCampos(numeroControl, nombre, apellidoPaterno, apellidoMaterno,
                     carrera, semestre, correo, telefono)) {
+                System.out.println("DEBUG: Validación de campos falló");
                 return false;
             }
 
             String numControlLimpio = numeroControl.trim().replaceAll("[\\s-]", "");
-            int numControl = Integer.parseInt(numControlLimpio);
 
-            if (existeResidente(numControl)) {
+            // *** FIX: Verificar existencia usando String ***
+            if (existeResidente(numControlLimpio)) {
                 mostrarError("Ya existe un residente con este número de control");
                 return false;
             }
 
+            // *** FIX: Verificar duplicado por correo ***
+            if (existeCorreo(correo.trim())) {
+                mostrarError("Ya existe un residente con este correo electrónico");
+                return false;
+            }
+
             ModeloResidente residente = new ModeloResidente();
-            residente.setNumeroControl(numControl);
+
+            // *** FIX: Asignar datos con validación estricta ***
+            try {
+                int numControl = Integer.parseInt(numControlLimpio);
+                residente.setNumeroControl(numControl);
+                System.out.println("DEBUG: Número de control convertido: " + numControl);
+            } catch (NumberFormatException e) {
+                mostrarError("Error al procesar el número de control: " + e.getMessage());
+                return false;
+            }
+
+            try {
+                int sem = Integer.parseInt(semestre.trim());
+                residente.setSemestre(sem);
+                System.out.println("DEBUG: Semestre convertido: " + sem);
+            } catch (NumberFormatException e) {
+                mostrarError("Error al procesar el semestre: " + e.getMessage());
+                return false;
+            }
+
+            // Asignar campos de texto
             residente.setNombre(formatearTexto(nombre.trim()));
             residente.setApellidoPaterno(formatearTexto(apellidoPaterno.trim()));
             residente.setApellidoMaterno(apellidoMaterno.trim().isEmpty() ? null : formatearTexto(apellidoMaterno.trim()));
-            residente.setCarrera(carrera);
-            residente.setSemestre(Integer.parseInt(semestre.trim()));
+            residente.setCarrera(carrera.trim());
             residente.setCorreo(correo.trim().toLowerCase());
             residente.setTelefono(telefono.trim().isEmpty() ? null : telefono.trim());
-            residente.setIdProyecto(1);
+            residente.setIdProyecto(1); // Proyecto por defecto
+            residente.setEstatus(true); // Activo
 
+            System.out.println("DEBUG: Objeto residente creado:");
+            System.out.println("  - numeroControl: " + residente.getNumeroControl());
+            System.out.println("  - nombre: " + residente.getNombre());
+            System.out.println("  - apellidoPaterno: " + residente.getApellidoPaterno());
+            System.out.println("  - apellidoMaterno: " + residente.getApellidoMaterno());
+            System.out.println("  - carrera: " + residente.getCarrera());
+            System.out.println("  - semestre: " + residente.getSemestre());
+            System.out.println("  - correo: " + residente.getCorreo());
+            System.out.println("  - telefono: " + residente.getTelefono());
+            System.out.println("  - idProyecto: " + residente.getIdProyecto());
+            System.out.println("  - estatus: " + residente.isEstatus());
+
+            System.out.println("DEBUG: Llamando a guardarEnBaseDatos()...");
             boolean guardado = residente.guardarEnBaseDatos();
+            System.out.println("DEBUG: Resultado de guardarEnBaseDatos(): " + guardado);
 
             if (guardado) {
+                System.out.println("DEBUG: ✅ Guardado exitoso - mostrando mensaje de éxito");
                 JOptionPane.showMessageDialog(vista,
-                        "✅ Residente guardado exitosamente",
+                        "✅ Residente guardado exitosamente\n" +
+                                "📝 Número de Control: " + numControlLimpio + "\n" +
+                                "👤 Nombre: " + residente.getNombre() + " " + residente.getApellidoPaterno(),
                         "Éxito",
                         JOptionPane.INFORMATION_MESSAGE);
                 return true;
             } else {
-                mostrarError("❌ Error al guardar en la base de datos");
-                return false;
+                System.out.println("DEBUG: ❌ guardarEnBaseDatos() retornó false");
+
+                // *** FIX: Verificar si realmente se guardó en la BD con delay ***
+                try {
+                    Thread.sleep(100); // Pequeño delay para asegurar consistencia
+                } catch (InterruptedException ignored) {}
+
+                ModeloResidente verificacion = ModeloResidente.buscarPorNumeroControl(residente.getNumeroControl());
+                if (verificacion != null) {
+                    System.out.println("DEBUG: ✅ PARADOJA CONFIRMADA: El registro SÍ existe en BD");
+                    System.out.println("DEBUG: Registro encontrado - ID: " + verificacion.getIdResidente() +
+                            ", Nombre: " + verificacion.getNombre());
+
+                    // *** TRATARLO COMO ÉXITO YA QUE EL REGISTRO EXISTE ***
+                    JOptionPane.showMessageDialog(vista,
+                            "✅ Residente guardado exitosamente\n" +
+                                    "📝 Número de Control: " + numControlLimpio + "\n" +
+                                    "👤 Nombre: " + residente.getNombre() + " " + residente.getApellidoPaterno() + "\n\n" +
+                                    "ℹ️ Nota técnica: Problema menor en la confirmación del guardado,\n" +
+                                    "pero el registro se guardó correctamente en la base de datos.",
+                            "Guardado Exitoso",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    return true;
+                } else {
+                    System.out.println("DEBUG: ❌ CONFIRMADO: El registro NO existe en BD");
+                    mostrarError("❌ Error al guardar en la base de datos\n" +
+                            "El registro no se encontró después del intento de guardado.");
+                    return false;
+                }
             }
 
         } catch (NumberFormatException e) {
-            mostrarError("Error en el formato de los números");
+            System.err.println("DEBUG: Error de formato numérico: " + e.getMessage());
+            mostrarError("Error en el formato de los números: " + e.getMessage());
             return false;
         } catch (Exception e) {
+            System.err.println("DEBUG: Error inesperado: " + e.getMessage());
+            e.printStackTrace();
             mostrarError("Error inesperado: " + e.getMessage());
             return false;
+        }
+    }
+
+    // *** FIX: Verificar si existe un correo (método auxiliar) ***
+    private boolean existeCorreo(String correo) {
+        try {
+            // Buscar en todos los residentes activos
+            java.util.List<ModeloResidente> residentes = ModeloResidente.obtenerTodos();
+            for (ModeloResidente residente : residentes) {
+                if (residente.getCorreo() != null &&
+                        residente.getCorreo().equalsIgnoreCase(correo.trim())) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("Error al verificar correo: " + e.getMessage());
+            return false; // En caso de error, permitir continuar
         }
     }
 
@@ -360,6 +485,7 @@ public class ControladorAgrManual {
         return ModeloResidente.buscarPorNumeroControl(numeroControl);
     }
 
+    // *** FIX: Validar número de control único con String ***
     public boolean validarNumeroControlUnico(String numeroControl) {
         try {
             String numControlLimpio = numeroControl.trim().replaceAll("[\\s-]", "");
@@ -368,20 +494,19 @@ public class ControladorAgrManual {
                 return false;
             }
 
-            int numControl = Integer.parseInt(numControlLimpio);
-
-            if (existeResidente(numControl)) {
+            if (existeResidente(numControlLimpio)) {
                 mostrarError("Ya existe un residente con este número de control");
                 return false;
             }
 
             return true;
-        } catch (NumberFormatException e) {
-            mostrarError("El número de control debe ser un número válido");
+        } catch (Exception e) {
+            mostrarError("Error al validar número de control: " + e.getMessage());
             return false;
         }
     }
 
+    // *** FIX: Validar solo formato de número de control ***
     public boolean validarSoloNumeroControl(String numeroControl) {
         if (numeroControl.trim().isEmpty()) {
             mostrarError("El número de control es obligatorio");
@@ -395,28 +520,35 @@ public class ControladorAgrManual {
             return false;
         }
 
-        if (numControlLimpio.length() != 8) {
-            mostrarError("El número de control debe tener exactamente 8 dígitos");
+        if (numControlLimpio.length() > 9) {
+            mostrarError("El número de control no puede tener más de 9 dígitos");
+            return false;
+        }
+
+        if (numControlLimpio.length() < 6) {
+            mostrarError("El número de control debe tener al menos 6 dígitos");
             return false;
         }
 
         try {
-            long numControl = Long.parseLong(numControlLimpio);
-            int anio = Integer.parseInt(numControlLimpio.substring(0, 2));
-            int anioActual = java.time.Year.now().getValue() % 100;
-            int anioMinimo = (anioActual - 20 + 100) % 100;
-            int anioMaximo = (anioActual + 2) % 100;
+            // Validación adicional para formato de 8 dígitos
+            if (numControlLimpio.length() == 8) {
+                int anio = Integer.parseInt(numControlLimpio.substring(0, 2));
+                int anioActual = java.time.Year.now().getValue() % 100;
+                int anioMinimo = (anioActual - 20 + 100) % 100;
+                int anioMaximo = (anioActual + 2) % 100;
 
-            boolean anioValido = false;
-            if (anioMinimo <= anioMaximo) {
-                anioValido = (anio >= anioMinimo && anio <= anioMaximo);
-            } else {
-                anioValido = (anio >= anioMinimo || anio <= anioMaximo);
-            }
+                boolean anioValido = false;
+                if (anioMinimo <= anioMaximo) {
+                    anioValido = (anio >= anioMinimo && anio <= anioMaximo);
+                } else {
+                    anioValido = (anio >= anioMinimo || anio <= anioMaximo);
+                }
 
-            if (!anioValido) {
-                mostrarError("El año en el número de control no es válido");
-                return false;
+                if (!anioValido) {
+                    mostrarError("El año en el número de control no es válido");
+                    return false;
+                }
             }
 
             return true;
@@ -431,8 +563,6 @@ public class ControladorAgrManual {
      */
     public static boolean procesarAgregarResidente(Frame parent) {
         AgregarManual vista = new AgregarManual(parent);
-        ControladorAgrManual controlador = new ControladorAgrManual(vista);
-
         vista.setVisible(true);
         return vista.isGuardado();
     }

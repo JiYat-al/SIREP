@@ -117,63 +117,143 @@ public class ModeloResidente {
 
     public boolean guardarEnBaseDatos() {
         try {
+            System.out.println("DEBUG: === INICIANDO guardarEnBaseDatos() ===");
+
+            // Crear proyecto por defecto si no existe
             crearProyectoDefecto();
 
             if (this.idProyecto <= 0) {
                 this.idProyecto = 1;
+                System.out.println("DEBUG: ID proyecto asignado por defecto: " + this.idProyecto);
             }
 
-            return this.insertar();
+            System.out.println("DEBUG: Llamando a insertar()...");
+            boolean resultado = this.insertar();
+
+            System.out.println("DEBUG: Resultado de insertar(): " + resultado);
+
+            if (resultado) {
+                System.out.println("DEBUG: ✅ guardarEnBaseDatos() exitoso");
+            } else {
+                System.out.println("DEBUG: ❌ guardarEnBaseDatos() falló");
+            }
+
+            return resultado;
 
         } catch (Exception e) {
-            System.err.println("Error en guardarEnBaseDatos: " + e.getMessage());
+            System.err.println("DEBUG: Error en guardarEnBaseDatos(): " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
 
-    // *** CAMBIO: Insertar con nueva estructura ***
+    // *** FIX: Insertar con debug detallado para encontrar el problema ***
     public boolean insertar() {
         String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
                 "carrera, semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+        System.out.println("DEBUG: Insertando residente con datos:");
+        System.out.println("  - numero_control: " + this.numeroControl);
+        System.out.println("  - nombre: " + this.nombre);
+        System.out.println("  - apellido_paterno: " + this.apellidoPaterno);
+        System.out.println("  - apellido_materno: " + this.apellidoMaterno);
+        System.out.println("  - carrera: " + this.carrera);
+        System.out.println("  - semestre: " + this.semestre);
+        System.out.println("  - correo: " + this.correo);
+        System.out.println("  - telefono: " + this.telefono);
+        System.out.println("  - id_proyecto: " + this.idProyecto);
+        System.out.println("  - estatus: " + this.estatus);
+
         try {
             Connection conn = getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            if (conn == null) {
+                System.err.println("DEBUG: ❌ Conexión es null");
+                return false;
+            }
 
-            // BD usa VARCHAR(9) internamente pero objeto mantiene int
-            stmt.setString(1, String.valueOf(this.numeroControl));
-            stmt.setString(2, this.nombre);
-            stmt.setString(3, this.apellidoPaterno);
-            stmt.setString(4, this.apellidoMaterno);
-            stmt.setString(5, this.carrera);
-            stmt.setInt(6, this.semestre);
-            stmt.setString(7, this.correo);
-            stmt.setString(8, this.telefono);
-            stmt.setInt(9, this.idProyecto);
-            stmt.setBoolean(10, true); // estatus = true por defecto
+            System.out.println("DEBUG: Conexión obtenida correctamente");
+
+            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            System.out.println("DEBUG: PreparedStatement creado");
+
+            // *** FIX: Orden correcto de parámetros con validación ***
+            stmt.setString(1, String.valueOf(this.numeroControl));  // numero_control (VARCHAR)
+            System.out.println("DEBUG: Parámetro 1 (numero_control) establecido: " + String.valueOf(this.numeroControl));
+
+            stmt.setString(2, this.nombre);                          // nombre (VARCHAR)
+            System.out.println("DEBUG: Parámetro 2 (nombre) establecido: " + this.nombre);
+
+            stmt.setString(3, this.apellidoPaterno);                // apellido_paterno (VARCHAR)
+            System.out.println("DEBUG: Parámetro 3 (apellido_paterno) establecido: " + this.apellidoPaterno);
+
+            stmt.setString(4, this.apellidoMaterno);                // apellido_materno (VARCHAR)
+            System.out.println("DEBUG: Parámetro 4 (apellido_materno) establecido: " + this.apellidoMaterno);
+
+            stmt.setString(5, this.carrera);                        // carrera (VARCHAR)
+            System.out.println("DEBUG: Parámetro 5 (carrera) establecido: " + this.carrera);
+
+            stmt.setInt(6, this.semestre);                          // semestre (INT)
+            System.out.println("DEBUG: Parámetro 6 (semestre) establecido: " + this.semestre);
+
+            stmt.setString(7, this.correo);                         // correo (VARCHAR)
+            System.out.println("DEBUG: Parámetro 7 (correo) establecido: " + this.correo);
+
+            stmt.setString(8, this.telefono);                       // telefono (VARCHAR)
+            System.out.println("DEBUG: Parámetro 8 (telefono) establecido: " + this.telefono);
+
+            stmt.setInt(9, this.idProyecto);                        // id_proyecto (INT)
+            System.out.println("DEBUG: Parámetro 9 (id_proyecto) establecido: " + this.idProyecto);
+
+            stmt.setBoolean(10, true);                              // estatus (BOOLEAN)
+            System.out.println("DEBUG: Parámetro 10 (estatus) establecido: true");
+
+            System.out.println("DEBUG: Todos los parámetros establecidos, ejecutando SQL...");
+            System.out.println("DEBUG: SQL: " + sql);
 
             int filasAfectadas = stmt.executeUpdate();
+            System.out.println("DEBUG: SQL ejecutado, filas afectadas: " + filasAfectadas);
 
             if (filasAfectadas > 0) {
+                System.out.println("DEBUG: ✅ Inserción exitosa, obteniendo ID generado...");
+
                 // Obtener el ID generado
-                ResultSet generatedKeys = stmt.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    this.idResidente = generatedKeys.getInt(1);
+                try {
+                    ResultSet generatedKeys = stmt.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        this.idResidente = generatedKeys.getInt(1);
+                        System.out.println("DEBUG: ✅ ID generado obtenido: " + this.idResidente);
+                    } else {
+                        System.out.println("DEBUG: ⚠️ No se generaron keys, pero la inserción fue exitosa");
+                    }
+                } catch (SQLException e) {
+                    System.err.println("DEBUG: ⚠️ Error al obtener ID generado (pero inserción exitosa): " + e.getMessage());
+                    // No retornar false aquí, la inserción fue exitosa
                 }
+
+                System.out.println("DEBUG: ✅ insertar() retornando true");
                 return true;
+            } else {
+                System.out.println("DEBUG: ❌ No se insertaron filas (filasAfectadas = 0)");
+                return false;
             }
-            return false;
 
         } catch (SQLException e) {
-            System.err.println("Error al insertar residente: " + e.getMessage());
+            System.err.println("DEBUG: ❌ SQLException en insertar(): " + e.getMessage());
+            System.err.println("DEBUG: SQL State: " + e.getSQLState());
+            System.err.println("DEBUG: Error Code: " + e.getErrorCode());
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            System.err.println("DEBUG: ❌ Exception general en insertar(): " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
 
-    // *** CAMBIO: Actualizar con nueva PK ***
+    // *** CAMBIO: Actualizar SIN modificar id_proyecto ***
     public boolean actualizar() {
         String sql = "UPDATE residente SET numero_control = ?, nombre = ?, apellido_paterno = ?, apellido_materno = ?, " +
-                "carrera = ?, semestre = ?, correo = ?, telefono = ?, id_proyecto = ? " +
+                "carrera = ?, semestre = ?, correo = ?, telefono = ? " +
                 "WHERE id_residente = ?";
 
         try {
@@ -188,8 +268,8 @@ public class ModeloResidente {
             stmt.setInt(6, this.semestre);
             stmt.setString(7, this.correo);
             stmt.setString(8, this.telefono);
-            stmt.setInt(9, this.idProyecto);
-            stmt.setInt(10, this.idResidente); // Usar nueva PK
+            stmt.setInt(9, this.idResidente); // Usar nueva PK
+            // *** ELIMINADO: id_proyecto de la actualización ***
 
             int filasAfectadas = stmt.executeUpdate();
             return filasAfectadas > 0;
@@ -287,10 +367,77 @@ public class ModeloResidente {
         return null;
     }
 
-    // *** CAMBIO: Obtener solo activos ***
+    // *** CAMBIO: Obtener solo activos - SIMPLIFICADO ***
     public static List<ModeloResidente> obtenerTodos() {
         List<ModeloResidente> residentes = new ArrayList<>();
         String sql = "SELECT * FROM residente WHERE estatus = TRUE ORDER BY numero_control";
+
+        System.out.println("DEBUG: Ejecutando consulta: " + sql);
+
+        try {
+            Connection conn = getConnection();
+            if (conn == null) {
+                System.err.println("ERROR: Conexión es null");
+                return residentes;
+            }
+
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            int contador = 0;
+            while (rs.next()) {
+                try {
+                    ModeloResidente residente = new ModeloResidente();
+                    residente.setIdResidente(rs.getInt("id_residente"));
+
+                    // Convertir numero_control a int
+                    String numeroControlStr = rs.getString("numero_control");
+                    residente.setNumeroControl(Integer.parseInt(numeroControlStr));
+
+                    residente.setNombre(rs.getString("nombre"));
+                    residente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                    residente.setApellidoMaterno(rs.getString("apellido_materno"));
+                    residente.setCarrera(rs.getString("carrera"));
+                    residente.setSemestre(rs.getInt("semestre"));
+                    residente.setCorreo(rs.getString("correo"));
+                    residente.setTelefono(rs.getString("telefono"));
+                    residente.setIdProyecto(rs.getInt("id_proyecto"));
+                    residente.setEstatus(rs.getBoolean("estatus"));
+
+                    residentes.add(residente);
+                    contador++;
+
+                    if (contador <= 3) { // Solo mostrar los primeros 3 para debug
+                        System.out.println("DEBUG: Residente cargado - ID: " + residente.getIdResidente() +
+                                ", No.Control: " + residente.getNumeroControl() +
+                                ", Nombre: " + residente.getNombre() +
+                                ", Estatus: " + residente.isEstatus());
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("Error procesando fila: " + e.getMessage());
+                    continue; // Continuar con el siguiente registro
+                }
+            }
+
+            System.out.println("DEBUG: Total residentes cargados: " + residentes.size());
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener residentes: " + e.getMessage());
+            e.printStackTrace();
+
+            // *** FALLBACK: Si falla, intentar sin filtro de estatus ***
+            System.out.println("DEBUG: Intentando consulta sin filtro estatus...");
+            return obtenerTodosSinFiltro();
+        }
+
+        return residentes;
+    }
+
+    // *** NUEVO: Método fallback sin filtro de estatus ***
+    private static List<ModeloResidente> obtenerTodosSinFiltro() {
+        List<ModeloResidente> residentes = new ArrayList<>();
+        String sql = "SELECT * FROM residente ORDER BY numero_control";
 
         try {
             Connection conn = getConnection();
@@ -298,25 +445,36 @@ public class ModeloResidente {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                ModeloResidente residente = new ModeloResidente();
-                residente.setIdResidente(rs.getInt("id_residente"));
-                residente.setNumeroControl(Integer.parseInt(rs.getString("numero_control")));
-                residente.setNombre(rs.getString("nombre"));
-                residente.setApellidoPaterno(rs.getString("apellido_paterno"));
-                residente.setApellidoMaterno(rs.getString("apellido_materno"));
-                residente.setCarrera(rs.getString("carrera"));
-                residente.setSemestre(rs.getInt("semestre"));
-                residente.setCorreo(rs.getString("correo"));
-                residente.setTelefono(rs.getString("telefono"));
-                residente.setIdProyecto(rs.getInt("id_proyecto"));
-                residente.setEstatus(rs.getBoolean("estatus"));
-                residentes.add(residente);
+                try {
+                    ModeloResidente residente = new ModeloResidente();
+                    residente.setIdResidente(rs.getInt("id_residente"));
+                    residente.setNumeroControl(Integer.parseInt(rs.getString("numero_control")));
+                    residente.setNombre(rs.getString("nombre"));
+                    residente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                    residente.setApellidoMaterno(rs.getString("apellido_materno"));
+                    residente.setCarrera(rs.getString("carrera"));
+                    residente.setSemestre(rs.getInt("semestre"));
+                    residente.setCorreo(rs.getString("correo"));
+                    residente.setTelefono(rs.getString("telefono"));
+                    residente.setIdProyecto(rs.getInt("id_proyecto"));
+
+                    // Verificar si tiene columna estatus
+                    try {
+                        residente.setEstatus(rs.getBoolean("estatus"));
+                    } catch (SQLException e) {
+                        residente.setEstatus(true); // Default si no existe la columna
+                    }
+
+                    residentes.add(residente);
+                } catch (Exception e) {
+                    System.err.println("Error procesando fila en fallback: " + e.getMessage());
+                }
             }
 
+            System.out.println("DEBUG: Fallback cargó " + residentes.size() + " residentes");
+
         } catch (SQLException e) {
-            System.err.println("Error al obtener residentes: " + e.getMessage());
-        } catch (NumberFormatException e) {
-            System.err.println("Error al convertir numero_control: " + e.getMessage());
+            System.err.println("Error en fallback: " + e.getMessage());
         }
 
         return residentes;
@@ -324,12 +482,28 @@ public class ModeloResidente {
 
     // *** CAMBIO: Verificar existencia solo activos ***
     public static boolean existe(int numeroControl) {
-        String sql = "SELECT COUNT(*) FROM residente WHERE numero_control = ? AND estatus = TRUE";
+        // *** FIX: Verificar si la columna estatus existe ***
+        String sqlCheck = "SELECT column_name FROM information_schema.columns " +
+                "WHERE table_name = 'residente' AND column_name = 'estatus'";
+
+        String sql;
+        boolean tieneColumnaEstatus = false;
 
         try {
             Connection conn = getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement checkStmt = conn.prepareStatement(sqlCheck);
+            ResultSet checkRs = checkStmt.executeQuery();
 
+            tieneColumnaEstatus = checkRs.next();
+
+            // Si tiene columna estatus, filtrar por activos. Si no, verificar existencia simple
+            if (tieneColumnaEstatus) {
+                sql = "SELECT COUNT(*) FROM residente WHERE numero_control = ? AND estatus = TRUE";
+            } else {
+                sql = "SELECT COUNT(*) FROM residente WHERE numero_control = ?";
+            }
+
+            PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, String.valueOf(numeroControl));
             ResultSet rs = stmt.executeQuery();
 
@@ -344,7 +518,7 @@ public class ModeloResidente {
         return false;
     }
 
-    // ==================== IMPORTACIÓN ACTUALIZADA ====================
+    // ==================== IMPORTACIÓN MEJORADA ====================
 
     public static ResultadoImportacion importarResidentes(List<ModeloResidente> residentes) {
         int exitosos = 0;
@@ -362,13 +536,14 @@ public class ModeloResidente {
 
         asegurarProyectosPorDefecto();
 
-        // *** CAMBIO: SQL actualizado para nueva estructura ***
+        // *** FIX: SQL actualizado para nueva estructura ***
         String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
                 "carrera, semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)";
 
         try {
             Connection conn = getConnection();
-            conn.setAutoCommit(false);
+            // *** FIX: NO usar transacciones para evitar abortos en duplicados ***
+            conn.setAutoCommit(true); // Cada insert es independiente
 
             PreparedStatement stmt = conn.prepareStatement(sql);
 
@@ -381,10 +556,19 @@ public class ModeloResidente {
                     System.out.println("DEBUG: Procesando residente " + residente.getNumeroControl() +
                             " - " + residente.getNombre() + " " + residente.getApellidoPaterno());
 
+                    // *** FIX: Verificar duplicados ANTES de insertar ***
                     if (existe(residente.getNumeroControl())) {
                         System.out.println("DEBUG: ❌ Ya existe en BD: " + residente.getNumeroControl());
                         duplicados++;
                         errores.add("Ya existe: " + residente.getNumeroControl() + " - " + residente.getNombre());
+                        continue;
+                    }
+
+                    // *** FIX: Verificar correo duplicado ***
+                    if (existeCorreo(residente.getCorreo())) {
+                        System.out.println("DEBUG: ❌ Correo duplicado: " + residente.getCorreo());
+                        duplicados++;
+                        errores.add("Correo duplicado: " + residente.getCorreo() + " - " + residente.getNombre());
                         continue;
                     }
 
@@ -441,7 +625,8 @@ public class ModeloResidente {
                     System.out.println("DEBUG: ❌ Error SQL para " + residente.getNumeroControl() + ": " + e.getMessage());
 
                     if (e.getMessage().toLowerCase().contains("duplicate") ||
-                            e.getMessage().toLowerCase().contains("unique constraint")) {
+                            e.getMessage().toLowerCase().contains("unique constraint") ||
+                            e.getMessage().toLowerCase().contains("unicidad")) {
                         duplicados++;
                         errores.add("Duplicado: " + residente.getNumeroControl() + " - " + residente.getNombre());
                     } else {
@@ -450,9 +635,6 @@ public class ModeloResidente {
                     }
                 }
             }
-
-            conn.commit();
-            conn.setAutoCommit(true);
 
             System.out.println("DEBUG: === RESUMEN IMPORTACIÓN ===");
             System.out.println("DEBUG: Exitosos: " + exitosos);
@@ -466,6 +648,31 @@ public class ModeloResidente {
         }
 
         return new ResultadoImportacion(exitosos, fallidos, duplicados, errores);
+    }
+
+    // *** NUEVO: Verificar si existe un correo ***
+    private static boolean existeCorreo(String correo) {
+        if (correo == null || correo.trim().isEmpty()) {
+            return false;
+        }
+
+        String sql = "SELECT COUNT(*) FROM residente WHERE correo = ?";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, correo.trim());
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al verificar correo: " + e.getMessage());
+        }
+
+        return false;
     }
 
     // ==================== MÉTODOS DE PROYECTOS ====================
@@ -510,6 +717,8 @@ public class ModeloResidente {
     }
 
     public static void crearProyectoDefecto() {
+        System.out.println("DEBUG: === VERIFICANDO PROYECTO POR DEFECTO ===");
+
         String sqlCheck = "SELECT COUNT(*) FROM proyecto WHERE id_proyecto = 1";
         String sqlInsert = "INSERT INTO proyecto (id_proyecto, nombre, descripcion, duracion, n_alumnos, estatus, origen) " +
                 "VALUES (1, 'Proyecto Por Defecto', 'Proyecto temporal para residentes sin asignar', " +
@@ -519,13 +728,25 @@ public class ModeloResidente {
             Connection conn = getConnection();
             PreparedStatement checkStmt = conn.prepareStatement(sqlCheck);
             ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) == 0) {
-                PreparedStatement insertStmt = conn.prepareStatement(sqlInsert);
-                insertStmt.executeUpdate();
+
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                System.out.println("DEBUG: Proyectos con ID=1 encontrados: " + count);
+
+                if (count == 0) {
+                    System.out.println("DEBUG: Creando proyecto por defecto...");
+                    PreparedStatement insertStmt = conn.prepareStatement(sqlInsert);
+                    int filasInsertadas = insertStmt.executeUpdate();
+                    System.out.println("DEBUG: Proyecto creado, filas insertadas: " + filasInsertadas);
+                } else {
+                    System.out.println("DEBUG: Proyecto por defecto ya existe");
+                }
             }
         } catch (SQLException e) {
-            if (!e.getMessage().contains("duplicate key") && !e.getMessage().contains("already exists")) {
-                System.err.println("Error al crear proyecto por defecto: " + e.getMessage());
+            if (e.getMessage().contains("duplicate key") || e.getMessage().contains("already exists")) {
+                System.out.println("DEBUG: Proyecto ya existe (error de duplicado ignorado)");
+            } else {
+                System.err.println("DEBUG: Error al crear proyecto por defecto: " + e.getMessage());
             }
         }
     }

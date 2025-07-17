@@ -78,8 +78,7 @@ public class ExcelHandler {
                 }
             }
 
-            // SIMPLIFICADO: Mostrar solo resumen de carga
-            mostrarResumenCarga(filasLeidas);
+
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null,
@@ -95,20 +94,6 @@ public class ExcelHandler {
         return residentes;
     }
 
-    /**
-     * SIMPLIFICADO: Solo mostrar resumen de carga
-     */
-    private static void mostrarResumenCarga(int totalCargados) {
-        String mensaje = "📊 Carga de Excel completada\n\n" +
-                "📋 Total registros cargados: " + totalCargados + "\n\n" +
-                "💡 Los registros se mostrarán en la tabla\n" +
-                "🔍 La validación se hará automáticamente\n" +
-                "✏️ Doble click para editar cualquier registro\n" +
-                "📥 Solo los válidos ✅ se podrán importar a la BD";
-
-        JOptionPane.showMessageDialog(null, mensaje,
-                "Carga completada", JOptionPane.INFORMATION_MESSAGE);
-    }
 
     private static Workbook crearWorkbook(File archivo, FileInputStream fis) throws IOException {
         String nombreArchivo = archivo.getName().toLowerCase();

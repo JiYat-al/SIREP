@@ -8,12 +8,54 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import java.awt.event.ActionEvent;
 import javax.swing.KeyStroke;
+// *** FIX: Agregar imports de SQL ***
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+// *** FIX: Agregar import de Conexion_bd ***
+import Modelo.Conexion_bd;
 
 public class ControladorRegistros {
     private VistaRegistros vista;
 
     public ControladorRegistros(VistaRegistros vista) {
         this.vista = vista;
+
+        // *** FIX: Debug simple al inicio ***
+        System.out.println("=== INICIANDO CONTROLADOR REGISTROS ===");
+        System.out.println("Probando conexión a BD...");
+
+        try {
+            // Probar conexión simple
+            Connection conn = Conexion_bd.getInstancia().getConexion();
+            if (conn != null && !conn.isClosed()) {
+                System.out.println("✅ Conexión a BD exitosa");
+
+                // Contar registros totales
+                String sqlCount = "SELECT COUNT(*) as total FROM residente";
+                PreparedStatement stmt = conn.prepareStatement(sqlCount);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    int total = rs.getInt("total");
+                    System.out.println("📊 Total registros en BD: " + total);
+                }
+
+                // Contar registros activos
+                String sqlActivos = "SELECT COUNT(*) as activos FROM residente WHERE estatus = TRUE";
+                PreparedStatement stmtActivos = conn.prepareStatement(sqlActivos);
+                ResultSet rsActivos = stmtActivos.executeQuery();
+                if (rsActivos.next()) {
+                    int activos = rsActivos.getInt("activos");
+                    System.out.println("✅ Registros activos: " + activos);
+                }
+
+            } else {
+                System.out.println("❌ Error: Conexión a BD falló");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error al conectar: " + e.getMessage());
+        }
     }
 
     // ==================== MÉTODOS PRINCIPALES ====================
@@ -62,27 +104,26 @@ public class ControladorRegistros {
     }
 
     /**
-     * Eliminar el registro seleccionado
+     * *** CAMBIO: Dar de baja en lugar de eliminar ***
      */
-    public void eliminarRegistroSeleccionado() {
+    public void darDeBajaRegistroSeleccionado() {
         ModeloResidente residenteSeleccionado = vista.getResidenteSeleccionado();
 
         if (residenteSeleccionado == null) {
             vista.mostrarMensaje(
-                    "⚠️ Por favor seleccione un registro para eliminar",
+                    "⚠️ Por favor seleccione un registro para dar de baja",
                     "Sin selección",
                     JOptionPane.WARNING_MESSAGE
             );
             return;
         }
 
-        // Confirmar eliminación
+        // Confirmar dar de baja
         String mensaje = String.format(
-                "¿Está seguro de eliminar el siguiente registro?\n\n" +
+                "¿Está seguro de dar de baja el siguiente registro?\n\n" +
                         "📝 Número de Control: %d\n" +
                         "👤 Nombre: %s %s %s\n" +
-                        "🎓 Carrera: %s\n\n" +
-                        "⚠️ Esta acción no se puede deshacer",
+                        "🎓 Carrera: %s\n\n",
                 residenteSeleccionado.getNumeroControl(),
                 residenteSeleccionado.getNombre(),
                 residenteSeleccionado.getApellidoPaterno(),
@@ -90,21 +131,22 @@ public class ControladorRegistros {
                 residenteSeleccionado.getCarrera()
         );
 
-        boolean confirmado = vista.mostrarConfirmacion(mensaje, "Confirmar eliminación");
+        boolean confirmado = vista.mostrarConfirmacion(mensaje, "Confirmar dar de baja");
 
         if (confirmado) {
             try {
                 // Cambiar cursor a espera
                 vista.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-                // Eliminar usando el modelo
-                boolean eliminado = residenteSeleccionado.eliminar();
+                // Dar de baja usando el modelo (método darDeBaja)
+                boolean dadoDeBaja = residenteSeleccionado.darDeBaja();
 
-                if (eliminado) {
+                if (dadoDeBaja) {
                     vista.mostrarMensaje(
-                            "✅ Registro eliminado exitosamente\n" +
-                                    "📝 Número de Control: " + residenteSeleccionado.getNumeroControl(),
-                            "Eliminación exitosa",
+                            " Registro dado de baja exitosamente\n" +
+                                    " Número de Control: " + residenteSeleccionado.getNumeroControl() + "\n" +
+                                    "⚠️ El registro ya no aparecerá en las consultas normales",
+                            "Baja exitosa",
                             JOptionPane.INFORMATION_MESSAGE
                     );
 
@@ -112,25 +154,33 @@ public class ControladorRegistros {
                     vista.actualizarTabla();
                 } else {
                     vista.mostrarMensaje(
-                            "❌ No se pudo eliminar el registro\n" +
-                                    "Puede que ya haya sido eliminado por otro usuario",
-                            "Error de eliminación",
+                            "❌ No se pudo dar de baja el registro\n",
+                            "Error al dar de baja",
                             JOptionPane.ERROR_MESSAGE
                     );
                 }
 
             } catch (Exception e) {
                 vista.mostrarMensaje(
-                        "❌ Error al eliminar el registro:\n" + e.getMessage(),
-                        "Error de eliminación",
+                        "❌ Error al dar de baja el registro:\n" + e.getMessage(),
+                        "Error al dar de baja",
                         JOptionPane.ERROR_MESSAGE
                 );
-                System.err.println("Error al eliminar registro: " + e.getMessage());
+                System.err.println("Error al dar de baja registro: " + e.getMessage());
             } finally {
                 // Restaurar cursor normal
                 vista.setCursor(Cursor.getDefaultCursor());
             }
         }
+    }
+
+    /**
+     * *** MANTENIDO: Método eliminar para compatibilidad (ahora llama a darDeBaja) ***
+     */
+    @Deprecated
+    public void eliminarRegistroSeleccionado() {
+        // Redirigir al nuevo método darDeBajaRegistroSeleccionado
+        darDeBajaRegistroSeleccionado();
     }
 
     /**
@@ -149,18 +199,8 @@ public class ControladorRegistros {
         }
 
         try {
-            // Crear diálogo de edición
-            DialogoEdicion dialogo = new DialogoEdicion(
-                    (Frame) SwingUtilities.getWindowAncestor(vista.getPanelPrincipal()),
-                    residenteSeleccionado
-            );
-
-            dialogo.setVisible(true);
-
-            // Si se confirmó la edición, actualizar tabla
-            if (dialogo.isGuardado()) {
-                vista.actualizarTabla();
-            }
+            // Delegar la edición a la vista (que tiene acceso a DialogoEdicion)
+            vista.abrirDialogoEdicion(residenteSeleccionado);
 
         } catch (Exception e) {
             vista.mostrarMensaje(
@@ -254,350 +294,198 @@ public class ControladorRegistros {
     }
 
     /**
-     * Verificar si existe un residente
+     * *** NUEVO: Reactivar un residente que fue dado de baja ***
+     */
+    public void reactivarResidente(int idResidente) {
+        try {
+            // Buscar el residente por ID (incluyendo inactivos)
+            ModeloResidente residente = buscarResidentePorId(idResidente);
+
+            if (residente != null && !residente.isEstatus()) {
+                boolean reactivado = residente.reactivar();
+
+                if (reactivado) {
+                    vista.mostrarMensaje(
+                            " Residente reactivado exitosamente\n" +
+                                    "Número de Control: " + residente.getNumeroControl(),
+                            "Reactivación exitosa",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+
+                    // Actualizar la tabla
+                    vista.actualizarTabla();
+                } else {
+                    vista.mostrarMensaje(
+                            "❌ No se pudo reactivar el residente",
+                            "Error de reactivación",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+        } catch (Exception e) {
+            vista.mostrarMensaje(
+                    "❌ Error al reactivar residente:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    /**
+     * *** NUEVO: Buscar residente por ID (incluyendo inactivos) ***
+     */
+    private ModeloResidente buscarResidentePorId(int idResidente) {
+        // Este método necesitaría ser implementado en ModeloResidente
+        // Por ahora, retornamos null
+        return null;
+    }
+
+    /**
+     * Verificar si existe un residente (solo activos)
      */
     public boolean existeResidente(int numeroControl) {
         return ModeloResidente.existe(numeroControl);
     }
 
     /**
-     * Obtener residente por número de control
+     * Obtener residente por número de control (solo activos)
      */
     public ModeloResidente obtenerResidentePorNumeroControl(int numeroControl) {
         return ModeloResidente.buscarPorNumeroControl(numeroControl);
     }
 
     /**
-     * Verificar integridad de datos antes de operaciones
+     * *** NUEVO: Obtener estadísticas de registros ***
      */
+    public void mostrarEstadisticas() {
+        try {
+            List<ModeloResidente> residentes = ModeloResidente.obtenerTodos();
 
-}
-
-// ==================== CLASE DIÁLOGO DE EDICIÓN ====================
-
-class DialogoEdicion extends JDialog {
-    private JTextField txtNumeroControl;
-    private JTextField txtNombre;
-    private JTextField txtApellidoPaterno;
-    private JTextField txtApellidoMaterno;
-    private JTextField txtCarrera;
-    private JSpinner spnSemestre;
-    private JTextField txtCorreo;
-    private JTextField txtTelefono;
-    private JSpinner spnIdProyecto;
-    private JButton btnGuardar;
-    private JButton btnCancelar;
-
-    private boolean guardado = false;
-    private ModeloResidente residente;
-
-    public DialogoEdicion(Frame parent, ModeloResidente residente) {
-        super(parent, "✏️ Editar Residente", true);
-        this.residente = residente;
-
-        initComponents();
-        cargarDatos();
-        setupLayout();
-        setupEvents();
-
-        setSize(450, 400);
-        setLocationRelativeTo(parent);
-        setResizable(false);
-    }
-
-    private void initComponents() {
-        txtNumeroControl = new JTextField(15);
-        txtNumeroControl.setEditable(false); // No editable
-        txtNumeroControl.setBackground(Color.LIGHT_GRAY);
-
-        txtNombre = new JTextField(15);
-        txtApellidoPaterno = new JTextField(15);
-        txtApellidoMaterno = new JTextField(15);
-        txtCarrera = new JTextField(15);
-        spnSemestre = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
-        txtCorreo = new JTextField(15);
-        txtTelefono = new JTextField(15);
-        spnIdProyecto = new JSpinner(new SpinnerNumberModel(1, 0, 999, 1));
-
-        btnGuardar = new JButton("💾 Guardar Cambios");
-        btnCancelar = new JButton("❌ Cancelar");
-
-        // Configurar colores
-        btnGuardar.setBackground(new Color(46, 125, 50));
-        btnGuardar.setForeground(Color.WHITE);
-        btnGuardar.setFocusPainted(false);
-
-        btnCancelar.setBackground(new Color(211, 47, 47));
-        btnCancelar.setForeground(Color.WHITE);
-        btnCancelar.setFocusPainted(false);
-    }
-
-    private void cargarDatos() {
-        txtNumeroControl.setText(String.valueOf(residente.getNumeroControl()));
-        txtNombre.setText(residente.getNombre());
-        txtApellidoPaterno.setText(residente.getApellidoPaterno());
-        txtApellidoMaterno.setText(residente.getApellidoMaterno() != null ? residente.getApellidoMaterno() : "");
-        txtCarrera.setText(residente.getCarrera());
-        spnSemestre.setValue(residente.getSemestre());
-        txtCorreo.setText(residente.getCorreo());
-        txtTelefono.setText(residente.getTelefono() != null ? residente.getTelefono() : "");
-        spnIdProyecto.setValue(residente.getIdProyecto());
-    }
-
-    private void setupLayout() {
-        setLayout(new BorderLayout());
-
-        // Panel principal con campos
-        JPanel panelCampos = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        // Título
-        JLabel lblTitulo = new JLabel("✏️ Editar Información del Residente");
-        lblTitulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-
-        // Agregar campos
-        agregarCampo(panelCampos, "Número de Control:", txtNumeroControl, gbc, 0);
-        agregarCampo(panelCampos, "* Nombre:", txtNombre, gbc, 1);
-        agregarCampo(panelCampos, "* Apellido Paterno:", txtApellidoPaterno, gbc, 2);
-        agregarCampo(panelCampos, "Apellido Materno:", txtApellidoMaterno, gbc, 3);
-        agregarCampo(panelCampos, "* Carrera:", txtCarrera, gbc, 4);
-        agregarCampo(panelCampos, "* Semestre:", spnSemestre, gbc, 5);
-        agregarCampo(panelCampos, "* Correo:", txtCorreo, gbc, 6);
-        agregarCampo(panelCampos, "Teléfono:", txtTelefono, gbc, 7);
-        agregarCampo(panelCampos, "ID Proyecto:", spnIdProyecto, gbc, 8);
-
-        // Nota sobre campos obligatorios
-        JLabel lblNota = new JLabel("* Campos obligatorios");
-        lblNota.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 11));
-        lblNota.setForeground(Color.GRAY);
-
-        // Panel de botones
-        JPanel panelBotones = new JPanel(new FlowLayout());
-        panelBotones.add(btnGuardar);
-        panelBotones.add(btnCancelar);
-
-        // Panel superior con título
-        JPanel panelSuperior = new JPanel(new BorderLayout());
-        panelSuperior.add(lblTitulo, BorderLayout.CENTER);
-        panelSuperior.setBorder(BorderFactory.createEmptyBorder(10, 10, 15, 10));
-
-        // Panel inferior con nota y botones
-        JPanel panelInferior = new JPanel(new BorderLayout());
-        panelInferior.add(lblNota, BorderLayout.NORTH);
-        panelInferior.add(panelBotones, BorderLayout.CENTER);
-        panelInferior.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Agregar todo al diálogo
-        add(panelSuperior, BorderLayout.NORTH);
-        add(panelCampos, BorderLayout.CENTER);
-        add(panelInferior, BorderLayout.SOUTH);
-
-        // Borde general
-        ((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-    }
-
-    private void agregarCampo(JPanel panel, String etiqueta, JComponent campo, GridBagConstraints gbc, int fila) {
-        gbc.gridx = 0;
-        gbc.gridy = fila;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-
-        JLabel label = new JLabel(etiqueta);
-        if (etiqueta.startsWith("*")) {
-            label.setForeground(new Color(211, 47, 47)); // Rojo para obligatorios
-        }
-        panel.add(label, gbc);
-
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-        panel.add(campo, gbc);
-    }
-
-    private void setupEvents() {
-        btnGuardar.addActionListener(e -> guardarCambios());
-        btnCancelar.addActionListener(e -> cancelar());
-
-        // Enter para guardar
-        getRootPane().setDefaultButton(btnGuardar);
-
-        // Escape para cancelar
-        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke("ESCAPE");
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
-        getRootPane().getActionMap().put("ESCAPE", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cancelar();
+            if (residentes.isEmpty()) {
+                vista.mostrarMensaje(
+                        "⚠️ No hay registros para mostrar estadísticas",
+                        "Sin datos",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
             }
-        });
+
+            // Calcular estadísticas básicas
+            int totalRegistros = residentes.size();
+
+            // Contar por semestre
+            java.util.Map<Integer, Integer> porSemestre = new java.util.HashMap<>();
+            for (ModeloResidente residente : residentes) {
+                porSemestre.put(residente.getSemestre(),
+                        porSemestre.getOrDefault(residente.getSemestre(), 0) + 1);
+            }
+
+            // Crear mensaje de estadísticas
+            StringBuilder mensaje = new StringBuilder();
+            mensaje.append("📊 Estadísticas de Registros Activos\n\n");
+            mensaje.append("📋 Total de registros activos: ").append(totalRegistros).append("\n\n");
+            mensaje.append("📚 Distribución por semestre:\n");
+
+            for (java.util.Map.Entry<Integer, Integer> entrada : porSemestre.entrySet()) {
+                mensaje.append("  • Semestre ").append(entrada.getKey())
+                        .append(": ").append(entrada.getValue()).append(" estudiantes\n");
+            }
+
+            vista.mostrarMensaje(
+                    mensaje.toString(),
+                    "Estadísticas del Sistema",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (Exception e) {
+            vista.mostrarMensaje(
+                    "❌ Error al generar estadísticas:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 
-    private void guardarCambios() {
-        // Validar campos obligatorios
-        if (!validarCampos()) {
-            return;
-        }
+    /**
+     * *** NUEVO: Verificar integridad de datos ***
+     */
+    public void verificarIntegridadDatos() {
+        try {
+            vista.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-        // Confirmar guardado
-        int opcion = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro de guardar los cambios?\n" +
-                        "Nombre: " + txtNombre.getText().trim() + " " + txtApellidoPaterno.getText().trim(),
-                "Confirmar cambios",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
+            List<ModeloResidente> residentes = ModeloResidente.obtenerTodos();
+            java.util.List<String> problemasEncontrados = new java.util.ArrayList<>();
 
-        if (opcion == JOptionPane.YES_OPTION) {
-            try {
-                // Cambiar cursor a espera
-                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            // Verificar duplicados por número de control
+            java.util.Set<Integer> numerosControl = new java.util.HashSet<>();
+            for (ModeloResidente residente : residentes) {
+                if (!numerosControl.add(residente.getNumeroControl())) {
+                    problemasEncontrados.add("Número de control duplicado: " + residente.getNumeroControl());
+                }
+            }
 
-                // Actualizar datos del residente
-                residente.setNombre(txtNombre.getText().trim());
-                residente.setApellidoPaterno(txtApellidoPaterno.getText().trim());
-                residente.setApellidoMaterno(txtApellidoMaterno.getText().trim().isEmpty() ? null : txtApellidoMaterno.getText().trim());
-                residente.setCarrera(txtCarrera.getText().trim());
-                residente.setSemestre((Integer) spnSemestre.getValue());
-                residente.setCorreo(txtCorreo.getText().trim());
-                residente.setTelefono(txtTelefono.getText().trim().isEmpty() ? null : txtTelefono.getText().trim());
-                residente.setIdProyecto((Integer) spnIdProyecto.getValue());
+            // Verificar correos duplicados
+            java.util.Set<String> correos = new java.util.HashSet<>();
+            for (ModeloResidente residente : residentes) {
+                if (residente.getCorreo() != null && !residente.getCorreo().trim().isEmpty()) {
+                    if (!correos.add(residente.getCorreo().toLowerCase())) {
+                        problemasEncontrados.add("Correo duplicado: " + residente.getCorreo());
+                    }
+                }
+            }
 
-                // Guardar en la base de datos
-                boolean actualizado = residente.actualizar();
+            // Verificar campos obligatorios vacíos
+            for (ModeloResidente residente : residentes) {
+                if (residente.getNombre() == null || residente.getNombre().trim().isEmpty()) {
+                    problemasEncontrados.add("Nombre vacío: No. Control " + residente.getNumeroControl());
+                }
+                if (residente.getApellidoPaterno() == null || residente.getApellidoPaterno().trim().isEmpty()) {
+                    problemasEncontrados.add("Apellido paterno vacío: No. Control " + residente.getNumeroControl());
+                }
+                if (residente.getCorreo() == null || residente.getCorreo().trim().isEmpty()) {
+                    problemasEncontrados.add("Correo vacío: No. Control " + residente.getNumeroControl());
+                }
+            }
 
-                if (actualizado) {
-                    guardado = true;
-                    JOptionPane.showMessageDialog(this,
-                            "✅ Cambios guardados exitosamente\n" +
-                                    "📝 Número de Control: " + residente.getNumeroControl(),
-                            "Actualización exitosa",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "❌ No se pudieron guardar los cambios\n" +
-                                    "Verifique que el registro aún existe en la base de datos",
-                            "Error de actualización",
-                            JOptionPane.ERROR_MESSAGE);
+            // Mostrar resultados
+            if (problemasEncontrados.isEmpty()) {
+                vista.mostrarMensaje(
+                        "✅ Verificación completada exitosamente\n\n" +
+                                "No se encontraron problemas de integridad en los datos.\n" +
+                                "Total de registros verificados: " + residentes.size(),
+                        "Integridad de Datos - OK",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            } else {
+                StringBuilder mensaje = new StringBuilder();
+                mensaje.append("⚠️ Se encontraron ").append(problemasEncontrados.size())
+                        .append(" problemas de integridad:\n\n");
+
+                int maxProblemas = Math.min(problemasEncontrados.size(), 10);
+                for (int i = 0; i < maxProblemas; i++) {
+                    mensaje.append("• ").append(problemasEncontrados.get(i)).append("\n");
                 }
 
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this,
-                        "❌ Error al guardar los cambios:\n" + e.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                System.err.println("Error al actualizar residente: " + e.getMessage());
-            } finally {
-                setCursor(Cursor.getDefaultCursor());
+                if (problemasEncontrados.size() > 10) {
+                    mensaje.append("\n... y ").append(problemasEncontrados.size() - 10)
+                            .append(" problemas adicionales.");
+                }
+
+                vista.mostrarMensaje(
+                        mensaje.toString(),
+                        "Problemas de Integridad Encontrados",
+                        JOptionPane.WARNING_MESSAGE
+                );
             }
+
+        } catch (Exception e) {
+            vista.mostrarMensaje(
+                    "❌ Error durante la verificación de integridad:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        } finally {
+            vista.setCursor(Cursor.getDefaultCursor());
         }
-    }
-
-    private boolean validarCampos() {
-        // Validar nombre
-        if (txtNombre.getText().trim().isEmpty()) {
-            mostrarError("El nombre es obligatorio", txtNombre);
-            return false;
-        }
-
-        if (txtNombre.getText().trim().length() < 2) {
-            mostrarError("El nombre debe tener al menos 2 caracteres", txtNombre);
-            return false;
-        }
-
-        // Validar apellido paterno
-        if (txtApellidoPaterno.getText().trim().isEmpty()) {
-            mostrarError("El apellido paterno es obligatorio", txtApellidoPaterno);
-            return false;
-        }
-
-        if (txtApellidoPaterno.getText().trim().length() < 2) {
-            mostrarError("El apellido paterno debe tener al menos 2 caracteres", txtApellidoPaterno);
-            return false;
-        }
-
-        // Validar carrera
-        if (txtCarrera.getText().trim().isEmpty()) {
-            mostrarError("La carrera es obligatoria", txtCarrera);
-            return false;
-        }
-
-        // Validar correo
-        String correo = txtCorreo.getText().trim();
-        if (correo.isEmpty()) {
-            mostrarError("El correo es obligatorio", txtCorreo);
-            return false;
-        }
-
-        if (!validarFormatoCorreo(correo)) {
-            mostrarError("El formato del correo no es válido\nEjemplo: usuario@dominio.com", txtCorreo);
-            return false;
-        }
-
-        // Validar teléfono (opcional, pero si se proporciona debe ser válido)
-        String telefono = txtTelefono.getText().trim();
-        if (!telefono.isEmpty() && !validarFormatoTelefono(telefono)) {
-            mostrarError("El formato del teléfono no es válido\nDebe contener solo números y tener entre 8 y 15 dígitos", txtTelefono);
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean validarFormatoCorreo(String correo) {
-        return correo.contains("@") &&
-                correo.contains(".") &&
-                correo.indexOf("@") > 0 &&
-                correo.indexOf("@") < correo.lastIndexOf(".") &&
-                correo.lastIndexOf(".") < correo.length() - 1;
-    }
-
-    private boolean validarFormatoTelefono(String telefono) {
-        String telefonoLimpio = telefono.replaceAll("[^0-9]", "");
-        return telefonoLimpio.length() >= 8 && telefonoLimpio.length() <= 15;
-    }
-
-    private void mostrarError(String mensaje, JTextField campo) {
-        JOptionPane.showMessageDialog(this,
-                mensaje,
-                "Error de validación",
-                JOptionPane.ERROR_MESSAGE);
-        campo.requestFocus();
-        campo.selectAll();
-    }
-
-    private void cancelar() {
-        if (hayCambios()) {
-            int opcion = JOptionPane.showConfirmDialog(this,
-                    "¿Está seguro de cancelar?\nSe perderán todos los cambios realizados.",
-                    "Confirmar cancelación",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
-
-            if (opcion == JOptionPane.YES_OPTION) {
-                guardado = false;
-                dispose();
-            }
-        } else {
-            guardado = false;
-            dispose();
-        }
-    }
-
-    private boolean hayCambios() {
-        return !txtNombre.getText().equals(residente.getNombre()) ||
-                !txtApellidoPaterno.getText().equals(residente.getApellidoPaterno()) ||
-                !txtApellidoMaterno.getText().equals(residente.getApellidoMaterno() != null ? residente.getApellidoMaterno() : "") ||
-                !txtCarrera.getText().equals(residente.getCarrera()) ||
-                !spnSemestre.getValue().equals(residente.getSemestre()) ||
-                !txtCorreo.getText().equals(residente.getCorreo()) ||
-                !txtTelefono.getText().equals(residente.getTelefono() != null ? residente.getTelefono() : "") ||
-                !spnIdProyecto.getValue().equals(residente.getIdProyecto());
-    }
-
-    public boolean isGuardado() {
-        return guardado;
     }
 }
