@@ -16,4 +16,10 @@ public class Seguridad {
         }
         return BCrypt.checkpw(contrasenaIngresada, hashGuardado);
     }
+
+    public static void main(String[] args) {
+        String contrasena = "yahir.098";
+        String hash = encriptar(contrasena);
+        System.out.println("Hash generado: " + hash);
+    }
 }

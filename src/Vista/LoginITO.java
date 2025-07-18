@@ -222,9 +222,10 @@ public class LoginITO extends JFrame {
         btnForgot.setForeground(new Color(92, 93, 169));
         btnForgot.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         btnForgot.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnForgot.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "Solicita el restablecimiento al administrador.",
-                "Recuperar contraseña", JOptionPane.INFORMATION_MESSAGE));
+        btnForgot.addActionListener(e -> {
+            vista.RecuperacionPasswordUI recuperacion = new vista.RecuperacionPasswordUI(this);
+            recuperacion.setVisible(true);
+        });
         btnForgot.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 btnForgot.setForeground(colorPrincipal.darker());
