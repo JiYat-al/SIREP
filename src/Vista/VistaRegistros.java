@@ -1,14 +1,15 @@
 package Vista;
 
-import Modelo.ModeloResidente;
 import Controlador.ControladorRegistros;
+import Modelo.ModeloResidente;
 import Vista.VistaResidentes.VistaResidente;
-import javax.swing.*;
-import javax.swing.plaf.basic.BasicScrollBarUI;
-import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.border.AbstractBorder;
+import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.table.*;
 
 public class VistaRegistros extends JFrame {
     // Paneles principales para intercambio
@@ -42,8 +43,6 @@ public class VistaRegistros extends JFrame {
 
     // Colores del tema
     private final Color colorPrincipal = new Color(92, 93, 169);
-    private final Color colorFondo = new Color(245, 243, 255);
-
     // Referencias para actualizar barra lateral
     private JLabel iconoBarra;
     private JLabel tituloBarra;
@@ -61,6 +60,42 @@ public class VistaRegistros extends JFrame {
         configurarInterfazConPaneles();
         configurarEventos();
         cargarDatosIniciales();
+    }
+    
+    // ==================== CLASE BORDE REDONDEADO ====================
+    
+    class RoundBorder extends AbstractBorder {
+        private final Color color;
+        private final int radius;
+        private final int thickness;
+    
+        public RoundBorder(Color color, int radius, int thickness) {
+            this.color = color;
+            this.radius = radius;
+            this.thickness = thickness;
+        }
+    
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            g2.setStroke(new BasicStroke(thickness));
+            g2.drawRoundRect(x + thickness/2, y + thickness/2, 
+                            width - thickness, height - thickness, 
+                            radius, radius);
+            g2.dispose();
+        }
+    
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(thickness + 2, thickness + 2, thickness + 2, thickness + 2);
+        }
+    
+        @Override
+        public boolean isBorderOpaque() {
+            return false;
+        }
     }
 
     private void configurarInterfazConPaneles() {
@@ -143,7 +178,7 @@ public class VistaRegistros extends JFrame {
         gbcL.anchor = GridBagConstraints.NORTH;
 
         // Icono dinámico
-        iconoBarra = new JLabel("R", SwingConstants.CENTER);
+        iconoBarra = new JLabel("G", SwingConstants.CENTER);
         iconoBarra.setFont(new Font("Segoe UI", Font.BOLD, 48));
         iconoBarra.setForeground(Color.WHITE);
         barraLateral.add(iconoBarra, gbcL);
@@ -151,7 +186,10 @@ public class VistaRegistros extends JFrame {
         // Título vertical dinámico
         gbcL.gridy++;
         gbcL.insets = new Insets(0, 0, 0, 0);
-        tituloBarra = new JLabel("<html>R<br>E<br>G<br>I<br>S<br>T<br>R<br>O<br>S</html>");
+        tituloBarra = new JLabel("<html><div style='text-align: center; line-height: 1.5;'>" +
+                "E<br>S<br>T<br>I<br>Ó<br>N<br><br>" +
+                "D<br>E<br><br>" +
+                "C<br>A<br>N<br>D<br>I<br>D<br>A<br>T<br>O<br>S</div></html>");
         tituloBarra.setFont(new Font("Segoe UI", Font.BOLD, 18));
         tituloBarra.setForeground(new Color(245, 243, 255, 200));
         tituloBarra.setHorizontalAlignment(SwingConstants.CENTER);
@@ -241,10 +279,6 @@ public class VistaRegistros extends JFrame {
             // MODIFICADO: Limpiar la tabla de residentes al regresar
             if (panelResidentes != null) {
                 panelResidentes.limpiarTabla();
-            } else {
-                Menu menu =  new Menu();
-                menu.setVisible(true);
-                this.dispose();
             }
 
             vistaActual = "REGISTROS";
@@ -254,16 +288,26 @@ public class VistaRegistros extends JFrame {
             // Recargar datos de registros y enfocar
             controlador.cargarTodosLosRegistros();
             panelRegistros.requestFocusInWindow();
+        }  else {
+            Menu menu =  new Menu();
+            menu.setVisible(true);
+            this.dispose();
         }
     }
 
     private void actualizarBarraLateral() {
         if (vistaActual.equals("REGISTROS")) {
-            iconoBarra.setText("R");
-            tituloBarra.setText("<html>E<br>G<br>I<br>S<br>T<br>R<br>O<br>S</html>");
+            iconoBarra.setText("G");
+            tituloBarra.setText("<html><div style='text-align: center; line-height: 1.5;'>" +
+                    "G<br>E<br>S<br>T<br>I<br>Ó<br>N<br><br>" +
+                    "D<br>E<br><br>" +
+                    "C<br>A<br>N<br>D<br>I<br>D<br>A<br>T<br>O<br>S</div></html>");
         } else {
-            iconoBarra.setText("R");
-            tituloBarra.setText("<html>E<br>S<br>I<br>D<br>E<br>N<br>T<br>E<br>S</html>");
+            iconoBarra.setText("G");
+            tituloBarra.setText("<html><div style='text-align: center; line-height: 1.5;'>" +
+                    "G<br>E<br>S<br>T<br>I<br>Ó<br>N<br><br>" +
+                    "D<br>E<br><br>" +
+                    "R<br>E<br>S<br>I<br>D<br>E<br>N<br>T<br>E<br>S</div></html>");
         }
 
         // Forzar repintado de la barra lateral
@@ -286,7 +330,7 @@ public class VistaRegistros extends JFrame {
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(32, 38, 24, 0));
 
-        JLabel lblTitulo = new JLabel("Registro");
+        JLabel lblTitulo = new JLabel("Registro De Candidatos");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 34));
         lblTitulo.setForeground(colorPrincipal);
         header.add(lblTitulo, BorderLayout.WEST);
@@ -307,49 +351,72 @@ public class VistaRegistros extends JFrame {
         JPanel panelBusqueda = new JPanel(new BorderLayout());
         panelBusqueda.setOpaque(false);
         panelBusqueda.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-
-        // Panel izquierdo con búsqueda
-        JPanel panelIzquierdo = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        panelIzquierdo.setOpaque(false);
-
-        lblBuscar = new JLabel("Buscar:");
+        
+        // Panel izquierdo para búsqueda
+        JPanel panelBusquedaCompleto = new JPanel();
+        panelBusquedaCompleto.setLayout(new BoxLayout(panelBusquedaCompleto, BoxLayout.Y_AXIS));
+        panelBusquedaCompleto.setOpaque(false);
+        
+        // Label de búsqueda
+        lblBuscar = new JLabel("Buscar alumno:");
         lblBuscar.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblBuscar.setForeground(colorPrincipal);
-        lblBuscar.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+        lblBuscar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lblBuscar.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // Campo de búsqueda estilizado
-        textField1 = new JTextField(25);
-        textField1.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        // Campo de búsqueda con esquinas redondeadas
+        textField1 = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 10, 10);
+                super.paintComponent(g);
+            }
+        };
+        textField1.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        textField1.setBackground(Color.WHITE);
         textField1.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(colorPrincipal, 2, true),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+                BorderFactory.createEmptyBorder(2, 2, 2, 2),
+                BorderFactory.createEmptyBorder(8, 16, 8, 16)
         ));
-        configurarCampoBusqueda();
+        textField1.setPreferredSize(new Dimension(400, 40));
+        textField1.setMaximumSize(new Dimension(400, 40));
+        textField1.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Botón limpiar búsqueda
-        btnLimpiarBusqueda = crearBotonAccion("Limpiar", new Color(158, 158, 158));
+        // Panel horizontal para campo de búsqueda y botones
+        JPanel panelBusquedaHorizontal = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        panelBusquedaHorizontal.setOpaque(false);
+        panelBusquedaHorizontal.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        panelIzquierdo.add(lblBuscar);
-        panelIzquierdo.add(textField1);
-        panelIzquierdo.add(Box.createHorizontalStrut(15));
-        panelIzquierdo.add(btnLimpiarBusqueda);
+        btnActualizar = crearBotonBusqueda("Buscar", "🔍");
+        btnLimpiarBusqueda = crearBotonBusqueda("Limpiar", "✖");
 
-        // Panel derecho con contador y actualizar
-        JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        panelDerecho.setOpaque(false);
+        // Añadir campo y botones al panel horizontal
+        panelBusquedaHorizontal.add(textField1);
+        panelBusquedaHorizontal.add(btnActualizar);
+        panelBusquedaHorizontal.add(btnLimpiarBusqueda);
 
+        // Crear y añadir botón actualizar
+        btnActualizar = crearBotonBusqueda("Actualizar", "🔄");
+        panelBusquedaHorizontal.add(Box.createHorizontalStrut(10));
+        panelBusquedaHorizontal.add(btnActualizar);
+
+        // Label de resultados
         lblResultados = new JLabel("Total de registros: 0");
         lblResultados.setFont(new Font("Segoe UI", Font.ITALIC, 14));
         lblResultados.setForeground(new Color(100, 100, 100));
+        lblResultados.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        lblResultados.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        btnActualizar = crearBotonAccion("Actualizar", new Color(46, 125, 50));
+        // Agregar componentes al panel principal
+        panelBusquedaCompleto.add(lblBuscar);
+        panelBusquedaCompleto.add(panelBusquedaHorizontal);
+        panelBusquedaCompleto.add(lblResultados);
 
-        panelDerecho.add(lblResultados);
-        panelDerecho.add(Box.createHorizontalStrut(20));
-        panelDerecho.add(btnActualizar);
-
-        panelBusqueda.add(panelIzquierdo, BorderLayout.WEST);
-        panelBusqueda.add(panelDerecho, BorderLayout.EAST);
+        // Agregar el panel completo al contenedor principal
+        panelBusqueda.add(panelBusquedaCompleto, BorderLayout.WEST);
 
         return panelBusqueda;
     }
@@ -483,27 +550,86 @@ public class VistaRegistros extends JFrame {
     }
 
     private JPanel crearPanelBotones() {
-        JPanel panelBotones = new JPanel(new BorderLayout());
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 20));
         panelBotones.setOpaque(false);
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
-        JPanel panelBotonesIzq = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        panelBotonesIzq.setOpaque(false);
+        // Botón Editar - Mantiene su funcionalidad existente
+        editar = new JButton("Editar") {
+            private boolean hover = false;
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(Color.WHITE);
+                setFont(new Font("Segoe UI", Font.BOLD, 15));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // Botones de acción
-        editar = crearBotonAccion("Editar", new Color(25, 118, 210));
-        // *** CAMBIO: Eliminar → Dar de baja ***
-        darDeBaja = crearBotonAccion("Dar de baja", new Color(211, 47, 47));
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) {
+                        hover = true;
+                        repaint();
+                    }
+                    public void mouseExited(MouseEvent e) {
+                        hover = false;
+                        repaint();
+                    }
+                });
+            }
 
-        // Deshabilitar hasta que se seleccione
-        editar.setEnabled(false);
-        darDeBaja.setEnabled(false);
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (hover) {
+                    g2.setColor(colorPrincipal.darker());
+                } else {
+                    g2.setColor(colorPrincipal);
+                }
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+            }
+        };
 
-        panelBotonesIzq.add(editar);
-        panelBotonesIzq.add(Box.createHorizontalStrut(15));
-        panelBotonesIzq.add(darDeBaja);
+        // Botón Dar de Baja - Mantiene su funcionalidad existente
+        darDeBaja = new JButton("Dar de baja") {
+            private boolean hover = false;
+            private final Color colorBase = new Color(200, 60, 60);
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(Color.WHITE);
+                setFont(new Font("Segoe UI", Font.BOLD, 15));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        panelBotones.add(panelBotonesIzq, BorderLayout.WEST);
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) {
+                        hover = true;
+                        repaint();
+                    }
+                    public void mouseExited(MouseEvent e) {
+                        hover = false;
+                        repaint();
+                    }
+                });
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (hover) {
+                    g2.setColor(colorBase.darker());
+                } else {
+                    g2.setColor(colorBase);
+                }
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+            }
+        };
+
+        panelBotones.add(editar);
+        panelBotones.add(darDeBaja);
 
         return panelBotones;
     }
@@ -545,6 +671,48 @@ public class VistaRegistros extends JFrame {
                 g2.dispose();
             }
         };
+    }
+
+    private JButton crearBotonBusqueda(String texto, String icono) {
+        JButton boton = new JButton(icono + " " + texto) {
+            private boolean hover = false;
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(colorPrincipal);
+                setFont(new Font("Segoe UI", Font.PLAIN, 13));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(new RoundBorder(colorPrincipal, 8, 1));
+                setPreferredSize(new Dimension(95, 28));
+                setMargin(new Insets(2, 8, 2, 8));
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        hover = true;
+                        setForeground(colorPrincipal.darker());
+                        setBorder(new RoundBorder(colorPrincipal.darker(), 8, 1));
+                    }
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        hover = false;
+                        setForeground(colorPrincipal);
+                        setBorder(new RoundBorder(colorPrincipal, 8, 1));
+                    }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (hover) {
+                    g2.setColor(new Color(245, 245, 255));
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                }
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+        return boton;
     }
 
     private void configurarCampoBusqueda() {
@@ -850,6 +1018,10 @@ class DialogoEdicion extends JDialog {
     private boolean guardado = false;
     private ModeloResidente residente;
 
+    public boolean isGuardado() {
+        return guardado;
+    }
+
     public DialogoEdicion(Frame parent, ModeloResidente residente) {
         super(parent, "✏️ Editar Residente", true);
         this.residente = residente;
@@ -883,8 +1055,8 @@ class DialogoEdicion extends JDialog {
         txtTelefono = new JTextField(15);
         // *** ELIMINADO: spnIdProyecto ***
 
-        btnGuardar = new JButton("Guardar Cambios");
-        btnCancelar = new JButton("Cancelar");
+        btnGuardar = new JButton("💾 Guardar Cambios");
+        btnCancelar = new JButton("❌ Cancelar");
 
         // Configurar colores
         btnGuardar.setBackground(new Color(46, 125, 50));
@@ -1177,39 +1349,66 @@ class DialogoEdicion extends JDialog {
 
     private void cancelar() {
         if (hayCambios()) {
+            // Aquí puedes agregar la lógica para confirmar la cancelación si hay cambios
             int opcion = JOptionPane.showConfirmDialog(this,
-                    "¿Está seguro de cancelar?\nSe perderán todos los cambios realizados.",
+                    "Hay cambios sin guardar. ¿Desea cancelar la edición?",
                     "Confirmar cancelación",
                     JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
-
-            if (opcion == JOptionPane.YES_OPTION) {
-                guardado = false;
-                dispose();
+                    JOptionPane.WARNING_MESSAGE);
+            if (opcion == JOptionPane.NO_OPTION) {
+                return;
             }
-        } else {
-            guardado = false;
-            dispose();
         }
+        dispose();
     }
 
+    // Comprueba si algún campo fue modificado respecto al residente original
     private boolean hayCambios() {
-        try {
-            return !txtNumeroControl.getText().equals(String.valueOf(residente.getNumeroControl())) ||
-                    !txtNombre.getText().equals(residente.getNombre()) ||
-                    !txtApellidoPaterno.getText().equals(residente.getApellidoPaterno()) ||
-                    !txtApellidoMaterno.getText().equals(residente.getApellidoMaterno() != null ? residente.getApellidoMaterno() : "") ||
-                    !txtCarrera.getText().equals(residente.getCarrera()) ||
-                    !spnSemestre.getValue().equals(residente.getSemestre()) ||
-                    !txtCorreo.getText().equals(residente.getCorreo()) ||
-                    !txtTelefono.getText().equals(residente.getTelefono() != null ? residente.getTelefono() : "");
-            // *** ELIMINADO: !spnIdProyecto.getValue().equals(residente.getIdProyecto()); ***
-        } catch (Exception e) {
-            return true; // Si hay error, asumir que hay cambios
-        }
+        if (!txtNumeroControl.getText().trim().equals(String.valueOf(residente.getNumeroControl()))) return true;
+        if (!txtNombre.getText().trim().equals(residente.getNombre())) return true;
+        if (!txtApellidoPaterno.getText().trim().equals(residente.getApellidoPaterno())) return true;
+        String originalApellidoMaterno = residente.getApellidoMaterno() == null ? "" : residente.getApellidoMaterno();
+        if (!txtApellidoMaterno.getText().trim().equals(originalApellidoMaterno)) return true;
+        if (!txtCarrera.getText().trim().equals(residente.getCarrera())) return true;
+        if (!spnSemestre.getValue().equals(residente.getSemestre())) return true;
+        if (!txtCorreo.getText().trim().equals(residente.getCorreo())) return true;
+        String originalTelefono = residente.getTelefono() == null ? "" : residente.getTelefono();
+        if (!txtTelefono.getText().trim().equals(originalTelefono)) return true;
+        return false;
+    }
+}
+
+// Clase para crear bordes redondeados (mover fuera de DialogoEdicion)
+class RoundBorder extends AbstractBorder {
+    private final Color color;
+    private final int radius;
+    private final int thickness;
+
+    public RoundBorder(Color color, int radius, int thickness) {
+        this.color = color;
+        this.radius = radius;
+        this.thickness = thickness;
     }
 
-    public boolean isGuardado() {
-        return guardado;
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(color);
+        g2.setStroke(new BasicStroke(thickness));
+        g2.drawRoundRect(x + thickness/2, y + thickness/2, 
+                        width - thickness, height - thickness, 
+                        radius, radius);
+        g2.dispose();
+    }
+
+    @Override
+    public Insets getBorderInsets(Component c) {
+        return new Insets(thickness + 2, thickness + 2, thickness + 2, thickness + 2);
+    }
+
+    @Override
+    public boolean isBorderOpaque() {
+        return false;
     }
 }

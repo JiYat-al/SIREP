@@ -1,5 +1,4 @@
 package Vista;
-import Controlador.ControladorDocente;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -114,7 +113,7 @@ public class Menu extends JFrame {
         JPanel panelMenu = new JPanel(new FlowLayout(FlowLayout.CENTER, 32, 8));
         panelMenu.setOpaque(false);
 
-        JButton btnAlumnos = new JButton("Alumnos");
+        JButton btnAlumnos = new JButton("Alumnos \u25BC");
         btnAlumnos.setIcon(cargarPNGComoIcono("/Recursos/alumnos.png", 28, 28));
         configurarBotonMenu(btnAlumnos);
 
@@ -130,42 +129,109 @@ public class Menu extends JFrame {
         btnProyectos.setIcon(cargarPNGComoIcono("/Recursos/proyectos.png", 28, 28));
         configurarBotonMenu(btnProyectos);
 
-        JPopupMenu menuProyectos = new JPopupMenu();
-        JMenuItem itemBancoProyectos = new JMenuItem("Banco de Proyectos", cargarPNGComoIcono("/Recursos/proyecto.png", 22, 22));
-        JMenuItem itemAnteproyectos = new JMenuItem("Anteproyectos", cargarPNGComoIcono("/Recursos/proyecto.png", 22, 22));
-        itemBancoProyectos.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        itemAnteproyectos.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        itemBancoProyectos.setBackground(Color.WHITE);
-        itemAnteproyectos.setBackground(Color.WHITE);
-
-        // Efecto hover en el menú popup
-        itemBancoProyectos.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { itemBancoProyectos.setBackground(new Color(230,225,255)); }
-            public void mouseExited(MouseEvent e) { itemBancoProyectos.setBackground(Color.WHITE); }
-        });
-        itemAnteproyectos.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { itemAnteproyectos.setBackground(new Color(230,225,255)); }
-            public void mouseExited(MouseEvent e) { itemAnteproyectos.setBackground(Color.WHITE); }
-        });
-
-        menuProyectos.add(itemBancoProyectos);
-        menuProyectos.add(itemAnteproyectos);
-
-        btnProyectos.addActionListener(e -> {
-            menuProyectos.show(btnProyectos, 0, btnProyectos.getHeight());
-        });
-
         panelMenu.add(btnAlumnos);
         panelMenu.add(btnDocentes);
         panelMenu.add(btnEmpresas);
         panelMenu.add(btnProyectos);
-
         barraSuperior.add(panelMenu, BorderLayout.CENTER);
 
-        // Botón de perfil PNG en la esquina superior derecha
+        // Estilo personalizado para los menús popup
+        class MenuPopupEstilizado extends JPopupMenu {
+            public MenuPopupEstilizado() {
+                setBorder(BorderFactory.createCompoundBorder(
+                        new LineBorder(new Color(180, 170, 255), 1),
+                        BorderFactory.createEmptyBorder(5, 0, 5, 0)
+                ));
+                setBackground(Color.WHITE);
+                // Sombra suave
+                setBorder(BorderFactory.createCompoundBorder(
+                        new Border() {
+                            @Override
+                            public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+                                Graphics2D g2 = (Graphics2D) g;
+                                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                                g2.setColor(new Color(0, 0, 0, 20));
+                                for (int i = 0; i < 4; i++) {
+                                    g2.drawRoundRect(x + i, y + i, width - 2*i - 1, height - 2*i - 1, 8, 8);
+                                }
+                            }
+                            @Override
+                            public Insets getBorderInsets(Component c) { return new Insets(4,4,4,4); }
+                            @Override
+                            public boolean isBorderOpaque() { return false; }
+                        },
+                        BorderFactory.createEmptyBorder(5, 0, 5, 0)
+                ));
+            }
+        }
+
+        // Configurar estilo para los items del menú
+        class MenuItemEstilizado extends JMenuItem {
+            public MenuItemEstilizado(String texto, Icon icono) {
+                super(texto, icono);
+                setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                setBackground(Color.WHITE);
+                setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+                setIconTextGap(12);
+
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        setBackground(new Color(240, 238, 255));
+                        setBorder(BorderFactory.createCompoundBorder(
+                                BorderFactory.createMatteBorder(0, 3, 0, 0, colorPrincipal),
+                                BorderFactory.createEmptyBorder(8, 17, 8, 20)
+                        ));
+                    }
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        setBackground(Color.WHITE);
+                        setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+                    }
+                });
+            }
+        }
+
+        // Crear menús popup estilizados
+        JPopupMenu menuProyectos = new MenuPopupEstilizado();
+        JPopupMenu menuAlumnos = new MenuPopupEstilizado();
+
+        // Items del menú de proyectos
+        JMenuItem itemBancoProyectos = new MenuItemEstilizado("Banco de Proyectos", cargarPNGComoIcono("/Recursos/proyectos.png", 22, 22));
+        JMenuItem itemAnteproyectos = new MenuItemEstilizado("Anteproyectos", cargarPNGComoIcono("/Recursos/docentes.png", 22, 22));
+
+        menuProyectos.add(itemBancoProyectos);
+        menuProyectos.add(itemAnteproyectos);
+
+        // Items del menú de alumnos
+        JMenuItem itemResidentes = new MenuItemEstilizado("Residentes", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
+        JMenuItem itemCandidatos = new MenuItemEstilizado("Candidatos", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
+
+        menuAlumnos.add(itemResidentes);
+        menuAlumnos.add(itemCandidatos);
+
+        // Alinear los menús popup con los botones
+        btnProyectos.addActionListener(e -> {
+            int x = (btnProyectos.getWidth() - menuProyectos.getPreferredSize().width) / 2;
+            menuProyectos.show(btnProyectos, x, btnProyectos.getHeight());
+        });
+
+        btnAlumnos.addActionListener(e -> {
+            /*int x = (btnAlumnos.getWidth() - menuAlumnos.getPreferredSize().width) / 2;
+            menuAlumnos.show(btnAlumnos, x, btnAlumnos.getHeight());*/
+            VistaRegistros alumnos = new VistaRegistros();
+            alumnos.setVisible(true);
+            this.dispose();
+        });
+
+        // Panel para los botones de perfil y cerrar sesión
+        JPanel panelBotonesUsuario = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        panelBotonesUsuario.setOpaque(false);
+
+        // Botón de perfil PNG
         JButton btnPerfil = new JButton();
         btnPerfil.setToolTipText("Perfil");
-        btnPerfil.setIcon(cargarPNGComoIcono("/Recursos/perfil.png", 32, 32)); // Usa un tamaño más grande para mejor visibilidad
+        btnPerfil.setIcon(cargarPNGComoIcono("/Recursos/perfil.png", 32, 32));
         btnPerfil.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         btnPerfil.setBackground(Color.WHITE);
         btnPerfil.setFocusPainted(false);
@@ -173,16 +239,75 @@ public class Menu extends JFrame {
         btnPerfil.setOpaque(true);
 
         // Efecto hover para el botón de perfil
-        btnPerfil.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
+        btnPerfil.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent evt) {
                 btnPerfil.setBackground(new Color(230, 225, 255));
             }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
+            @Override
+            public void mouseExited(MouseEvent evt) {
                 btnPerfil.setBackground(Color.WHITE);
             }
         });
 
-        barraSuperior.add(btnPerfil, BorderLayout.EAST);
+        // Botón de cerrar sesión
+        JButton btnCerrarSesion = new JButton("Cerrar Sesión");
+        btnCerrarSesion.setToolTipText("Cerrar Sesión");
+        btnCerrarSesion.setIcon(cargarPNGComoIcono("/Recursos/perfil.svg", 36, 36));
+        btnCerrarSesion.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btnCerrarSesion.setForeground(new Color(200, 60, 60));
+        btnCerrarSesion.setBorder(new CompoundBorder(
+                new LineBorder(new Color(230, 200, 200), 2, true),
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+        btnCerrarSesion.setBackground(Color.WHITE);
+        btnCerrarSesion.setFocusPainted(false);
+        btnCerrarSesion.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCerrarSesion.setOpaque(true);
+        btnCerrarSesion.setIconTextGap(12);
+
+        // Efecto hover para el botón de cerrar sesión
+        btnCerrarSesion.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent evt) {
+                btnCerrarSesion.setBackground(new Color(255, 200, 200));
+                btnCerrarSesion.setBorder(new CompoundBorder(
+                        new LineBorder(new Color(200, 60, 60), 2, true),
+                        BorderFactory.createEmptyBorder(10, 20, 10, 20)
+                ));
+                btnCerrarSesion.setFont(btnCerrarSesion.getFont().deriveFont(Font.BOLD, 17f));
+            }
+            @Override
+            public void mouseExited(MouseEvent evt) {
+                btnCerrarSesion.setBackground(Color.WHITE);
+                btnCerrarSesion.setBorder(new CompoundBorder(
+                        new LineBorder(new Color(230, 200, 200), 2, true),
+                        BorderFactory.createEmptyBorder(10, 20, 10, 20)
+                ));
+                btnCerrarSesion.setFont(btnCerrarSesion.getFont().deriveFont(Font.BOLD, 16f));
+            }
+        });
+
+        // Acción de cerrar sesión
+        btnCerrarSesion.addActionListener(e -> {
+            int opcion = JOptionPane.showConfirmDialog(
+                    this,
+                    "¿Está seguro que desea cerrar sesión?",
+                    "Cerrar Sesión",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+            if (opcion == JOptionPane.YES_OPTION) {
+                dispose();
+                new LoginITO().setVisible(true);
+            }
+        });
+
+        // Agregar botones al panel
+        panelBotonesUsuario.add(btnPerfil);
+        panelBotonesUsuario.add(btnCerrarSesion);
+
+        barraSuperior.add(panelBotonesUsuario, BorderLayout.EAST);
 
         mainPanel.add(barraSuperior, BorderLayout.NORTH);
 
@@ -360,16 +485,29 @@ public class Menu extends JFrame {
         setContentPane(mainPanel);
 
         // Acciones de los botones para abrir los bancos
-        btnAlumnos.addActionListener(e -> new VistaRegistros().setVisible(true));
-        /** Apertura de docentes*/
+        // Acciones de los botones principales
         btnDocentes.addActionListener(e -> {
-            DocentesUI vistaDocentes = new DocentesUI();
-            ControladorDocente controladorDocentes = new ControladorDocente();
-            vistaDocentes.setVisible(true);
+            new DocentesUI().setVisible(true);
+            this.dispose();
         });
-        btnEmpresas.addActionListener(e -> new BancoEmpresasUI().setVisible(true));
-         itemBancoProyectos.addActionListener(e -> new BancoProyectosUI().setVisible(true));
-         //itemAnteproyectos.addActionListener(e -> new BancoAnteproyectosUI().setVisible(true)); */
+        btnEmpresas.addActionListener(e -> {
+            new BancoEmpresasUI().setVisible(true);
+            this.dispose();
+        });
+
+        // Acciones de los items del menú proyectos
+        itemBancoProyectos.addActionListener(e -> new BancoProyectosUI().setVisible(true));
+        //itemAnteproyectos.addActionListener(e -> new AnteproyectosUI().setVisible(true));
+
+        // Acciones de los items del menú alumnos
+        itemResidentes.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this,
+                    "Vista de Residentes en desarrollo.\nPróximamente disponible.",
+                    "En desarrollo",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        itemCandidatos.addActionListener(e -> new VistaRegistros().setVisible(true));
         btnPerfil.addActionListener(e -> JOptionPane.showMessageDialog(this,
                 "Perfil de la profesora Maricarmen\nCorreo: maricarmen@ito.edu.mx\nRol: Administradora",
                 "Perfil", JOptionPane.INFORMATION_MESSAGE));

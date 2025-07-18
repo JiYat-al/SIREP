@@ -66,6 +66,7 @@ public class ControladorLogin {
             JOptionPane.showMessageDialog(vista, "¡Bienvenido, " + usuario + "!", "Acceso", JOptionPane.INFORMATION_MESSAGE);
             intentosFallidos = 0; // resetear contador si éxito
             new Menu().setVisible(true);
+            vista.dispose();
             // Aquí iría la lógica para abrir la siguiente ventana
         } else {
             intentosFallidos++;

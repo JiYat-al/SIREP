@@ -72,7 +72,7 @@ public class AgregarManual extends JDialog {
         headerPanel.add(lblTituloDialog, BorderLayout.CENTER);
 
         // Botón ayuda en el header
-        btnAyuda = new JButton("Question");
+        btnAyuda = new JButton("❓");
         btnAyuda.setFont(new Font("Segoe UI", Font.BOLD, 20));
         btnAyuda.setBackground(Color.WHITE);
         btnAyuda.setForeground(colorPrincipal);
@@ -110,7 +110,7 @@ public class AgregarManual extends JDialog {
         // Nota sobre campos obligatorios y carrera
         JPanel panelNota = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelNota.setBackground(Color.WHITE);
-        JLabel lblNota = new JLabel("* Campos obligatorios - 🎓 Carrera: " + CARRERA_FIJA + " - Semestre: 9-15");
+        JLabel lblNota = new JLabel("⚠️ * Campos obligatorios - 🎓 Carrera: " + CARRERA_FIJA + " - 📚 Semestre: 9-15");
         lblNota.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblNota.setForeground(new Color(150, 150, 150));
         panelNota.add(lblNota);

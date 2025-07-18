@@ -17,7 +17,7 @@ public class DialogoEditarResidente extends JDialog {
     private JButton btnCancelar;
 
     private boolean confirmado = false;
-    private final ModeloResidente residente;
+    private ModeloResidente residente;
     private final Color colorPrincipal = new Color(92, 93, 169);
     private final Color colorExito = new Color(76, 175, 80);
     private final Color colorError = new Color(244, 67, 54);

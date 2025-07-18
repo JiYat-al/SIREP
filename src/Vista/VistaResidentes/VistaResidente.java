@@ -1,14 +1,14 @@
 package Vista.VistaResidentes;
 
+import Controlador.ControladorResidente;
+import Modelo.ModeloResidente;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
-import java.util.ArrayList;
-import Modelo.ModeloResidente;
-import Controlador.ControladorResidente;
 
 public class VistaResidente {
     private JPanel panelPrincipal;
@@ -19,7 +19,6 @@ public class VistaResidente {
     private final Color colorExito = new Color(76, 175, 80);
     private final Color colorError = new Color(244, 67, 54);
     private final Color colorAdvertencia = new Color(255, 152, 0);
-    private final Color colorEliminar = new Color(229, 115, 115);
 
     private List<ModeloResidente> listaResidentes = new ArrayList<>();
     private List<Boolean> validacionEstados = new ArrayList<>();
@@ -50,10 +49,17 @@ public class VistaResidente {
                 g2.setColor(new Color(140, 130, 220, 60));
                 g2.drawArc(-80, -80, 200, 200, 0, 360);
 
+                // Dibujar círculos decorativos
                 g2.setColor(new Color(180, 170, 255, 60));
                 g2.drawArc(getWidth() - 180, getHeight() - 180, 160, 160, 0, 360);
                 g2.setColor(new Color(140, 130, 220, 40));
                 g2.drawArc(getWidth() - 120, getHeight() - 120, 100, 100, 0, 360);
+
+                // Agregar cuadrado decorativo morado
+                g2.setColor(new Color(92, 93, 169, 40));
+                g2.fillRect(getWidth() - 200, getHeight() - 200, 150, 150);
+                g2.setColor(new Color(92, 93, 169, 60));
+                g2.drawRect(getWidth() - 200, getHeight() - 200, 150, 150);
             }
         };
         panelPrincipal.setBackground(colorFondo);
@@ -75,7 +81,7 @@ public class VistaResidente {
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(32, 38, 24, 38));
 
-        JLabel lblTitulo = new JLabel("Gestión de Residentes");
+        JLabel lblTitulo = new JLabel("Gestión de Candidatos");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 34));
         lblTitulo.setForeground(colorPrincipal);
         header.add(lblTitulo, BorderLayout.WEST);
@@ -83,23 +89,23 @@ public class VistaResidente {
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 20));
         panelBotones.setOpaque(false);
 
-        JButton btnCargarExcel = crearBotonAccion("📄 Cargar Excel", new Color(103, 58, 183));
+        JButton btnCargarExcel = crearBotonAccion("Cargar Excel", colorPrincipal);
         btnCargarExcel.addActionListener(e -> cargarExcelCompleto());
         panelBotones.add(btnCargarExcel);
 
-        JButton btnImportar = crearBotonAccion("📥 Importar", colorExito);
+        JButton btnImportar = crearBotonAccion("Importar", colorPrincipal);
         btnImportar.addActionListener(e -> importarSoloValidos());
         panelBotones.add(btnImportar);
 
-        JButton btnAgregarManual = crearBotonAccion("➕ Agregar Manual", new Color(33, 150, 243));
+        JButton btnAgregarManual = crearBotonAccion("Agregar Manual", colorPrincipal);
         btnAgregarManual.addActionListener(e -> abrirAgregarManual());
         panelBotones.add(btnAgregarManual);
 
-        JButton btnEliminarSeleccionado = crearBotonAccion("🗑️ Eliminar", colorEliminar);
+        JButton btnEliminarSeleccionado = crearBotonAccion("Eliminar", colorPrincipal);
         btnEliminarSeleccionado.addActionListener(e -> eliminarResidenteSeleccionado());
         panelBotones.add(btnEliminarSeleccionado);
 
-        JButton btnLimpiarTabla = crearBotonAccion("🧹 Limpiar", new Color(158, 158, 158));
+        JButton btnLimpiarTabla = crearBotonAccion("Limpiar", colorPrincipal);
         btnLimpiarTabla.addActionListener(e -> limpiarTablaConConfirmacion());
         panelBotones.add(btnLimpiarTabla);
 

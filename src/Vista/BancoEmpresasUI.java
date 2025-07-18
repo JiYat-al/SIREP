@@ -528,7 +528,9 @@ public class BancoEmpresasUI extends JFrame {
         btnRegresar.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
         btnRegresar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRegresar.addActionListener(e -> {
-            dispose();
+            Menu menu = new Menu();
+            menu.setVisible(true);
+            this.dispose();
         });
 
         JPanel panelTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
