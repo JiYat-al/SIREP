@@ -66,6 +66,14 @@ public class ModeloResidente {
     }
 
 
+
+
+
+
+
+
+
+
     public boolean validarCamposBasicos() {
         boolean valido = (this.numeroControl > 0 &&
                 this.nombre != null && !this.nombre.trim().isEmpty() &&
@@ -392,7 +400,6 @@ public class ModeloResidente {
                     residente.setNombre(rs.getString("nombre"));
                     residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                     residente.setApellidoMaterno(rs.getString("apellido_materno"));
-                    residente.setCarrera(rs.getString("carrera"));
                     residente.setSemestre(rs.getInt("semestre"));
                     residente.setCorreo(rs.getString("correo"));
                     residente.setTelefono(rs.getString("telefono"));
@@ -533,7 +540,7 @@ public class ModeloResidente {
 
         // *** FIX: SQL actualizado para nueva estructura ***
         String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
-                "carrera, semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)";
+                "semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)";
 
         try {
             Connection conn = getConnection();
@@ -600,11 +607,10 @@ public class ModeloResidente {
                     stmt.setString(2, residente.getNombre().trim());
                     stmt.setString(3, residente.getApellidoPaterno().trim());
                     stmt.setString(4, residente.getApellidoMaterno() != null ? residente.getApellidoMaterno().trim() : null);
-                    stmt.setString(5, residente.getCarrera());
-                    stmt.setInt(6, residente.getSemestre());
-                    stmt.setString(7, residente.getCorreo().trim());
-                    stmt.setString(8, residente.getTelefono() != null ? residente.getTelefono().trim() : null);
-                    stmt.setInt(9, residente.getIdProyecto());
+                    stmt.setInt(5, residente.getSemestre());
+                    stmt.setString(6, residente.getCorreo().trim());
+                    stmt.setString(7, residente.getTelefono() != null ? residente.getTelefono().trim() : null);
+                    stmt.setInt(8, residente.getIdProyecto());
 
                     int filasAfectadas = stmt.executeUpdate();
 
@@ -745,6 +751,9 @@ public class ModeloResidente {
             }
         }
     }
+
+
+
 
     public static class ResultadoImportacion {
         private final int exitosos;

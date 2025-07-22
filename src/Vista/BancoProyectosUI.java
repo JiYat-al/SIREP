@@ -1,19 +1,24 @@
+
 package Vista;
+
+import Controlador.ControladorProyectos;
+import Modelo.ProyectoDAO;
+import Modelo.Proyectos;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
-import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BancoProyectosUI extends JFrame {
+    private ControladorProyectos controladorProyectos = new ControladorProyectos(new ProyectoDAO());
     private DefaultTableModel modelo;
     private JTable tabla;
     private final Color colorPrincipal = new Color(92, 93, 169);
     private final Color colorFondo = new Color(245, 243, 255);
-    private ArrayList<Proyecto> listaProyectos = new ArrayList<>();
+    private ArrayList<Proyectos> listaProyectos = new ArrayList<>();
 
     public BancoProyectosUI() {
         setTitle("Banco de Proyectos");
@@ -23,7 +28,6 @@ public class BancoProyectosUI extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(colorFondo);
 
-        // Barra lateral
         JPanel barraLateral = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -48,11 +52,9 @@ public class BancoProyectosUI extends JFrame {
         barraLateral.add(verticalTitle, gbcL);
         mainPanel.add(barraLateral, BorderLayout.WEST);
 
-        // Panel contenido
         JPanel panelContenido = new JPanel(new BorderLayout());
         panelContenido.setBackground(colorFondo);
 
-        // Encabezado
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(Color.WHITE);
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 250)));
@@ -62,7 +64,6 @@ public class BancoProyectosUI extends JFrame {
         lblTitulo.setBorder(BorderFactory.createEmptyBorder(32, 38, 24, 0));
         header.add(lblTitulo, BorderLayout.WEST);
 
-        // Botón Registrar
         JButton btnNuevo = new JButton("Registrar nuevo proyecto");
         btnNuevo.setBackground(colorPrincipal);
         btnNuevo.setForeground(Color.WHITE);
@@ -81,53 +82,17 @@ public class BancoProyectosUI extends JFrame {
         header.add(btnPanel, BorderLayout.EAST);
         panelContenido.add(header, BorderLayout.NORTH);
 
-        // Tabla de proyectos
         String[] columnas = {
-                "ID", "Empresa", "Descripción", "Alumnos requeridos",
-                "Estatus elaboración", "Origen", "Asesor", "Revisor", "" // Sin título para el botón
+                "ID","Nombre", "Descripción", "Origen"
         };
-        modelo = new DefaultTableModel(null, columnas) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                // Solo la última columna (botón) es editable
-                return column == 8;
-            }
-        };
-        tabla = new JTable(modelo) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                // Solo el botón puede "editarse"
-                return column == 8;
-            }
-            private int hoveredRow = -1;
-            {
-                setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-                setRowSelectionAllowed(false);
-                setColumnSelectionAllowed(false);
-                getTableHeader().setReorderingAllowed(false); // No permite mover columnas
-                setFocusable(false);
-                addMouseMotionListener(new MouseMotionAdapter() {
-                    public void mouseMoved(MouseEvent e) {
-                        int row = rowAtPoint(e.getPoint());
-                        if (row != hoveredRow) {
-                            hoveredRow = row; repaint();
-                        }
-                    }
-                });
-                addMouseListener(new MouseAdapter() {
-                    public void mouseExited(MouseEvent e) {
-                        hoveredRow = -1; repaint();
-                    }
-                });
-            }
-            @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                c.setBackground(Color.WHITE);
-                c.setForeground(new Color(60, 60, 100));
-                return c;
-            }
-        };
+        modelo = new DefaultTableModel(null, columnas);
+        tabla = new JTable(modelo);
+        // Ocultar la columna ID (columna 0)
+        tabla.getColumnModel().getColumn(0).setMinWidth(0);
+        tabla.getColumnModel().getColumn(0).setMaxWidth(0);
+        tabla.getColumnModel().getColumn(0).setWidth(0);
+
+
         tabla.setFont(new Font("Segoe UI", Font.PLAIN, 17));
         tabla.setRowHeight(36);
         tabla.setShowVerticalLines(false);
@@ -137,13 +102,10 @@ public class BancoProyectosUI extends JFrame {
         tabla.getTableHeader().setBackground(new Color(220, 219, 245));
         tabla.getTableHeader().setForeground(colorPrincipal);
         ((DefaultTableCellRenderer) tabla.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.LEFT);
-
-        // Botón redondo morado en la tabla
-        tabla.getColumnModel().getColumn(8).setCellRenderer(new BotonRedondoRenderer());
-        tabla.getColumnModel().getColumn(8).setCellEditor(new BotonRedondoEditor(new JCheckBox()));
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
-        scrollTabla.setBorder(BorderFactory.createEmptyBorder(32, 38, 38, 38));
+        scrollTabla.setBorder(BorderFactory.createEmptyBorder(0, 0, 38, 0));
         scrollTabla.getViewport().setBackground(Color.WHITE);
         scrollTabla.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
             protected void configureScrollBarColors() {
@@ -160,290 +122,370 @@ public class BancoProyectosUI extends JFrame {
                 return jbutton;
             }
         });
-        panelContenido.add(scrollTabla, BorderLayout.CENTER);
+
+        // Panel superior para los botones de filtro con espaciado uniforme
+        JPanel panelBotonesFiltro = new JPanel(new GridBagLayout());
+        panelBotonesFiltro.setBackground(Color.WHITE);
+        panelBotonesFiltro.setBorder(BorderFactory.createEmptyBorder(20, 38, 20, 38));
+
+        // Crear botones con texto descriptivo
+        JButton btnBanco = new JButton(" Banco de proyectos");
+        JButton btnResidencia = new JButton(" Proyectos de residencia");
+        JButton btnAnteproyectos = new JButton(" Anteproyectos");
+
+        JButton[] botones = {btnBanco, btnResidencia, btnAnteproyectos};
+
+        // Preparar el panel para los botones
+        GridBagConstraints gbcBtn = new GridBagConstraints();
+        gbcBtn.fill = GridBagConstraints.HORIZONTAL;
+        gbcBtn.weightx = 1.0;
+        gbcBtn.insets = new Insets(0, 10, 0, 10);
+        var ref = new Object() {
+            AtomicInteger numeroActualBoton = new AtomicInteger();
+        };
+
+/**1 banco de proyectos 2 proyectos residencia 3 anteproyectos*/
+        int index = 0;
+        for (JButton boton : botones) {
+            // Configurar estilo del botón
+            boton.setFont(new Font("Segoe UI", Font.BOLD, 15));
+            boton.setForeground(Color.WHITE);
+            boton.setBackground(colorPrincipal);
+            boton.setFocusPainted(false);
+            boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            boton.setOpaque(true);
+
+            // Borde con efecto de elevación
+            boton.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 4, 0, new Color(120, 120, 170, 60)),
+                    BorderFactory.createEmptyBorder(12, 24, 12, 24)
+            ));
+
+            // Efecto hover
+            boton.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    boton.setBackground(new Color(82, 83, 159));
+                }
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    boton.setBackground(colorPrincipal);
+                }
+            });
+
+            // Agregar al panel con GridBagLayout
+            gbcBtn.gridx = index++;
+            panelBotonesFiltro.add(boton, gbcBtn);
+        }
+        btnBanco.addActionListener(e -> {
+            cargarTablaBancoProyectos();
+            ref.numeroActualBoton.set(1);
+        });
+
+        btnResidencia.addActionListener(e -> {
+            cargarTablaProyectosResidencia();
+            ref.numeroActualBoton.set(2);
+        });
+
+        btnAnteproyectos.addActionListener(e -> {
+            cargarTablaAnteproyectos();
+            ref.numeroActualBoton.set(3);
+        });
+/**final de los botones de banco proyecto proyecto etc*/
+
+        // Panel de botones de acción
+        JPanel panelAcciones = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        panelAcciones.setBackground(Color.WHITE);
+
+        JButton btnEditar = new JButton("Editar");
+        JButton btnDarBaja = new JButton("Dar de baja");
+        JButton btnVerInfo = new JButton("Ver información");
+
+        // Configurar estilo de botones
+        JButton[] botonesAccion = {btnEditar, btnDarBaja, btnVerInfo};
+        for (JButton btn : botonesAccion) {
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            btn.setBackground(colorPrincipal);
+            btn.setForeground(Color.WHITE);
+            btn.setEnabled(false);
+            btn.setFocusPainted(false);
+            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            btn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(120, 120, 170, 60)),
+                    BorderFactory.createEmptyBorder(8, 15, 8, 15)
+            ));
+            panelAcciones.add(btn);
+        }
+
+        // Agregar listener de selección de tabla
+        tabla.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                boolean haySeleccion = tabla.getSelectedRow() != -1;
+                for (JButton btn : botonesAccion) {
+                    btn.setEnabled(haySeleccion);
+                }
+            }
+        });
+
+// Evento del botón Editar
+        btnEditar.addActionListener(e -> {
+            int filaSeleccionada = tabla.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                Proyectos proyecto = obtenerProyectoSeleccionado();
+                if (proyecto != null) {
+                    mostrarDialogoEdicion(proyecto);
+                }
+            }
+        });
+
+// Evento del botón Dar de Baja
+        btnDarBaja.addActionListener(e -> {
+            int filaSeleccionada = tabla.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                Proyectos proyecto = obtenerProyectoSeleccionado();
+                int idProyecto = Integer.parseInt(tabla.getValueAt(filaSeleccionada, 0).toString());
+                if (proyecto != null) {
+                    int confirmacion = JOptionPane.showConfirmDialog(this,
+                            "¿Está seguro que desea dar de baja el proyecto '" + proyecto.getNombre() + "'?",
+                            "Confirmar Baja",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE);
+
+                    if (confirmacion == JOptionPane.YES_OPTION) {
+                        controladorProyectos.Baja(idProyecto);
+                        JOptionPane.showMessageDialog(this,
+                                "El proyecto ha sido dado de baja correctamente.",
+                                "Operación Exitosa",
+                                JOptionPane.INFORMATION_MESSAGE);
+                       if(ref.numeroActualBoton.get()==1){
+                           cargarTablaBancoProyectos();
+                       }
+                        if(ref.numeroActualBoton.get()==2){
+                            cargarTablaAnteproyectos();
+                        }
+                        if(ref.numeroActualBoton.get()==3){
+                            cargarTablaAnteproyectos();
+                        }
+
+
+                    }
+                }
+            }
+        });
+
+// Evento del botón Ver Información
+        btnVerInfo.addActionListener(e -> {
+            int filaSeleccionada = tabla.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                Proyectos proyecto = obtenerProyectoSeleccionado();
+                if (proyecto != null) {
+                    mostrarInformacionProyecto(proyecto);
+                }
+            }
+        });        JPanel centroTabla = new JPanel(new BorderLayout());
+        centroTabla.setBackground(colorFondo);
+        centroTabla.setBorder(BorderFactory.createEmptyBorder(32, 38, 0, 38));
+        centroTabla.add(panelBotonesFiltro, BorderLayout.NORTH);
+        centroTabla.add(scrollTabla, BorderLayout.CENTER);
+        centroTabla.add(panelAcciones, BorderLayout.SOUTH);
+        panelContenido.add(centroTabla, BorderLayout.CENTER);
 
         mainPanel.add(panelContenido, BorderLayout.CENTER);
         setContentPane(mainPanel);
 
-        // Proyectos de ejemplo:
-        agregarProyectosDeEjemplo();
-        cargarTabla();
-
-        // ---- Evento del botón Registrar (Abre formulario) ----
+        // Acciones de los botones
         btnNuevo.addActionListener(e -> {
-            RegistrarProyectoDialog dialog = new RegistrarProyectoDialog(this, colorPrincipal, null);
-            dialog.setVisible(true);
-            if (dialog.seRegistro) {
-                listaProyectos.add(dialog.proyectoEditado);
-                cargarTabla();
-            }
+            JDialog dialogoNuevoProyecto = new JDialog(this, "Nuevo Proyecto", true);
+            dialogoNuevoProyecto.setSize(600, 500);
+            dialogoNuevoProyecto.setLocationRelativeTo(this);
+
+            JPanel panelForm = new JPanel(new GridBagLayout());
+            panelForm.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.insets = new Insets(5, 5, 5, 5);
+
+            // Campos del formulario
+            JTextField txtNombre = new JTextField(20);
+            JTextField txtDuracion = new JTextField(20);
+            JTextArea txtDescripcion = new JTextArea(5, 20);
+            JComboBox<String> comboEmpresa = new JComboBox<>();
+
+            // Configurar área de descripción
+            txtDescripcion.setLineWrap(true);
+            txtDescripcion.setWrapStyleWord(true);
+            JScrollPane scrollDescripcion = new JScrollPane(txtDescripcion);
+
+            // Agregar campos al panel
+            panelForm.add(new JLabel("Nombre:"), gbc);
+            gbc.gridy++;
+            panelForm.add(txtNombre, gbc);
+            gbc.gridy++;
+            panelForm.add(new JLabel("Duración (meses):"), gbc);
+            gbc.gridy++;
+            panelForm.add(txtDuracion, gbc);
+            gbc.gridy++;
+            panelForm.add(new JLabel("Empresa:"), gbc);
+            gbc.gridy++;
+            panelForm.add(comboEmpresa, gbc);
+            gbc.gridy++;
+            panelForm.add(new JLabel("Descripción:"), gbc);
+            gbc.gridy++;
+            gbc.fill = GridBagConstraints.BOTH;
+            panelForm.add(scrollDescripcion, gbc);
+
+            // Botones
+            JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JButton btnGuardar = new JButton("Guardar");
+            JButton btnCancelar = new JButton("Cancelar");
+
+            btnGuardar.addActionListener(ev -> {
+                // Aquí iría la lógica para guardar el proyecto
+                dialogoNuevoProyecto.dispose();
+            });
+
+            btnCancelar.addActionListener(ev -> dialogoNuevoProyecto.dispose());
+
+            panelBotones.add(btnGuardar);
+            panelBotones.add(btnCancelar);
+
+            dialogoNuevoProyecto.setLayout(new BorderLayout());
+            dialogoNuevoProyecto.add(panelForm, BorderLayout.CENTER);
+            dialogoNuevoProyecto.add(panelBotones, BorderLayout.SOUTH);
+
+            dialogoNuevoProyecto.setVisible(true);
         });
     }
 
-    private void agregarProyectosDeEjemplo() {
-        listaProyectos.add(new Proyecto(1, "Empresa A", "Proyecto de software para gestión escolar", 3, "Disponible", "Banco de Proyectos", "Docente X", "Docente Y"));
-        listaProyectos.add(new Proyecto(2, "Empresa B", "Sistema de inventarios", 2, "No disponible", "Externo", "Docente Y", "Docente Z"));
-        listaProyectos.add(new Proyecto(3, "Empresa C", "App móvil para ventas", 4, "Terminado", "Banco de Proyectos", "Docente Z", "Docente X"));
-    }
-
-    private void cargarTabla() {
+    private void cargarTablaBancoProyectos() {
         modelo.setRowCount(0);
-        for (Proyecto p : listaProyectos) {
-            modelo.addRow(new Object[]{
-                    p.id, p.empresa, p.descripcion, p.alumnos,
-                    p.estatus, p.origen, p.asesor, p.revisor, ""
-            });
+        listaProyectos = new ArrayList<>(controladorProyectos.ObProyectosBanco());
+        for (Proyectos p : listaProyectos) {
+            modelo.addRow(new Object[]{p.getId_proyecto(),p.getNombre(), p.getDescripcion(),  p.getNombreOrigen()});
         }
     }
 
-    // Botón Editar bonito en la tabla
-    class BotonRedondoRenderer extends JButton implements TableCellRenderer {
-        public BotonRedondoRenderer() {
-            setOpaque(false);
-            setContentAreaFilled(false);
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setFont(new Font("Segoe UI", Font.BOLD, 15));
-        }
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus,
-                                                       int row, int column) {
-            setText("Editar");
-            setForeground(Color.WHITE);
-            setBackground(colorPrincipal);
-            setBorder(BorderFactory.createEmptyBorder());
-            return this;
-        }
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(colorPrincipal);
-            g2.fillRoundRect(0, 2, getWidth()-1, getHeight()-5, 24, 24); // Circular/Pill
-            g2.dispose();
-            super.paintComponent(g);
+    private void cargarTablaProyectosResidencia() {
+        modelo.setRowCount(0);
+        listaProyectos = new ArrayList<>(controladorProyectos.ObProyectosResidencia());
+        for (Proyectos p : listaProyectos) {
+            modelo.addRow(new Object[]{p.getId_proyecto(),p.getNombre(), p.getDescripcion(), p.getNombreOrigen()});
         }
     }
 
-    class BotonRedondoEditor extends DefaultCellEditor {
-        private JButton button;
-        private int selectedRow;
-
-        public BotonRedondoEditor(JCheckBox checkBox) {
-            super(checkBox);
-            button = new JButton("Editar") {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setColor(colorPrincipal);
-                    g2.fillRoundRect(0, 2, getWidth()-1, getHeight()-5, 24, 24);
-                    g2.dispose();
-                    super.paintComponent(g);
-                }
-            };
-            button.setOpaque(false);
-            button.setContentAreaFilled(false);
-            button.setFocusPainted(false);
-            button.setBorderPainted(false);
-            button.setForeground(Color.WHITE);
-            button.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            button.setBorder(BorderFactory.createEmptyBorder());
-            button.addActionListener(e -> {
-                editarProyecto(selectedRow);
-            });
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                                                     boolean isSelected, int row, int column) {
-            selectedRow = row;
-            return button;
+    private void cargarTablaAnteproyectos() {
+        modelo.setRowCount(0);
+        listaProyectos = new ArrayList<>(controladorProyectos.ObAnteproyectos());
+        for (Proyectos p : listaProyectos) {
+            modelo.addRow(new Object[]{p.getId_proyecto(),p.getNombre(), p.getDescripcion(), p.getNombreOrigen()});
         }
     }
 
-    private void editarProyecto(int row) {
-        Proyecto proyecto = listaProyectos.get(row);
-        RegistrarProyectoDialog dialog = new RegistrarProyectoDialog(this, colorPrincipal, proyecto);
-        dialog.setVisible(true);
-        if (dialog.seRegistro) {
-            listaProyectos.set(row, dialog.proyectoEditado);
-            cargarTabla();
+    private Proyectos obtenerProyectoSeleccionado() {
+        int filaSeleccionada = tabla.getSelectedRow();
+        if (filaSeleccionada != -1) {
+            return listaProyectos.get(filaSeleccionada);
         }
+        return null;
     }
 
-    static class Proyecto {
-        int id;
-        String empresa, descripcion, estatus, origen, asesor, revisor;
-        int alumnos;
-        Proyecto(int id, String empresa, String descripcion, int alumnos, String estatus, String origen, String asesor, String revisor) {
-            this.id = id; this.empresa = empresa; this.descripcion = descripcion;
-            this.alumnos = alumnos; this.estatus = estatus; this.origen = origen; this.asesor = asesor; this.revisor = revisor;
-        }
+    private void mostrarDialogoEdicion(Proyectos proyecto) {
+        JDialog dialogo = new JDialog(this, "Editar Proyecto", true);
+        dialogo.setSize(600, 500);
+        dialogo.setLocationRelativeTo(this);
+
+        JPanel panelForm = new JPanel(new GridBagLayout());
+        panelForm.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Campos del formulario
+        JTextField txtNombre = new JTextField(proyecto.getNombre(), 20);
+        JTextField txtDuracion = new JTextField(proyecto.getDuracion(), 20);
+        JTextArea txtDescripcion = new JTextArea(proyecto.getDescripcion(), 5, 20);
+
+        // Configurar área de descripción
+        txtDescripcion.setLineWrap(true);
+        txtDescripcion.setWrapStyleWord(true);
+        JScrollPane scrollDescripcion = new JScrollPane(txtDescripcion);
+
+        // Agregar campos al panel
+        panelForm.add(new JLabel("Nombre:"), gbc);
+        gbc.gridy++;
+        panelForm.add(txtNombre, gbc);
+        gbc.gridy++;
+        panelForm.add(new JLabel("Duración (meses):"), gbc);
+        gbc.gridy++;
+        panelForm.add(txtDuracion, gbc);
+        gbc.gridy++;
+        panelForm.add(new JLabel("Descripción:"), gbc);
+        gbc.gridy++;
+        gbc.fill = GridBagConstraints.BOTH;
+        panelForm.add(scrollDescripcion, gbc);
+
+        // Botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnCancelar = new JButton("Cancelar");
+
+        btnGuardar.addActionListener(ev -> {
+            proyecto.setNombre(txtNombre.getText().trim());
+            proyecto.setDuracion(txtDuracion.getText().trim());
+            proyecto.setDescripcion(txtDescripcion.getText().trim());
+
+            // Aquí iría la lógica para actualizar el proyecto en la base de datos
+
+            JOptionPane.showMessageDialog(dialogo,
+                    "Los cambios han sido guardados correctamente.",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
+            cargarTablaBancoProyectos();
+            dialogo.dispose();
+        });
+
+        btnCancelar.addActionListener(ev -> dialogo.dispose());
+
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnCancelar);
+
+        dialogo.setLayout(new BorderLayout());
+        dialogo.add(panelForm, BorderLayout.CENTER);
+        dialogo.add(panelBotones, BorderLayout.SOUTH);
+
+        dialogo.setVisible(true);
     }
 
-    public static class RegistrarProyectoDialog extends JDialog {
-        public boolean seRegistro = false;
-        public Proyecto proyectoEditado;
-        public RegistrarProyectoDialog(JFrame parent, Color colorPrincipal, Proyecto proyecto) {
-            super(parent, (proyecto == null ? "Registrar" : "Editar") + " proyecto", true);
-            setSize(480, 560);
-            setLocationRelativeTo(parent);
-            setLayout(new BorderLayout());
-            JPanel panel = new JPanel(new GridBagLayout());
-            panel.setBackground(Color.WHITE);
-            panel.setBorder(BorderFactory.createEmptyBorder(22, 34, 22, 34));
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(10, 2, 2, 2);
-
-            panel.add(labelField("Empresa", colorPrincipal), gbc);
-            gbc.gridy++;
-            JComboBox<String> cbEmpresa = new JComboBox<>(new String[] {"Empresa A", "Empresa B", "Empresa C"});
-            personalizaCombo(cbEmpresa, colorPrincipal);
-            panel.add(cbEmpresa, gbc);
-
-            gbc.gridy++;
-            panel.add(labelField("Descripción", colorPrincipal), gbc);
-            gbc.gridy++;
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.weightx = 1.0;
-            JTextArea txtDescripcion = new JTextArea(3, 22);
-            txtDescripcion.setLineWrap(true);
-            txtDescripcion.setWrapStyleWord(true);
-            txtDescripcion.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            JScrollPane scrollDesc = new JScrollPane(txtDescripcion);
-            scrollDesc.setPreferredSize(new Dimension(240, 60));
-            scrollDesc.setBorder(BorderFactory.createLineBorder(colorPrincipal, 2));
-            panel.add(scrollDesc, gbc);
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.weightx = 0;
-
-            gbc.gridy++; panel.add(labelField("Alumnos requeridos", colorPrincipal), gbc);
-            gbc.gridy++; JSpinner spAlumnos = new JSpinner(new SpinnerNumberModel(1,1,20,1)); panel.add(spAlumnos, gbc);
-
-            gbc.gridy++; panel.add(labelField("Estatus elaboración", colorPrincipal), gbc);
-            gbc.gridy++;
-            JComboBox<String> cbEstatus = new JComboBox<>(new String[]{"Disponible", "No disponible", "Terminado"});
-            personalizaCombo(cbEstatus, colorPrincipal);
-            panel.add(cbEstatus, gbc);
-
-            gbc.gridy++; panel.add(labelField("Origen", colorPrincipal), gbc);
-            gbc.gridy++;
-            JComboBox<String> cbOrigen = new JComboBox<>(new String[]{"Banco de Proyectos", "Externo"});
-            personalizaCombo(cbOrigen, colorPrincipal);
-            panel.add(cbOrigen, gbc);
-
-            gbc.gridy++; panel.add(labelField("Asesor", colorPrincipal), gbc);
-            gbc.gridy++;
-            JComboBox<String> cbAsesor = new JComboBox<>(new String[] {"Docente X", "Docente Y", "Docente Z"});
-            personalizaCombo(cbAsesor, colorPrincipal);
-            panel.add(cbAsesor, gbc);
-
-            gbc.gridy++; panel.add(labelField("Revisor", colorPrincipal), gbc);
-            gbc.gridy++;
-            JComboBox<String> cbRevisor = new JComboBox<>(new String[] {"Docente X", "Docente Y", "Docente Z"});
-            personalizaCombo(cbRevisor, colorPrincipal);
-            panel.add(cbRevisor, gbc);
-
-            gbc.gridy++; gbc.anchor = GridBagConstraints.CENTER; gbc.insets = new Insets(22, 4, 4, 4); gbc.gridwidth = 2;
-            JButton btnGuardar = new JButton(proyecto == null ? "Guardar" : "Actualizar");
-            btnGuardar.setBackground(colorPrincipal);
-            btnGuardar.setForeground(Color.WHITE);
-            btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            btnGuardar.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
-            btnGuardar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            btnGuardar.setFocusPainted(false);
-            btnGuardar.setOpaque(true);
-            panel.add(btnGuardar, gbc);
-
-            add(panel, BorderLayout.CENTER);
-
-            // Si es edición, llena los campos
-            if (proyecto != null) {
-                cbEmpresa.setSelectedItem(proyecto.empresa);
-                txtDescripcion.setText(proyecto.descripcion);
-                spAlumnos.setValue(proyecto.alumnos);
-                cbEstatus.setSelectedItem(proyecto.estatus);
-                cbOrigen.setSelectedItem(proyecto.origen);
-                cbAsesor.setSelectedItem(proyecto.asesor);
-                cbRevisor.setSelectedItem(proyecto.revisor);
-            }
-
-            btnGuardar.addActionListener(ev -> {
-                String empresa = cbEmpresa.getSelectedItem() != null ? cbEmpresa.getSelectedItem().toString().trim() : "";
-                String descripcion = txtDescripcion.getText().trim();
-                int alumnos = (Integer) spAlumnos.getValue();
-                String estatus = cbEstatus.getSelectedItem() != null ? cbEstatus.getSelectedItem().toString() : "";
-                String origen = cbOrigen.getSelectedItem() != null ? cbOrigen.getSelectedItem().toString() : "";
-                String asesor = cbAsesor.getSelectedItem() != null ? cbAsesor.getSelectedItem().toString() : "";
-                String revisor = cbRevisor.getSelectedItem() != null ? cbRevisor.getSelectedItem().toString() : "";
-
-                if (empresa.isEmpty() || empresa.equals("Selecciona")) {
-                    JOptionPane.showMessageDialog(this, "Selecciona la empresa.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    cbEmpresa.requestFocus(); return;
-                }
-                if (descripcion.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "La descripción no puede estar vacía.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    txtDescripcion.requestFocus(); return;
-                }
-                if (alumnos < 1) {
-                    JOptionPane.showMessageDialog(this, "El número de alumnos requeridos debe ser mayor a cero.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    spAlumnos.requestFocus(); return;
-                }
-                if (estatus.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Selecciona el estatus de elaboración.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    cbEstatus.requestFocus(); return;
-                }
-                if (origen.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Selecciona el origen.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    cbOrigen.requestFocus(); return;
-                }
-                if (asesor.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Selecciona un asesor.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    cbAsesor.requestFocus(); return;
-                }
-                if (revisor.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Selecciona un revisor.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    cbRevisor.requestFocus(); return;
-                }
-                if (asesor.equals(revisor)) {
-                    JOptionPane.showMessageDialog(this, "El asesor y el revisor deben ser diferentes.", "Validación", JOptionPane.WARNING_MESSAGE);
-                    cbRevisor.requestFocus(); return;
-                }
-
-                int id = (proyecto == null) ? generarId() : proyecto.id;
-                proyectoEditado = new Proyecto(id, empresa, descripcion, alumnos, estatus, origen, asesor, revisor);
-                seRegistro = true;
-                dispose();
-            });
+    private void mostrarInformacionProyecto(Proyectos proyecto) {
+        StringBuilder info = new StringBuilder();
+        info.append("Información del Proyecto\n\n");
+        info.append("Nombre: ").append(proyecto.getNombre()).append("\n");
+        info.append("Descripción: ").append(proyecto.getDescripcion()).append("\n");
+        info.append("Duración: ").append(proyecto.getDuracion()).append(" meses\n");
+        info.append("ID Empresa: ").append(proyecto.getId_empresa()).append("\n");
+        if (proyecto.getFecha_inicio() != null) {
+            info.append("Fecha Inicio: ").append(proyecto.getFecha_inicio()).append("\n");
         }
+        if (proyecto.getFecha_fin() != null) {
+            info.append("Fecha Fin: ").append(proyecto.getFecha_fin()).append("\n");
+        }
+        info.append("Número de Alumnos: ").append(proyecto.getNumero_alumnos()).append("\n");
+        info.append("Periodo de Realización: ").append(proyecto.getPeriodo_realizacion()).append("\n");
 
-        private static JLabel labelField(String texto, Color colorPrincipal) {
-            JLabel l = new JLabel(texto);
-            l.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            l.setForeground(colorPrincipal);
-            return l;
-        }
-        private static void personalizaCombo(JComboBox<String> combo, Color colorPrincipal) {
-            combo.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            combo.setBackground(new Color(248,248,255));
-            combo.setForeground(colorPrincipal.darker());
-            combo.setUI(new BasicComboBoxUI());
-        }
+        JTextArea textArea = new JTextArea(info.toString());
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        textArea.setMargin(new Insets(10, 10, 10, 10));
 
-        private int generarId() {
-            Window w = SwingUtilities.getWindowAncestor(this);
-            if (w instanceof BancoProyectosUI) {
-                BancoProyectosUI ui = (BancoProyectosUI) w;
-                int max = 0;
-                for (Proyecto p : ui.listaProyectos) {
-                    if (p.id > max) max = p.id;
-                }
-                return max + 1;
-            }
-            return 1;
-        }
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(400, 300));
+
+        JOptionPane.showMessageDialog(this,
+                scrollPane,
+                "Información del Proyecto",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void main(String[] args) {

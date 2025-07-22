@@ -37,8 +37,8 @@ public class DocenteDAO {
         //String sql = "SELECT * FROM docente";
 
         try (Connection con = Conexion_bd.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                           PreparedStatement stmt = con.prepareStatement(sql);
+                           ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Docente d = new Docente();
@@ -135,6 +135,10 @@ public class DocenteDAO {
         }
         return false;
     }
+
+
+    /**Obtener docentes por asesor*/
+
 
 
 }
