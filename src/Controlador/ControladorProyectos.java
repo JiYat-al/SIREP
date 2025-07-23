@@ -18,16 +18,36 @@ public class ControladorProyectos {
        return proyectoDAO.ObtenerProyectosBanco();
     }
 
-    public List<Proyectos> ObProyectosResidencia(){
+   /* public List<Proyectos> ObProyectosResidencia(){
         return proyectoDAO.ObtenerProyectosResidencia();
-    }
+    }*/
 
     public List<Proyectos> ObAnteproyectos(){
         return proyectoDAO.ObtenerAnteproyectos();
     }
  /**Dependiendo del numero cambia el sql*/
     public boolean Baja( int id_proyecto){
-
         return proyectoDAO.Dardebaja(id_proyecto);
+    }
+
+    public String [] InformacionProyectoBanco(int id_proyecto){
+        String[] datos = proyectoDAO.verInformacionProyectoBanco(id_proyecto);
+        return datos;
+    }
+    public String [] InformacionProyectoResidencia(int id_proyecto){
+        String[] datos = proyectoDAO.verInformacionProyectoResidencia(id_proyecto);
+        return datos;
+    }
+    public String[] InformacionProyectoAnteproyecto(int id_proyecto){
+        String[] datos = proyectoDAO.verInformacionAnteproyecto(id_proyecto);
+        return datos;
+    }
+
+    public boolean EditarInformacionProyectoResidencia(Proyectos proyecto){
+        return proyectoDAO.EditarInfoBanco(proyecto);
+    }
+
+    public boolean NuevoProyectoBanco(Proyectos proyecto){
+     return proyectoDAO.nuevoProyecto(proyecto);
     }
 }

@@ -3,39 +3,35 @@ package Modelo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class ProyectoDAO {
-  /**  public boolean nuevoProyecto( String nombre,String descripcion, String duracion, int numero_alumnos,
-                                  int id_empresa, Date fecha_inicio, Date fecha_fin, String periodo_realizacion,
-                                  int id_estatus_proyecto, int id_origen, int id_estatus_anteproyecto) {
+   public boolean nuevoProyecto( Proyectos p) {
 
         String sql="INSERT INTO public.proyecto (nombre,descripcion,duracion,n_alumnos," +
-                "id_empresa,fecha_inicio,fecha_fin,periodo_realizacion," +
-                "id_estatus_proyecto,id_origen,id_estatus_anteproyecto) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                "id_empresa, id_estatus_proyecto,id_origen) VALUES (?,?,?,?,?,?,?);";
         try (Connection con = Conexion_bd.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, nombre);
-            ps.setString(2, descripcion);
-            ps.setString(3, duracion);
-            ps.setInt(4, numero_alumnos);
-            ps.setInt(5, id_empresa);
-            ps.setDate(6, (java.sql.Date) fecha_inicio);
-            ps.setDate(7, (java.sql.Date) fecha_fin);
-            ps.setString(8, periodo_realizacion);
-            ps.setInt(9, id_estatus_proyecto);
-            ps.setInt(10, id_origen);
-            ps.setInt(11, id_estatus_anteproyecto);
+            ps.setString(1, p.getNombre());
+            ps.setString(2, p.getDescripcion());
+            ps.setString(3, p.getDuracion());
+            ps.setInt(4, p.getNumero_alumnos());
+            ps.setInt(5, p.getId_empresa());
+            ps.setInt(6,1);
+            ps.setInt(7,1);
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
-    }*/
+    }
+
+
 /**Para cargar la tabla de proyectos del banco*/
     public List<Proyectos> ObtenerProyectosBanco(){
         List<Proyectos> lista = new ArrayList<>();
@@ -83,7 +79,7 @@ public class ProyectoDAO {
         }
         return lista;
     }
-    /**Cargar la tabla de proyecto de residencia*/
+    /**Cargar la tabla de proyecto de residencia
     public List<Proyectos> ObtenerProyectosResidencia(){
         List<Proyectos> lista = new ArrayList<>();
         String sql="SELECT id_proyecto, nombre,descripcion, nombre_origen FROM proyecto" +
@@ -106,7 +102,7 @@ public class ProyectoDAO {
         }
         return lista;
     }
-
+*/
 /**Dar de baja*/
 
 public boolean Dardebaja( int id_proyecto){
@@ -125,10 +121,152 @@ public boolean Dardebaja( int id_proyecto){
         return false;
     }
 
-    public verInormacion(){
-    String sql="";
+    public String[] verInformacionProyectoBanco(int id_proyecto){
+    String sql="SELECT p.id_proyecto,p.nombre,p.descripcion,p.duracion,p.n_alumnos, e.nombre AS empresa\n" +
+            ",ep.descripcion_estatus AS estatus,\n" +
+            "nombre_origen  \n" +
+            "FROM Proyecto AS p\n" +
+            "JOIN empresa AS e ON p.id_empresa=e.id_empresa\n" +
+            "JOIN estatus_proyecto AS ep ON p.id_estatus_proyecto=ep.id_estatus_proyecto\n" +
+            "JOIN origen_proyecto AS op ON p.id_origen=op.id_origen WHERE nombre_origen='Banco de Proyectos' " +
+            "AND id_proyecto=?;";
 
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id_proyecto);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return new String[] {
+                        rs.getString("nombre"),
+                        rs.getString("descripcion"),
+                        rs.getString("duracion"),
+                        rs.getString("n_alumnos"),
+                        rs.getString("empresa"),
+                        rs.getString("estatus"),
+                        rs.getString("nombre_origen")
+                };
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+    return null; // Si no encontró resultados
+    }
+
+    public String[] verInformacionProyectoResidencia(int id_proyecto){
+        String sql="SELECT p.nombre,p.descripcion,p.duracion,p.n_alumnos, e.nombre AS empresa,\n" +
+                "p.fecha_inicio,fecha_fin,p.perido_realizacion,ep.descripcion_estatus AS estatus,\n" +
+                "nombre_origen,estatus AS estatus_anteproyecto FROM Proyecto AS p\n" +
+                "JOIN empresa AS e ON p.id_empresa=e.id_empresa\n" +
+                "JOIN estatus_proyecto AS ep ON p.id_estatus_proyecto=ep.id_estatus_proyecto\n" +
+                "JOIN origen_proyecto AS op ON p.id_origen=op.id_origen\n" +
+                "JOIN estatus_anteproyecto AS ea ON p.id_estatus_anteproyecto=ea.id_estatus_anteproyecto " +
+                "WHERE nombre_origen='Externo' AND id_proyecto=?;";
+
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id_proyecto);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new String[] {
+                            rs.getString("nombre"),
+                            rs.getString("descripcion"),
+                            rs.getString("duracion"),
+                            rs.getString("n_alumnos"),
+                            rs.getString("empresa"),
+                            rs.getString("fecha_inicio"),
+                            rs.getString("fecha_fin"),
+                            rs.getString("perido_realizacion"),
+                            rs.getString("estatus"),
+                            rs.getString("nombre_origen"),
+                            rs.getString("estatus_anteproyecto"),
+
+                    };
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null; // Si no encontró resultados
+    }
+
+public String[] verInformacionAnteproyecto(int id_proyecto){
+    String sql="SELECT p.nombre AS nombre_proyecto, p.descripcion,p.duracion,p.n_alumnos,e.nombre AS nombre_empresa,\n" +
+            "nombre_origen, estatus AS estatus_anteproyecto\n" +
+            "FROM PROYECTO AS p\n" +
+            "JOIN empresa AS e ON p.id_empresa=e.id_empresa\n" +
+            "JOIN origen_proyecto AS op ON p.id_origen=op.id_origen\n" +
+            "JOIN estatus_anteproyecto AS ea ON p.id_estatus_anteproyecto=ea.id_estatus_anteproyecto " +
+            "WHERE id_proyecto=?;";
+    try (Connection con = Conexion_bd.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+        ps.setInt(1, id_proyecto);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return new String[] {
+                        rs.getString("nombre_proyecto"),
+                        rs.getString("descripcion"),
+                        rs.getString("duracion"),
+                        rs.getString("n_alumnos"),
+                        rs.getString("nombre_empresa"),
+                        rs.getString("nombre_origen"),
+                        rs.getString("estatus_anteproyecto"),
+
+                };
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return null; // Si no encontró resultados
+}
+
+/**Ediatr informacion Banco*/
+public boolean EditarInfoBanco(Proyectos p){
+
+    String sql="UPDATE proyecto\n" +
+            "SET nombre = ?,\n" +
+            "    descripcion = ?,\n" +
+            "    duracion = ?,\n" +
+            "    n_alumnos = ?,\n" +
+            "    id_empresa = ?,\n" +
+            "    estado_actividad = ? " +
+            "WHERE id_proyecto = ?;";
+    try (Connection con = Conexion_bd.getConnection();
+         PreparedStatement stmt = con.prepareStatement(sql)) {
+
+        stmt.setString(1, p.getNombre());
+        stmt.setString(2, p.getDescripcion());
+        stmt.setString(3, p.getDuracion());
+        stmt.setInt(4, p.getNumero_alumnos());
+        stmt.setInt(5, p.getId_empresa());
+        stmt.setBoolean(6,p.getEstado());
+        stmt.setInt(7, p.getId_proyecto());
+
+        int filas = stmt.executeUpdate();
+        return filas > 0;
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+
+
+
 
 
 

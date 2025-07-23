@@ -16,9 +16,29 @@ public class Proyectos {
     private int id_origen;
     private String NombreOrigen;
     private int id_estatus_anteproyecto;
+    private boolean estado;
 
     public Proyectos() {
 
+    }
+
+    public Proyectos( String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa) {
+
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.duracion = duracion;
+        this.numero_alumnos = numero_alumnos;
+        this.id_empresa = id_empresa;
+    }
+
+    public Proyectos(int id_proyecto, String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa, boolean estado) {
+        this.id_proyecto = id_proyecto;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.duracion = duracion;
+        this.numero_alumnos = numero_alumnos;
+        this.id_empresa = id_empresa;
+        this.estado = estado;
     }
 
     public Proyectos(String nombre, String descripcion, int id_origen) {  /**Constructor para obtener datos para vista*/
@@ -26,6 +46,8 @@ public class Proyectos {
         this.descripcion = descripcion;
         this.id_origen = id_origen;
     }
+
+
 
     public String getNombreOrigen() {
         return NombreOrigen;
@@ -129,5 +151,13 @@ public class Proyectos {
 
     public void setId_estatus_anteproyecto(int id_estatus_anteproyecto) {
         this.id_estatus_anteproyecto = id_estatus_anteproyecto;
+    }
+
+    public boolean getEstado() {
+        return estado;
+    }
+
+    public void setEstado(boolean estado) {
+        this.estado = estado;
     }
 }
