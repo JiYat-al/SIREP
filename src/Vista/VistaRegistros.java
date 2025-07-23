@@ -15,8 +15,10 @@ public class VistaRegistros extends JFrame {
     // Paneles principales para intercambio
     private JPanel panelContenedor;
     private JPanel panelRegistros;
-    private VistaResidente panelResidentes; // AGREGADO: referencia directa
+    private VistaResidente panelResidentes;
     private CardLayout cardLayout;
+    private JButton btnConvertirAResidente;
+    private JButton btnVerResidentesActivos;
 
     // Vista actual
     private String vistaActual = "REGISTROS";
@@ -61,37 +63,37 @@ public class VistaRegistros extends JFrame {
         configurarEventos();
         cargarDatosIniciales();
     }
-    
+
     // ==================== CLASE BORDE REDONDEADO ====================
-    
+
     class RoundBorder extends AbstractBorder {
         private final Color color;
         private final int radius;
         private final int thickness;
-    
+
         public RoundBorder(Color color, int radius, int thickness) {
             this.color = color;
             this.radius = radius;
             this.thickness = thickness;
         }
-    
+
         @Override
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setColor(color);
             g2.setStroke(new BasicStroke(thickness));
-            g2.drawRoundRect(x + thickness/2, y + thickness/2, 
-                            width - thickness, height - thickness, 
-                            radius, radius);
+            g2.drawRoundRect(x + thickness/2, y + thickness/2,
+                    width - thickness, height - thickness,
+                    radius, radius);
             g2.dispose();
         }
-    
+
         @Override
         public Insets getBorderInsets(Component c) {
             return new Insets(thickness + 2, thickness + 2, thickness + 2, thickness + 2);
         }
-    
+
         @Override
         public boolean isBorderOpaque() {
             return false;
@@ -242,7 +244,7 @@ public class VistaRegistros extends JFrame {
     }
 
     private void crearPanelResidentes() {
-        // MODIFICADO: Crear una instancia de VistaResidente y mantener referencia
+        //  Crear una instancia de VistaResidente y mantener referencia
         panelResidentes = new VistaResidente();
         // Ya no necesita setVisible porque ahora es solo un panel
     }
@@ -276,7 +278,7 @@ public class VistaRegistros extends JFrame {
 
     private void regresarAVistaRegistros() {
         if (vistaActual.equals("RESIDENTES")) {
-            // MODIFICADO: Limpiar la tabla de residentes al regresar
+            // Limpiar la tabla de residentes al regresar
             if (panelResidentes != null) {
                 panelResidentes.limpiarTabla();
             }
@@ -328,22 +330,27 @@ public class VistaRegistros extends JFrame {
             }
         };
         header.setOpaque(false);
-        header.setBorder(BorderFactory.createEmptyBorder(32, 38, 24, 0));
+        header.setBorder(BorderFactory.createEmptyBorder(32, 38, 24, 38));
 
-        JLabel lblTitulo = new JLabel("Registro De Candidatos");
+        JLabel lblTitulo = new JLabel("Candidatos");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 34));
         lblTitulo.setForeground(colorPrincipal);
         header.add(lblTitulo, BorderLayout.WEST);
 
-        // Botón Nuevo Alumno en el header
-        JPanel panelBotonHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 20));
-        panelBotonHeader.setOpaque(false);
+        // Panel de botones en el header
+        JPanel panelBotonesHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 20));
+        panelBotonesHeader.setOpaque(false);
 
-        btnNuevoAlumno = crearBotonAccion("Nuevo Alumno", new Color(34, 139, 34));
+        btnNuevoAlumno = crearBotonAccion("Nuevo Alumno", new Color(63, 81, 181));
         btnNuevoAlumno.addActionListener(e -> cambiarAVistaResidentes());
-        panelBotonHeader.add(btnNuevoAlumno);
 
-        header.add(panelBotonHeader, BorderLayout.EAST);
+        btnVerResidentesActivos = crearBotonAccion("Ver Residentes", new Color(63, 81, 181));
+        btnVerResidentesActivos.addActionListener(e -> controlador.abrirVistaResidentesActivos());
+
+        panelBotonesHeader.add(btnNuevoAlumno);
+        panelBotonesHeader.add(btnVerResidentesActivos);
+
+        header.add(panelBotonesHeader, BorderLayout.EAST);
         return header;
     }
 
@@ -351,12 +358,12 @@ public class VistaRegistros extends JFrame {
         JPanel panelBusqueda = new JPanel(new BorderLayout());
         panelBusqueda.setOpaque(false);
         panelBusqueda.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        
+
         // Panel izquierdo para búsqueda
         JPanel panelBusquedaCompleto = new JPanel();
         panelBusquedaCompleto.setLayout(new BoxLayout(panelBusquedaCompleto, BoxLayout.Y_AXIS));
         panelBusquedaCompleto.setOpaque(false);
-        
+
         // Label de búsqueda
         lblBuscar = new JLabel("Buscar alumno:");
         lblBuscar.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -553,7 +560,7 @@ public class VistaRegistros extends JFrame {
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 20));
         panelBotones.setOpaque(false);
 
-        // Botón Editar - Mantiene su funcionalidad existente
+        // Botón Editar
         editar = new JButton("Editar") {
             private boolean hover = false;
             {
@@ -593,7 +600,45 @@ public class VistaRegistros extends JFrame {
         // Botón Dar de Baja - Mantiene su funcionalidad existente
         darDeBaja = new JButton("Dar de baja") {
             private boolean hover = false;
-            private final Color colorBase = new Color(200, 60, 60);
+            private final Color colorBase = new Color(92, 93, 169);
+            {
+                setContentAreaFilled(false);
+                setFocusPainted(false);
+                setForeground(Color.WHITE);
+                setFont(new Font("Segoe UI", Font.BOLD, 15));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+                addMouseListener(new MouseAdapter() {
+                    public void mouseEntered(MouseEvent e) {
+                        hover = true;
+                        repaint();
+                    }
+                    public void mouseExited(MouseEvent e) {
+                        hover = false;
+                        repaint();
+                    }
+                });
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (hover) {
+                    g2.setColor(colorBase.darker());
+                } else {
+                    g2.setColor(colorBase);
+                }
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+            }
+        };
+
+        // NUEVO: Botón Convertir a Residente
+        btnConvertirAResidente = new JButton("Convertir a Residente") {
+            private boolean hover = false;
+            private final Color colorBase = new Color(92, 93, 169);
             {
                 setContentAreaFilled(false);
                 setFocusPainted(false);
@@ -630,6 +675,7 @@ public class VistaRegistros extends JFrame {
 
         panelBotones.add(editar);
         panelBotones.add(darDeBaja);
+        panelBotones.add(btnConvertirAResidente);
 
         return panelBotones;
     }
@@ -765,18 +811,22 @@ public class VistaRegistros extends JFrame {
             }
         });
 
-        // *** CAMBIO: Eventos de botones actualizados ***
+        // Eventos de botones actualizados
         darDeBaja.addActionListener(e -> controlador.darDeBajaRegistroSeleccionado());
         editar.addActionListener(e -> controlador.editarRegistroSeleccionado());
         btnActualizar.addActionListener(e -> controlador.cargarTodosLosRegistros());
         btnLimpiarBusqueda.addActionListener(e -> limpiarBusqueda());
 
+        // NUEVO: Evento para convertir a residente
+        btnConvertirAResidente.addActionListener(e -> controlador.convertirAResidenteActivo());
+
         // Selección en tabla
         candidatos.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 boolean haySeleccion = candidatos.getSelectedRow() != -1;
-                darDeBaja.setEnabled(haySeleccion); // *** CAMBIO: eliminar → darDeBaja ***
+                darDeBaja.setEnabled(haySeleccion);
                 editar.setEnabled(haySeleccion);
+                btnConvertirAResidente.setEnabled(haySeleccion); // NUEVO: Habilitar/deshabilitar botón
             }
         });
 
@@ -859,13 +909,15 @@ public class VistaRegistros extends JFrame {
 
     private void mostrarAyuda() {
         String ayuda = vistaActual.equals("REGISTROS") ?
-                "Sistema de Registros de Residentes SIREP\n\n" +
+                "Sistema de Registros de Candidatos SIREP\n\n" +
                         "• Busqueda: Escriba para filtrar por nombre o numero de control\n" +
-                        "• Editar: Seleccione un registro y haga clic en Editar\n" +
-                        "• Dar de baja: Seleccione un registro y haga clic en Dar de baja\n" +
-                        "• Actualizar: Recarga todos los registros desde la base de datos\n" +
+                        "• Editar: Seleccione un candidato y haga clic en Editar\n" +
+                        "• Dar de baja: Seleccione un candidato y haga clic en Dar de baja\n" +
+                        "• Convertir a Residente: Procesa la transición de candidato a residente activo\n" +
+                        "• Ver Residentes: Abre la vista de residentes activos\n" +
+                        "• Actualizar: Recarga todos los candidatos desde la base de datos\n" +
                         "• Limpiar: Borra el filtro de busqueda\n" +
-                        "• Nuevo Alumno: Cambia a la vista para registrar nuevos alumnos\n" +
+                        "• Nuevo Alumno: Cambia a la vista para registrar nuevos candidatos\n" +
                         "• ESC: Atajo para limpiar la busqueda\n\n":
 
                 "Sistema de Gestion de Residentes SIREP\n\n" +
@@ -873,11 +925,10 @@ public class VistaRegistros extends JFrame {
                         "• Importar: Guarda los datos cargados en la base de datos\n" +
                         "• Agregar Manual: Agrega un residente manualmente\n" +
                         "• Limpiar Tabla: Limpia todos los datos de la tabla temporal\n" +
-                        "• Flecha izquierda: Regresa a la vista de registros\n\n";
+                        "• Flecha izquierda: Regresa a la vista de candidatos\n\n";
 
         JOptionPane.showMessageDialog(this, ayuda, "Ayuda - Sistema SIREP", JOptionPane.INFORMATION_MESSAGE);
     }
-
     // ==================== MÉTODOS PARA EL CONTROLADOR ====================
 
     public ModeloResidente getResidenteSeleccionado() {
@@ -1055,8 +1106,8 @@ class DialogoEdicion extends JDialog {
         txtTelefono = new JTextField(15);
         // *** ELIMINADO: spnIdProyecto ***
 
-        btnGuardar = new JButton("💾 Guardar Cambios");
-        btnCancelar = new JButton("❌ Cancelar");
+        btnGuardar = new JButton(" Guardar Cambios");
+        btnCancelar = new JButton(" Cancelar");
 
         // Configurar colores
         btnGuardar.setBackground(new Color(46, 125, 50));
@@ -1090,7 +1141,7 @@ class DialogoEdicion extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
 
         // Título
-        JLabel lblTitulo = new JLabel("✏️ Editar Información del Residente");
+        JLabel lblTitulo = new JLabel(" Editar Información del Residente");
         lblTitulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -1227,14 +1278,14 @@ class DialogoEdicion extends JDialog {
                 if (actualizado) {
                     guardado = true;
                     JOptionPane.showMessageDialog(this,
-                            "✅ Cambios guardados exitosamente\n" +
-                                    "📝 Número de Control: " + residente.getNumeroControl(),
+                            " Cambios guardados exitosamente\n" +
+                                    " Número de Control: " + residente.getNumeroControl(),
                             "Actualización exitosa",
                             JOptionPane.INFORMATION_MESSAGE);
                     dispose();
                 } else {
                     JOptionPane.showMessageDialog(this,
-                            "❌ No se pudieron guardar los cambios\n" +
+                            " No se pudieron guardar los cambios\n" +
                                     "Verifique que el registro aún existe en la base de datos",
                             "Error de actualización",
                             JOptionPane.ERROR_MESSAGE);
@@ -1242,7 +1293,7 @@ class DialogoEdicion extends JDialog {
 
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this,
-                        "❌ Error al guardar los cambios:\n" + e.getMessage(),
+                        " Error al guardar los cambios:\n" + e.getMessage(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
                 System.err.println("Error al actualizar residente: " + e.getMessage());
@@ -1396,9 +1447,9 @@ class RoundBorder extends AbstractBorder {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(color);
         g2.setStroke(new BasicStroke(thickness));
-        g2.drawRoundRect(x + thickness/2, y + thickness/2, 
-                        width - thickness, height - thickness, 
-                        radius, radius);
+        g2.drawRoundRect(x + thickness/2, y + thickness/2,
+                width - thickness, height - thickness,
+                radius, radius);
         g2.dispose();
     }
 

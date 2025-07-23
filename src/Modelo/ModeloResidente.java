@@ -20,7 +20,7 @@ public class ModeloResidente {
     private boolean esValido = true;
     private String motivoInvalido = "";
     private List<String> erroresValidacion = new ArrayList<>();
-
+    private boolean esResidenteActivo = false;
 
     public ModeloResidente() {
         this.estatus = true;
@@ -245,6 +245,50 @@ public class ModeloResidente {
         }
     }
 
+
+    // Modificar el método insertar para incluir el nuevo campo
+    public boolean insertarConEstatus() {
+        String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
+                "carrera, semestre, correo, telefono, id_proyecto, estatus, es_residente_activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
+            stmt.setString(1, String.valueOf(this.numeroControl));
+            stmt.setString(2, this.nombre);
+            stmt.setString(3, this.apellidoPaterno);
+            stmt.setString(4, this.apellidoMaterno);
+            stmt.setString(5, this.carrera);
+            stmt.setInt(6, this.semestre);
+            stmt.setString(7, this.correo);
+            stmt.setString(8, this.telefono);
+            stmt.setInt(9, this.idProyecto);
+            stmt.setBoolean(10, true);
+            stmt.setBoolean(11, this.esResidenteActivo);
+
+            int filasAfectadas = stmt.executeUpdate();
+
+            if (filasAfectadas > 0) {
+                try {
+                    ResultSet generatedKeys = stmt.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        this.idResidente = generatedKeys.getInt(1);
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Error al obtener ID generado: " + e.getMessage());
+                }
+                return true;
+            }
+            return false;
+
+        } catch (SQLException e) {
+            System.err.println("Error al insertar residente con estatus: " + e.getMessage());
+            return false;
+        }
+    }
+
+
     // *** CAMBIO: Actualizar SIN modificar id_proyecto ***
     public boolean actualizar() {
         String sql = "UPDATE residente SET numero_control = ?, nombre = ?, apellido_paterno = ?, apellido_materno = ?, " +
@@ -325,6 +369,195 @@ public class ModeloResidente {
             return false;
         }
     }
+
+    public boolean convertirAResidenteActivo() {
+        String sql = "UPDATE residente SET id_estatus_residente = 2 WHERE id_residente = ?";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, this.idResidente);
+
+            int filasAfectadas = stmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                this.idEstatus = 2; // Actualizar el objeto
+                return true;
+            }
+            return false;
+
+        } catch (SQLException e) {
+            System.err.println("Error al convertir a residente activo: " + e.getMessage());
+            return false;
+        }
+    }
+    public static List<ModeloResidente> obtenerCandidatos() {
+        List<ModeloResidente> candidatos = new ArrayList<>();
+        String sql = "SELECT * FROM residente WHERE estatus = TRUE AND (id_estatus_residente = 1 OR id_estatus_residente IS NULL) ORDER BY numero_control";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                try {
+                    ModeloResidente residente = new ModeloResidente();
+                    residente.setIdResidente(rs.getInt("id_residente"));
+                    residente.setNumeroControl(Integer.parseInt(rs.getString("numero_control")));
+                    residente.setNombre(rs.getString("nombre"));
+                    residente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                    residente.setApellidoMaterno(rs.getString("apellido_materno"));
+                    residente.setCarrera(rs.getString("carrera"));
+                    residente.setSemestre(rs.getInt("semestre"));
+                    residente.setCorreo(rs.getString("correo"));
+                    residente.setTelefono(rs.getString("telefono"));
+                    residente.setIdProyecto(rs.getInt("id_proyecto"));
+                    residente.setEstatus(rs.getBoolean("estatus"));
+
+                    // Manejar id_estatus_residente
+                    try {
+                        residente.setIdEstatus(rs.getInt("id_estatus_residente"));
+                    } catch (SQLException e) {
+                        residente.setIdEstatus(1); // Default candidato
+                    }
+
+                    candidatos.add(residente);
+                } catch (Exception e) {
+                    System.err.println("Error procesando candidato: " + e.getMessage());
+                    continue;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener candidatos: " + e.getMessage());
+        }
+
+        return candidatos;
+    }
+
+    public static List<ModeloResidente> obtenerResidentesActivos() {
+        List<ModeloResidente> residentes = new ArrayList<>();
+        String sql = "SELECT * FROM residente WHERE estatus = TRUE AND id_estatus_residente = 2 ORDER BY numero_control";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                try {
+                    ModeloResidente residente = new ModeloResidente();
+                    residente.setIdResidente(rs.getInt("id_residente"));
+                    residente.setNumeroControl(Integer.parseInt(rs.getString("numero_control")));
+                    residente.setNombre(rs.getString("nombre"));
+                    residente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                    residente.setApellidoMaterno(rs.getString("apellido_materno"));
+                    residente.setCarrera(rs.getString("carrera"));
+                    residente.setSemestre(rs.getInt("semestre"));
+                    residente.setCorreo(rs.getString("correo"));
+                    residente.setTelefono(rs.getString("telefono"));
+                    residente.setIdProyecto(rs.getInt("id_proyecto"));
+                    residente.setEstatus(rs.getBoolean("estatus"));
+                    residente.setIdEstatus(rs.getInt("id_estatus_residente"));
+
+                    residentes.add(residente);
+                } catch (Exception e) {
+                    System.err.println("Error procesando residente activo: " + e.getMessage());
+                    continue;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener residentes activos: " + e.getMessage());
+        }
+
+        return residentes;
+    }
+
+    public static boolean regresarACandidato(int idResidente) {
+        String sql = "UPDATE residente SET id_estatus_residente = 1 WHERE id_residente = ?";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, idResidente);
+
+            int filasAfectadas = stmt.executeUpdate();
+            return filasAfectadas > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error al regresar a candidato: " + e.getMessage());
+            return false;
+        }
+    }
+    public static void verificarEstructuraTabla() {
+        String sqlCheck = "SELECT column_name FROM information_schema.columns " +
+                "WHERE table_name = 'residente' AND column_name = 'es_residente_activo'";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement checkStmt = conn.prepareStatement(sqlCheck);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (!rs.next()) {
+                String sqlAlter = "ALTER TABLE residente ADD COLUMN es_residente_activo BOOLEAN DEFAULT FALSE";
+                PreparedStatement alterStmt = conn.prepareStatement(sqlAlter);
+                alterStmt.executeUpdate();
+                System.out.println("Columna es_residente_activo agregada a la tabla residente");
+            } else {
+                System.out.println("Columna es_residente_activo ya existe en la tabla residente");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al verificar/crear estructura de tabla: " + e.getMessage());
+        }
+    }
+
+    public static void verificarEstatusResidentes() {
+        String sqlCheck = "SELECT COUNT(*) FROM estatus_residente";
+        String sqlInsert1 = "INSERT INTO estatus_residente (id_estatus_residente, estatus) VALUES (1, true)";
+        String sqlInsert2 = "INSERT INTO estatus_residente (id_estatus_residente, estatus) VALUES (2, true)";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement checkStmt = conn.prepareStatement(sqlCheck);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                if (count == 0) {
+                    // Insertar estatus por defecto
+                    try {
+                        PreparedStatement stmt1 = conn.prepareStatement(sqlInsert1);
+                        stmt1.executeUpdate();
+                        System.out.println("Estatus candidato (1) creado");
+                    } catch (SQLException e) {
+                        System.err.println("Error creando estatus candidato: " + e.getMessage());
+                    }
+
+                    try {
+                        PreparedStatement stmt2 = conn.prepareStatement(sqlInsert2);
+                        stmt2.executeUpdate();
+                        System.out.println("Estatus residente activo (2) creado");
+                    } catch (SQLException e) {
+                        System.err.println("Error creando estatus residente: " + e.getMessage());
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al verificar estatus de residentes: " + e.getMessage());
+        }
+    }
+
+    private int idEstatus = 1; // 1 = candidato, 2 = residente activo
+    public boolean isResidenteActivo() { return idEstatus == 2; }
+    public boolean isCandidato() { return idEstatus == 1 || idEstatus == 0; }
+
+
+
+
+
 
     // *** CAMBIO: Buscar solo activos ***
     public static ModeloResidente buscarPorNumeroControl(int numeroControl) {
@@ -809,6 +1042,13 @@ public class ModeloResidente {
 
     public List<String> getErroresValidacion() { return new ArrayList<>(erroresValidacion); }
     public void setErroresValidacion(List<String> errores) { this.erroresValidacion = new ArrayList<>(errores); }
+
+    public boolean isEsResidenteActivo() { return esResidenteActivo; }
+    public void setEsResidenteActivo(boolean esResidenteActivo) { this.esResidenteActivo = esResidenteActivo; }
+
+    public int getIdEstatus() { return idEstatus; }
+    public void setIdEstatus(int idEstatus) { this.idEstatus = idEstatus; }
+
 
     @Override
     public String toString() {

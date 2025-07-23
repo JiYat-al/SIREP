@@ -66,7 +66,7 @@ public class AgregarManual extends JDialog {
         headerPanel.setPreferredSize(new Dimension(0, 80));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        JLabel lblTituloDialog = new JLabel("📝 Registro de Nuevo Residente");
+        JLabel lblTituloDialog = new JLabel(" Registro de Nuevo Residente");
         lblTituloDialog.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTituloDialog.setForeground(Color.WHITE);
         headerPanel.add(lblTituloDialog, BorderLayout.CENTER);
@@ -110,7 +110,7 @@ public class AgregarManual extends JDialog {
         // Nota sobre campos obligatorios y carrera
         JPanel panelNota = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelNota.setBackground(Color.WHITE);
-        JLabel lblNota = new JLabel("⚠️ * Campos obligatorios - 🎓 Carrera: " + CARRERA_FIJA + " - 📚 Semestre: 9-15");
+        JLabel lblNota = new JLabel(" * Campos obligatorios - 🎓 Carrera: " + CARRERA_FIJA + " -  Semestre: 9-15");
         lblNota.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblNota.setForeground(new Color(150, 150, 150));
         panelNota.add(lblNota);
@@ -237,7 +237,7 @@ public class AgregarManual extends JDialog {
 
     private void crearBotones(JPanel panelBotones) {
         // Botón Limpiar
-        btnLimpiar = new JButton("🧹 Limpiar") {
+        btnLimpiar = new JButton(" Limpiar") {
             private boolean hover = false;
             {
                 setContentAreaFilled(false);
@@ -270,7 +270,7 @@ public class AgregarManual extends JDialog {
         };
 
         // Botón Guardar - MEJORADO
-        btnGuardar = new JButton("💾 Guardar en BD") {
+        btnGuardar = new JButton(" Guardar") {
             private boolean hover = false;
             {
                 setContentAreaFilled(false);
@@ -302,7 +302,7 @@ public class AgregarManual extends JDialog {
         };
 
         // Botón Cancelar
-        btnCancelar = new JButton("❌ Cancelar") {
+        btnCancelar = new JButton(" Cancelar") {
             private boolean hover = false;
             {
                 setContentAreaFilled(false);
