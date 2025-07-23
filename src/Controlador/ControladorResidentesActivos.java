@@ -6,6 +6,9 @@ import Vista.DialogoConfirmacionRegresoCandidato;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import java.awt.Component;
+import java.awt.Frame;
+import javax.swing.JFrame;
 
 public class ControladorResidentesActivos {
     private VistaResidentesActivos vista;
@@ -122,8 +125,24 @@ public class ControladorResidentesActivos {
         }
 
         try {
+            // Buscar el Frame padre de manera más robusta
+            Frame parentFrame = null;
+
+            if (vista instanceof JFrame) {
+                parentFrame = (JFrame) vista;
+            } else {
+                // Buscar el Frame padre
+                Component parent = (Component) vista;
+                while (parent != null && !(parent instanceof Frame)) {
+                    parent = parent.getParent();
+                }
+                if (parent instanceof Frame) {
+                    parentFrame = (Frame) parent;
+                }
+            }
+
             DialogoConfirmacionRegresoCandidato dialogo = new DialogoConfirmacionRegresoCandidato(
-                    (java.awt.Frame) SwingUtilities.getWindowAncestor(vista),
+                    parentFrame,
                     residente
             );
 
@@ -135,8 +154,7 @@ public class ControladorResidentesActivos {
                 if (resultado) {
                     vista.mostrarMensaje(
                             "Residente regresado a candidato exitosamente.\n" +
-                                    "Nombre: " + residente.getNombre() + " " + residente.getApellidoPaterno() + "\n" +
-                                    "Observaciones: " + dialogo.getObservaciones(),
+                                    "Nombre: " + residente.getNombre() + " " + residente.getApellidoPaterno(),
                             "Operación exitosa",
                             JOptionPane.INFORMATION_MESSAGE
                     );
@@ -154,11 +172,12 @@ public class ControladorResidentesActivos {
 
         } catch (Exception e) {
             System.err.println("Error al regresar a candidato: " + e.getMessage());
+            e.printStackTrace(); // Para debug
             vista.mostrarMensaje(
                     "Error al procesar la operación:\n" + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE
-            );
+                    );
         }
     }
 }

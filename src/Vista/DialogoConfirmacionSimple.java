@@ -45,11 +45,14 @@ public class DialogoConfirmacionSimple extends JDialog {
         JPanel checkPanel = new JPanel(new GridLayout(4, 1, 5, 5));
         checkPanel.setBorder(BorderFactory.createTitledBorder("Verificar Requisitos"));
 
-        chk2 = new JCheckBox("Solicitud firmada por el alumno");
-        chk3 = new JCheckBox("Solicitud firmada y sellada por la institución");
-        chk4 = new JCheckBox("Todos los procesos administrativos completados");
+        chk2 = new JCheckBox();
+        chk3 = new JCheckBox();
+        chk4 = new JCheckBox();
 
-        checkPanel.add(chk1);
+        chk2.setText("Solicitud firmada por el alumno");
+        chk3.setText("Solicitud firmada y sellada por la institución");
+        chk4.setText("Todos los procesos administrativos completados");
+
         checkPanel.add(chk2);
         checkPanel.add(chk3);
         checkPanel.add(chk4);
@@ -76,7 +79,6 @@ public class DialogoConfirmacionSimple extends JDialog {
 
         // Eventos
         ActionListener checkListener = e -> updateButton();
-        chk1.addActionListener(checkListener);
         chk2.addActionListener(checkListener);
         chk3.addActionListener(checkListener);
         chk4.addActionListener(checkListener);
@@ -97,7 +99,7 @@ public class DialogoConfirmacionSimple extends JDialog {
     }
 
     private void updateButton() {
-        boolean allSelected = chk1.isSelected() && chk2.isSelected() &&
+        boolean allSelected = chk2.isSelected() &&
                 chk3.isSelected() && chk4.isSelected();
         btnConfirmar.setEnabled(allSelected);
 

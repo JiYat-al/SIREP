@@ -11,6 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import Modelo.Conexion_bd;
 import Vista.VistaResidentesActivos;
+import java.awt.Component;
+import java.awt.Frame;
+import javax.swing.JFrame;
 
 public class ControladorRegistros {
     private VistaRegistros vista;
@@ -186,10 +189,24 @@ public class ControladorRegistros {
         }
 
         try {
-            DialogoConfirmacionSimple dialogo = new DialogoConfirmacionSimple(
-                    (java.awt.Frame) SwingUtilities.getWindowAncestor(vista),
-                    candidato
-            );
+            // Buscar el Frame padre de manera más robusta
+            Frame parentFrame = null;
+
+            if (vista instanceof JFrame) {
+                parentFrame = (JFrame) vista;
+            } else {
+                // Buscar el Frame padre
+                Component parent = (Component) vista;
+                while (parent != null && !(parent instanceof Frame)) {
+                    parent = parent.getParent();
+                }
+                if (parent instanceof Frame) {
+                    parentFrame = (Frame) parent;
+                }
+            }
+
+            // Si no encontramos Frame padre, usar null (el diálogo será modal para toda la aplicación)
+            DialogoConfirmacionSimple dialogo = new DialogoConfirmacionSimple(parentFrame, candidato);
 
             dialogo.setVisible(true);
 
@@ -200,7 +217,7 @@ public class ControladorRegistros {
                     vista.mostrarMensaje(
                             "Candidato convertido a residente activo exitosamente.\n" +
                                     "Nombre: " + candidato.getNombre() + " " + candidato.getApellidoPaterno() + "\n" +
-                                    "No. Control: " + candidato.getNumeroControl() ,
+                                    "No. Control: " + candidato.getNumeroControl(),
                             "Transición exitosa",
                             JOptionPane.INFORMATION_MESSAGE
                     );
@@ -218,11 +235,12 @@ public class ControladorRegistros {
 
         } catch (Exception e) {
             System.err.println("Error al convertir a residente activo: " + e.getMessage());
+            e.printStackTrace(); // Para debug
             vista.mostrarMensaje(
                     "Error al procesar la transición:\n" + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE
-            );
+                    );
         }
     }
 
