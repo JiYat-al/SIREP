@@ -183,4 +183,3 @@ public class RegistroAnteproyectoUI extends JFrame {
         });
     }
 }
-

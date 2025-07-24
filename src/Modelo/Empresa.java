@@ -98,4 +98,8 @@ public class Empresa {
     public void setRfc(String rfc) {this.rfc = rfc;}
 
     public boolean isEstatus() {return estatus;}
+
+    public String toString() {
+        return nombre;
+    }
 }

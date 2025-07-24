@@ -98,12 +98,12 @@ public class Menu extends JFrame {
         panelLogo.setOpaque(false);
 
         // Carga el logotipo del ITO desde la carpeta de imágenes y ajusta el tamaño
-        ImageIcon icon = cargarPNGComoIcono("/Recursos/logo.png", 64, 64); // Ajusta el tamaño aquí
+        ImageIcon icon = cargarPNGComoIcono("/Recursos/logo.png", 64, 64);
         JLabel logo = new JLabel();
         if (icon != null && icon.getIconWidth() > 0) {
             logo.setIcon(icon);
         } else {
-            logo.setText(""); // No mostrar texto alternativo
+            logo.setText("");
         }
         logo.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 12));
         panelLogo.add(logo);
@@ -129,10 +129,15 @@ public class Menu extends JFrame {
         btnProyectos.setIcon(cargarPNGComoIcono("/Recursos/proyectos.png", 28, 28));
         configurarBotonMenu(btnProyectos);
 
+        JButton btnReportes = new JButton("Reportes \u25BC");
+        btnReportes.setIcon(cargarPNGComoIcono("/Recursos/excel_1.png", 32, 32));
+        configurarBotonMenu(btnReportes);
+
         panelMenu.add(btnAlumnos);
         panelMenu.add(btnDocentes);
         panelMenu.add(btnEmpresas);
         panelMenu.add(btnProyectos);
+        panelMenu.add(btnReportes);
         barraSuperior.add(panelMenu, BorderLayout.CENTER);
 
         // Estilo personalizado para los menús popup
@@ -195,20 +200,31 @@ public class Menu extends JFrame {
         // Crear menús popup estilizados
         JPopupMenu menuProyectos = new MenuPopupEstilizado();
         JPopupMenu menuAlumnos = new MenuPopupEstilizado();
+        JPopupMenu menuReportes = new MenuPopupEstilizado();
 
         // Items del menú de proyectos
         JMenuItem itemBancoProyectos = new MenuItemEstilizado("Banco de Proyectos", cargarPNGComoIcono("/Recursos/proyectos.png", 22, 22));
         JMenuItem itemAnteproyectos = new MenuItemEstilizado("Anteproyectos", cargarPNGComoIcono("/Recursos/docentes.png", 22, 22));
 
+        // Items del menú de reportes
+        JMenuItem itemReporteAsesor = new MenuItemEstilizado("Reporte de Asesores", cargarPNGComoIcono("/Recursos/docentes.png", 22, 22));
+        JMenuItem itemReporteRevisor = new MenuItemEstilizado("Reporte de Revisores", cargarPNGComoIcono("/Recursos/docentes.png", 22, 22));
+        JMenuItem itemReporteAlumnos = new MenuItemEstilizado("Reporte de Alumnos", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
+
         menuProyectos.add(itemBancoProyectos);
         menuProyectos.add(itemAnteproyectos);
 
         // Items del menú de alumnos
-        JMenuItem itemResidentes = new MenuItemEstilizado("Residentes", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
         JMenuItem itemCandidatos = new MenuItemEstilizado("Candidatos", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
+        JMenuItem itemResidentes = new MenuItemEstilizado("Residentes", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
 
-        menuAlumnos.add(itemResidentes);
         menuAlumnos.add(itemCandidatos);
+        menuAlumnos.add(itemResidentes);
+
+        // Agregar items al menú de reportes
+        menuReportes.add(itemReporteAsesor);
+        menuReportes.add(itemReporteRevisor);
+        menuReportes.add(itemReporteAlumnos);
 
         // Alinear los menús popup con los botones
         btnProyectos.addActionListener(e -> {
@@ -217,11 +233,13 @@ public class Menu extends JFrame {
         });
 
         btnAlumnos.addActionListener(e -> {
-            /*int x = (btnAlumnos.getWidth() - menuAlumnos.getPreferredSize().width) / 2;
-            menuAlumnos.show(btnAlumnos, x, btnAlumnos.getHeight());*/
-            VistaRegistros alumnos = new VistaRegistros();
-            alumnos.setVisible(true);
-            this.dispose();
+            int x = (btnAlumnos.getWidth() - menuAlumnos.getPreferredSize().width) / 2;
+            menuAlumnos.show(btnAlumnos, x, btnAlumnos.getHeight());
+        });
+
+        btnReportes.addActionListener(e -> {
+            int x = (btnReportes.getWidth() - menuReportes.getPreferredSize().width) / 2;
+            menuReportes.show(btnReportes, x, btnReportes.getHeight());
         });
 
         // Panel para los botones de perfil y cerrar sesión
@@ -311,65 +329,6 @@ public class Menu extends JFrame {
 
         mainPanel.add(barraSuperior, BorderLayout.NORTH);
 
-        // Botón de créditos en la esquina inferior derecha
-        JButton btnCreditos = new JButton();
-        btnCreditos.setToolTipText("Créditos");
-        btnCreditos.setIcon(cargarPNGComoIcono("/Recursos/creditos.png", 32, 32)); // Usa tu icono, por ejemplo "creditos.png"
-        btnCreditos.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        btnCreditos.setBackground(Color.WHITE);
-        btnCreditos.setFocusPainted(false);
-        btnCreditos.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnCreditos.setOpaque(true);
-
-        // Efecto hover para el botón de créditos
-        btnCreditos.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnCreditos.setBackground(new Color(230, 225, 255));
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btnCreditos.setBackground(Color.WHITE);
-            }
-        });
-
-        btnCreditos.addActionListener(e -> JOptionPane.showMessageDialog(
-                this,
-                "<html><center>"
-                        + "<span style='font-size:28px; color:#5c5da9; font-weight:bold;'>SIREP (2025)</span><br><br>"
-                        + "<b>by:</b><br>"
-                        + "Yahir Jibsam Alonso Cruz<br>"
-                        + "Juan Francisco Mendoza<br>"
-                        + "Cruz Gomez Ramon Isaac<br>"
-                        + "Giner Coache Nierika"
-                        + "</center></html>",
-                "Créditos del Proyecto",
-                JOptionPane.INFORMATION_MESSAGE
-        ));
-
-        // Panel para colocar el botón en la esquina inferior derecha
-        JPanel panelCreditos = new JPanel(new BorderLayout());
-        panelCreditos.setOpaque(false);
-        panelCreditos.add(btnCreditos, BorderLayout.SOUTH);
-        mainPanel.add(panelCreditos, BorderLayout.SOUTH);
-
-        // Etiqueta SIREP (2025) en la esquina inferior izquierda
-        JLabel lblSirep = new JLabel("SIREP (2025)");
-        lblSirep.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblSirep.setForeground(new Color(92, 93, 169));
-        lblSirep.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 0));
-
-        // Panel para colocar la etiqueta en la esquina inferior izquierda
-        JPanel panelSirep = new JPanel(new BorderLayout());
-        panelSirep.setOpaque(false);
-        panelSirep.add(lblSirep, BorderLayout.WEST);
-        mainPanel.add(panelSirep, BorderLayout.SOUTH);
-
-        // Panel footer para colocar juntos el botón de créditos y la etiqueta SIREP
-        JPanel panelFooter = new JPanel(new BorderLayout());
-        panelFooter.setOpaque(false);
-        panelFooter.add(lblSirep, BorderLayout.WEST);
-        panelFooter.add(btnCreditos, BorderLayout.EAST);
-        mainPanel.add(panelFooter, BorderLayout.SOUTH);
-
         // Panel central con icono antes del texto de bienvenida
         JPanel panelCentral = new JPanel(new GridBagLayout()) {
             int alpha = 0;
@@ -433,58 +392,94 @@ public class Menu extends JFrame {
 
         // Texto de bienvenida
         gbc.gridy++;
-        JLabel lblBienvenida = new JLabel("Bienvenida profesora Maricarmen");
+        JLabel lblBienvenida = new JLabel("Bienvenida profesora Maricarmen!");
         lblBienvenida.setFont(new Font("Segoe UI", Font.BOLD, 44));
         lblBienvenida.setForeground(new Color(60, 60, 100));
         lblBienvenida.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         lblBienvenida.setHorizontalAlignment(SwingConstants.CENTER);
         panelCentral.add(lblBienvenida, gbc);
 
-        // Frase motivacional
+        // Frases motivacionales rotativas
         gbc.gridy++;
-        JLabel lblFrase = new JLabel("<html><center>“El futuro pertenece a quienes creen en la belleza de sus sueños.”<br><span style='font-size:18px;color:#5c5da9;'>- Eleanor Roosevelt</span></center></html>");
+        JLabel lblFrase = new JLabel();
         lblFrase.setFont(new Font("Segoe UI", Font.ITALIC, 28));
         lblFrase.setForeground(new Color(92, 93, 169));
         lblFrase.setHorizontalAlignment(SwingConstants.CENTER);
+
+        String[][] frases = {
+                {"El futuro pertenece a quienes creen en la belleza de sus sueños.", "Eleanor Roosevelt"},
+                {"La educación es el arma más poderosa que puedes usar para cambiar el mundo.", "Nelson Mandela"},
+                {"El éxito es la suma de pequeños esfuerzos repetidos día tras día.", "Robert Collier"},
+                {"Todo lo que puedas imaginar es real.", "Pablo Picasso"},
+                {"La mejor forma de predecir el futuro es creándolo.", "Peter Drucker"},
+                {"No dejes que tus miedos se interpongan en tus sueños.", "Walt Disney"}
+        };
+
+        final int[] indice = {0};
+        Timer timerFrases = new Timer(20000, e -> {
+            indice[0] = (indice[0] + 1) % frases.length;
+            lblFrase.setText("<html><center>'" + frases[indice[0]][0] +
+                    "'<br><span style='font-size:18px;color:#5c5da9;'>- " +
+                    frases[indice[0]][1] + "</span></center></html>");
+        });
+
+        // Establecer la primera frase
+        lblFrase.setText("<html><center>'" + frases[0][0] +
+                "'<br><span style='font-size:18px;color:#5c5da9;'>- " +
+                frases[0][1] + "</span></center></html>");
+
+        timerFrases.start();
         panelCentral.add(lblFrase, gbc);
 
         mainPanel.add(panelCentral, BorderLayout.CENTER);
 
-        // Easter egg: botón invisible en la esquina inferior izquierda
-        JButton btnEasterEgg = new JButton();
-        btnEasterEgg.setOpaque(false);
-        btnEasterEgg.setContentAreaFilled(false);
-        btnEasterEgg.setBorderPainted(false);
-        btnEasterEgg.setFocusPainted(false);
-        btnEasterEgg.setPreferredSize(new Dimension(40, 40));
-        btnEasterEgg.setToolTipText("¿Curioso?");
+        // Botón de créditos y etiqueta SIREP en footer
+        JPanel panelFooter = new JPanel(new BorderLayout());
+        panelFooter.setOpaque(false);
 
-        btnEasterEgg.addActionListener(e -> JOptionPane.showMessageDialog(
+        JLabel lblSirep = new JLabel("SIREP (2025)");
+        lblSirep.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblSirep.setForeground(new Color(92, 93, 169));
+        lblSirep.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 0));
+
+        JButton btnCreditos = new JButton();
+        btnCreditos.setToolTipText("Créditos");
+        btnCreditos.setIcon(cargarPNGComoIcono("/Recursos/creditos.png", 32, 32));
+        btnCreditos.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        btnCreditos.setBackground(Color.WHITE);
+        btnCreditos.setFocusPainted(false);
+        btnCreditos.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCreditos.setOpaque(true);
+
+        btnCreditos.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                btnCreditos.setBackground(new Color(230, 225, 255));
+            }
+            public void mouseExited(MouseEvent evt) {
+                btnCreditos.setBackground(Color.WHITE);
+            }
+        });
+
+        btnCreditos.addActionListener(e -> JOptionPane.showMessageDialog(
                 this,
                 "<html><center>"
-                        + "<span style='font-size:32px; color:#5c5da9; font-weight:bold;'>SIREP (2025)</span><br><br>"
+                        + "<span style='font-size:28px; color:#5c5da9; font-weight:bold;'>SIREP (2025)</span><br><br>"
                         + "<b>by:</b><br>"
-                        + "<div style='font-size:20px; color:#444;'>"
-                        + "Yahir Jibsam Alonso Cruz<br>"
-                        + "Juan Francisco Mendoza<br>"
+                        + "Alonso Cruz Yahir Jibsam<br>"
+                        + "Mendoza Duran Juan Francisco<br>"
                         + "Cruz Gomez Ramon Isaac<br>"
                         + "Giner Coache Nierika"
-                        + "</div>"
-                        + "<br><span style='font-size:16px;color:#aaa;'>¡Gracias por descubrir el easter egg!</span>"
                         + "</center></html>",
-                "Easter Egg",
+                "Créditos del Proyecto",
                 JOptionPane.INFORMATION_MESSAGE
         ));
 
-        // Panel para colocar el botón invisible en la esquina inferior izquierda
-        JPanel panelEasterEgg = new JPanel(new BorderLayout());
-        panelEasterEgg.setOpaque(false);
-        panelEasterEgg.add(btnEasterEgg, BorderLayout.WEST);
-        mainPanel.add(panelEasterEgg, BorderLayout.SOUTH);
+        panelFooter.add(lblSirep, BorderLayout.WEST);
+        panelFooter.add(btnCreditos, BorderLayout.EAST);
+        mainPanel.add(panelFooter, BorderLayout.SOUTH);
 
         setContentPane(mainPanel);
 
-        // Acciones de los botones para abrir los bancos
         // Acciones de los botones principales
         btnDocentes.addActionListener(e -> {
             new DocentesUI().setVisible(true);
@@ -496,18 +491,24 @@ public class Menu extends JFrame {
         });
 
         // Acciones de los items del menú proyectos
-        itemBancoProyectos.addActionListener(e -> new BancoProyectosUI().setVisible(true));
-        //itemAnteproyectos.addActionListener(e -> new AnteproyectosUI().setVisible(true));
-
-        // Acciones de los items del menú alumnos
-        itemResidentes.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this,
-                    "Vista de Residentes en desarrollo.\nPróximamente disponible.",
-                    "En desarrollo",
-                    JOptionPane.INFORMATION_MESSAGE);
+        itemBancoProyectos.addActionListener(e -> {
+            new BancoProyectosUI().setVisible(true);
+            this.dispose();
         });
 
-        itemCandidatos.addActionListener(e -> new VistaRegistros().setVisible(true));
+        // Acciones de los items del menú alumnos
+        itemCandidatos.addActionListener(e -> {
+            VistaRegistros candidatos = new VistaRegistros();
+            candidatos.setVisible(true);
+            this.dispose();
+        });
+
+        itemResidentes.addActionListener(e -> {
+            VistaResidentesActivos residentes = new VistaResidentesActivos();
+            residentes.setVisible(true);
+            this.dispose();
+        });
+
         btnPerfil.addActionListener(e -> JOptionPane.showMessageDialog(this,
                 "Perfil de la profesora Maricarmen\nCorreo: maricarmen@ito.edu.mx\nRol: Administradora",
                 "Perfil", JOptionPane.INFORMATION_MESSAGE));
@@ -539,8 +540,8 @@ public class Menu extends JFrame {
         btn.setHorizontalTextPosition(SwingConstants.RIGHT);
         btn.setIconTextGap(14);
 
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
                 btn.setBackground(new Color(230, 225, 255));
                 btn.setForeground(colorPrincipal.darker());
                 btn.setBorder(new CompoundBorder(
@@ -553,7 +554,7 @@ public class Menu extends JFrame {
                         BorderFactory.createEmptyBorder(10, 28, 10, 28)
                 ));
             }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
+            public void mouseExited(MouseEvent evt) {
                 btn.setBackground(Color.WHITE);
                 btn.setForeground(colorPrincipal);
                 btn.setBorder(new CompoundBorder(

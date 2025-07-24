@@ -1,6 +1,7 @@
 package Controlador;
 
 import Modelo.ModeloResidente;
+import Vista.DialogoConfirmacionSimple;
 import Vista.VistaRegistros;
 import javax.swing.*;
 import java.awt.*;
@@ -9,6 +10,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import Modelo.Conexion_bd;
+import Vista.VistaResidentesActivos;
+import java.awt.Component;
+import java.awt.Frame;
+import javax.swing.JFrame;
 
 public class ControladorRegistros {
     private VistaRegistros vista;
@@ -54,48 +59,49 @@ public class ControladorRegistros {
     // ==================== MÉTODOS PRINCIPALES ====================
 
     public void cargarTodosLosRegistros() {
-        try {
-            // Cambiar cursor a espera
-            vista.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // Verificar que existan los estatus en la tabla estatus_residente
+                ModeloResidente.verificarEstatusResidentes();
 
-            // Obtener residentes desde el modelo
-            List<ModeloResidente> residentes = ModeloResidente.obtenerTodos();
+                // Cargar solo candidatos (estatus = 1 o NULL)
+                List<ModeloResidente> candidatos = ModeloResidente.obtenerCandidatos();
+                vista.cargarResidentes(candidatos);
 
-            if (residentes != null) {
-                // Cargar en la vista
-                vista.cargarResidentes(residentes);
+                System.out.println("Candidatos cargados: " + candidatos.size());
 
-                if (residentes.isEmpty()) {
-                    vista.mostrarMensaje(
-                            "⚠️ No se encontraron registros en la base de datos",
-                            "Sin registros",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-                }
-            } else {
+            } catch (Exception e) {
+                System.err.println("Error al cargar candidatos: " + e.getMessage());
                 vista.mostrarMensaje(
-                        "Error al cargar los registros desde la base de datos",
+                        "Error al cargar los candidatos:\n" + e.getMessage(),
                         "Error de carga",
                         JOptionPane.ERROR_MESSAGE
                 );
             }
+        });
+    }
+
+    public void abrirVistaResidentesActivos() {
+        try {
+            VistaResidentesActivos vistaResidentes = new VistaResidentesActivos();
+            vistaResidentes.setVisible(true);
+
+            // Cerrar la vista actual
+            if (vista instanceof JFrame) {
+                ((JFrame) vista).dispose();
+            }
 
         } catch (Exception e) {
+            System.err.println("Error al abrir vista de residentes activos: " + e.getMessage());
             vista.mostrarMensaje(
-                    "Error inesperado al cargar registros:\n" + e.getMessage(),
+                    "Error al abrir la vista de residentes activos:\n" + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE
             );
-            System.err.println("Error al cargar registros: " + e.getMessage());
-        } finally {
-            // Restaurar cursor normal
-            vista.setCursor(Cursor.getDefaultCursor());
         }
     }
 
-    /**
-     * *** CAMBIO: Dar de baja en lugar de eliminar ***
-     */
+
     public void darDeBajaRegistroSeleccionado() {
         ModeloResidente residenteSeleccionado = vista.getResidenteSeleccionado();
 
@@ -170,7 +176,73 @@ public class ControladorRegistros {
         // Redirigir al nuevo método darDeBajaRegistroSeleccionado
         darDeBajaRegistroSeleccionado();
     }
+    public void convertirAResidenteActivo() {
+        ModeloResidente candidato = vista.getResidenteSeleccionado();
 
+        if (candidato == null) {
+            vista.mostrarMensaje(
+                    "Por favor, seleccione un candidato para convertir a residente activo.",
+                    "Ningún candidato seleccionado",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            // Buscar el Frame padre de manera más robusta
+            Frame parentFrame = null;
+
+            if (vista instanceof JFrame) {
+                parentFrame = (JFrame) vista;
+            } else {
+                // Buscar el Frame padre
+                Component parent = (Component) vista;
+                while (parent != null && !(parent instanceof Frame)) {
+                    parent = parent.getParent();
+                }
+                if (parent instanceof Frame) {
+                    parentFrame = (Frame) parent;
+                }
+            }
+
+            // Si no encontramos Frame padre, usar null (el diálogo será modal para toda la aplicación)
+            DialogoConfirmacionSimple dialogo = new DialogoConfirmacionSimple(parentFrame, candidato);
+
+            dialogo.setVisible(true);
+
+            if (dialogo.isConfirmado()) {
+                boolean resultado = candidato.convertirAResidenteActivo();
+
+                if (resultado) {
+                    vista.mostrarMensaje(
+                            "Candidato convertido a residente activo exitosamente.\n" +
+                                    "Nombre: " + candidato.getNombre() + " " + candidato.getApellidoPaterno() + "\n" +
+                                    "No. Control: " + candidato.getNumeroControl(),
+                            "Transición exitosa",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+
+                    cargarTodosLosRegistros();
+                } else {
+                    vista.mostrarMensaje(
+                            "No se pudo convertir el candidato a residente activo.\n" +
+                                    "Verifique que el registro aún existe en la base de datos.",
+                            "Error en la transición",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error al convertir a residente activo: " + e.getMessage());
+            e.printStackTrace(); // Para debug
+            vista.mostrarMensaje(
+                    "Error al procesar la transición:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
 
     public void editarRegistroSeleccionado() {
         ModeloResidente residenteSeleccionado = vista.getResidenteSeleccionado();
@@ -242,6 +314,8 @@ public class ControladorRegistros {
             vista.setCursor(Cursor.getDefaultCursor());
         }
     }
+
+
 
     /**
      * Buscar por nombre (metodo auxiliar)
