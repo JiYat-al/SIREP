@@ -5,11 +5,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class ProyectoDAO {
-    public boolean nuevoProyecto( Proyectos p) {
+    public boolean nuevoProyecto( Proyecto p) {
         String sql="INSERT INTO public.proyecto (nombre,descripcion,duracion,n_alumnos," +
                 "id_empresa, id_estatus_proyecto,id_origen) VALUES (?,?,?,?,?,?,?);";
         try (Connection con = Conexion_bd.getConnection();
@@ -20,7 +19,7 @@ public class ProyectoDAO {
             ps.setString(3, p.getDuracion());
             ps.setInt(4, p.getNumero_alumnos());
             ps.setInt(5, p.getId_empresa());
-            ps.setInt(6,1);
+            ps.setInt(6,2);
             ps.setInt(7,1);
 
             return ps.executeUpdate() > 0;
@@ -32,8 +31,8 @@ public class ProyectoDAO {
 
 
     /**Para cargar la tabla de proyectos del banco*/
-    public List<Proyectos> ObtenerProyectosBanco(){
-        List<Proyectos> lista = new ArrayList<>();
+    public List<Proyecto> ObtenerProyectosBanco(){
+        List<Proyecto> lista = new ArrayList<>();
         String sql="SELECT p.id_proyecto, p.nombre, p.descripcion, op.nombre_origen FROM public.proyecto AS p JOIN " +
                 "public.origen_proyecto AS op ON p.id_origen = op.id_origen WHERE p.estado_actividad = true " +
                 "AND p.id_origen = 1 AND id_estatus_proyecto=2;";
@@ -42,7 +41,7 @@ public class ProyectoDAO {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                Proyectos p = new Proyectos();
+                Proyecto p = new Proyecto();
                 p.setId_proyecto(rs.getInt("id_proyecto"));
                 p.setNombre(rs.getString("nombre"));
                 p.setDescripcion(rs.getString("descripcion"));
@@ -112,7 +111,7 @@ public class ProyectoDAO {
 
 
     /**Ediatr informacion Banco*/
-    public boolean EditarInfoBanco(Proyectos p){
+    public boolean EditarInfoBanco(Proyecto p){
 
         String sql="UPDATE proyecto\n" +
                 "SET nombre = ?,\n" +

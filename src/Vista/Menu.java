@@ -496,6 +496,11 @@ public class Menu extends JFrame {
             this.dispose();
         });
 
+        itemAnteproyectos.addActionListener(e -> {
+            new AnteproyectoInterfaz().setVisible(true);
+            this.dispose();
+        });
+
         // Acciones de los items del menú alumnos
         itemCandidatos.addActionListener(e -> {
             VistaRegistros candidatos = new VistaRegistros();
