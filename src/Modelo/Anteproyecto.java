@@ -29,6 +29,18 @@ public class Anteproyecto {
         this.fechaFin = fechaFin;
     }
 
+    public  Anteproyecto() {
+        proyecto = null;
+        archivoAnteproyecto = null;
+        residentes = null;
+        asesor = null;
+        revisores = null;
+        periodo = null;
+        estatusRevision = false;
+        fechaInicio = null;
+        fechaFin = null;
+    }
+
     public Proyecto getProyecto() {
         return proyecto;
     }

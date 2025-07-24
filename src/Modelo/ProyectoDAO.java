@@ -140,4 +140,35 @@ public class ProyectoDAO {
             return false;
         }
     }
+
+    public static Proyecto proyectoPorID (int id_proyecto){
+        Proyecto proyecto =  new Proyecto();
+
+        String sql="SELECT p.id_proyecto,p.nombre, p.id_empresa, p.descripcion,p.n_alumnos, p.id_estatus_proyecto, p.id_origen\n" +
+                "    FROM proyecto p WHERE p.id_proyecto = ?;";
+
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id_proyecto);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    proyecto.setId_proyecto(id_proyecto);
+                    proyecto.setNombre(rs.getString("nombre"));
+                    proyecto.setId_empresa(rs.getInt("id_empresa"));
+                    proyecto.setDescripcion(rs.getString("descripcion"));
+                    proyecto.setNumero_alumnos(rs.getInt("n_alumnos"));
+                    proyecto.setId_estatus_proyecto(rs.getInt("id_estatus_proyecto"));
+                    proyecto.setId_origen(rs.getInt("id_origen"));
+                    proyecto.setDuracion(rs.getString("duracion"));
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null; // Si no encontró resultados
+    }
 }

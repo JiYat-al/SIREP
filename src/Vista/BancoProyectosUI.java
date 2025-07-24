@@ -1,7 +1,7 @@
 package Vista;
 
 import Controlador.ControladorProyectos;
-import Modelo.ConsultasEmpresa;
+import Modelo.EmpresaDAO;
 import Modelo.Empresa;
 import Modelo.ProyectoDAO;
 import Modelo.Proyecto;
@@ -406,7 +406,7 @@ public class BancoProyectosUI extends JFrame {
         JSpinner spinnerAlumnos = new JSpinner(new SpinnerNumberModel(1, 1, 5, 1));
 
         JComboBox<Empresa> comboEmpresa = new JComboBox<>();
-        ArrayList<Empresa> empresas = ConsultasEmpresa.recuperarDatos();
+        ArrayList<Empresa> empresas = EmpresaDAO.recuperarDatos();
         for (Empresa empresa : empresas) {
             comboEmpresa.addItem(empresa);
         }
@@ -532,7 +532,7 @@ public class BancoProyectosUI extends JFrame {
         JSpinner spinnerAlumnos = new JSpinner(new SpinnerNumberModel(Integer.parseInt(datos[3]), 1, 100, 1));
 
         JComboBox<Empresa> comboEmpresa = new JComboBox<>();
-        ArrayList<Empresa> empresas = ConsultasEmpresa.recuperarDatos();
+        ArrayList<Empresa> empresas = EmpresaDAO.recuperarDatos();
         for (Empresa empresa : empresas) {
             comboEmpresa.addItem(empresa);
         }

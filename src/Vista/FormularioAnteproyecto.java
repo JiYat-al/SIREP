@@ -1,5 +1,7 @@
 package Vista;
 
+import Modelo.Proyecto;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
@@ -42,6 +44,7 @@ public class FormularioAnteproyecto extends JFrame {
     private JTextField txtNombreProyecto;
     private JTextArea txtDescripcion;
     private JComboBox<Empresa> comboEmpresa;
+    private JComboBox<Proyecto> comboBanco;
     private JTextField txtCorreoEmpresa;
     private JComboBox<String> comboOrigen;
     private JSpinner fechaEntrega;
@@ -126,10 +129,26 @@ public class FormularioAnteproyecto extends JFrame {
 
     private void inicializarCampos() {
         txtNombreProyecto = new JTextField(30);
+        txtNombreProyecto.setEditable(false); // <- evita que el usuario escriba manualmente
+        txtNombreProyecto.setBackground(new Color(245, 245, 245)); // gris claro
+        txtNombreProyecto.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+        txtNombreProyecto.setText("Selecciona un proyecto...");
+        txtNombreProyecto.setForeground(Color.GRAY);
+
         txtDescripcion = new JTextArea(3, 30);
         txtDescripcion.setLineWrap(true);
         txtDescripcion.setWrapStyleWord(true);
         comboEmpresa = new JComboBox<>();
+
+        comboBanco = new JComboBox<>();
+
+        comboBanco.setVisible(false); // oculto al inicio
+        comboBanco.setPreferredSize(new Dimension(400, 28));
+        comboBanco.setBorder(BorderFactory.createLineBorder(colorPrincipal, 2));
+        comboBanco.setBackground(new Color(248, 248, 255));
+        comboBanco.setForeground(colorPrincipal.darker());
+
+
         txtCorreoEmpresa = new JTextField(30);
         txtCorreoEmpresa.setEditable(false);
         comboOrigen = new JComboBox<>(new String[]{"Externo", "Banco de Proyectos"});
@@ -173,8 +192,61 @@ public class FormularioAnteproyecto extends JFrame {
 
         // INFORMACIÓN DEL PROYECTO
         agregarTitulo(panel, "INFORMACIÓN DEL PROYECTO", gbc, y++);
-        agregarCampo(panel, "Nombre del Proyecto:", txtNombreProyecto, gbc, y++);
-        agregarCampoDescripcion(panel, "Descripción:", txtDescripcion, gbc, y++);
+        agregarCampo(panel, "Proyecto:", txtNombreProyecto, gbc, y);
+        agregarCampo(panel, "", comboBanco, gbc, y++);
+        comboBanco.setVisible(false); // iniciar oculto
+
+
+        // Reemplazo de campos por botones
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(8, 4, 4, 12);
+
+        JPanel panelBotonesProyecto = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        panelBotonesProyecto.setOpaque(false);
+
+        JButton btnElegirBanco = new JButton("Elegir del Banco de Proyecto");
+        btnElegirBanco.setBackground(colorPrincipal);
+        btnElegirBanco.setForeground(Color.WHITE);
+        btnElegirBanco.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnElegirBanco.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+        btnElegirBanco.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnElegirBanco.setFocusPainted(false);
+
+        btnElegirBanco.addActionListener( e -> {
+            txtNombreProyecto.setVisible(false); // ocultar el campo de texto
+            comboBanco.setVisible(true);         // mostrar el combo
+        });
+
+        JButton btnCrearProyecto = new JButton("Crear Proyecto Nuevo");
+        btnCrearProyecto.setBackground(colorSecundario);
+        btnCrearProyecto.setForeground(Color.WHITE);
+        btnCrearProyecto.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnCrearProyecto.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+        btnCrearProyecto.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCrearProyecto.setFocusPainted(false);
+
+        panelBotonesProyecto.add(btnElegirBanco);
+        panelBotonesProyecto.add(btnCrearProyecto);
+        panel.add(panelBotonesProyecto, gbc);
+        y++;
+
+        btnCrearProyecto.addActionListener(e -> {
+            new Vista.FormularioNuevoProyecto(FormularioAnteproyecto.this, proyecto -> {
+                // Aquí puedes actualizar comboBanco o cualquier campo con el proyecto creado
+                JOptionPane.showMessageDialog(this,
+                        "Proyecto creado: " + proyecto.getNombre(),
+                        "Nuevo Proyecto",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
+                // Por ejemplo, lo agregas al combo
+                comboBanco.addItem(proyecto);
+                comboBanco.setSelectedItem(proyecto);
+                txtNombreProyecto.setText(proyecto.getNombre());
+            });
+        });
 
         // EMPRESA
         agregarTitulo(panel, "INFORMACIÓN DE LA EMPRESA", gbc, y++);

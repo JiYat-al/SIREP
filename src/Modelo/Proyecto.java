@@ -41,6 +41,17 @@ public class Proyecto {
         this.estado = estado;
     }
 
+    public Proyecto(int id_proyecto, String nombre,int id_empresa, String descripcion, int numero_alumnos, int id_estatus_proyecto, int id_origen, String duracion) {
+        this.id_proyecto = id_proyecto;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.duracion = duracion;
+        this.numero_alumnos = numero_alumnos;
+        this.id_empresa = id_empresa;
+        this.id_estatus_proyecto = id_estatus_proyecto;
+        this.id_origen = id_origen;
+    }
+
     public Proyecto(String nombre, String descripcion, int id_origen) {  /**Constructor para obtener datos para vista*/
         this.nombre = nombre;
         this.descripcion = descripcion;

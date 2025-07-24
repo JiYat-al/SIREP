@@ -16,8 +16,13 @@ public class Docente {
     }
 
     public Docente() {
-
+        numeroTarjeta = 0;
+        nombre = null;
+        apellidoPaterno = null;
+        apellidoMaterno = null;
+        correo = null;
     }
+
 
     public int getNumeroTarjeta() {
         return numeroTarjeta;

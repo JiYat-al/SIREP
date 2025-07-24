@@ -1,6 +1,6 @@
 package Controlador;
 
-import Modelo.ConsultasEmpresa;
+import Modelo.EmpresaDAO;
 import Modelo.Empresa;
 
 import javax.swing.*;
@@ -19,7 +19,7 @@ public class CtrlEmpresa  {
 
         empresa = new Empresa(nombre, direccion, responsable, telefono, correo, rfc);
 
-        boolean estaRegistrado = ConsultasEmpresa.registrar(empresa);
+        boolean estaRegistrado = EmpresaDAO.registrar(empresa);
 
         if (estaRegistrado) {
             JOptionPane.showMessageDialog(null, "Registro Guardado");
@@ -29,7 +29,7 @@ public class CtrlEmpresa  {
     }
 
     public static ArrayList<Empresa> obtenerEmpresas() {
-        return ConsultasEmpresa.recuperarDatos();
+        return EmpresaDAO.recuperarDatos();
     }
 
     public static void editarEmpresa (int id, JTextField txtNombre, JTextField txtDireccion, JTextField txtResponsable, JTextField txtTelefono, JTextField txtCorreo, JTextField txtRfc){
@@ -43,11 +43,11 @@ public class CtrlEmpresa  {
         empresa.setCorreo(txtCorreo.getText());
         empresa.setRfc(txtRfc.getText());
 
-        boolean ban = ConsultasEmpresa.actualizarEmpresa(empresa);
+        boolean ban = EmpresaDAO.actualizarEmpresa(empresa);
     }
 
     public static boolean cambiarEstatus(int id){
-        boolean ban = ConsultasEmpresa.cambiarEstatus(id);
+        boolean ban = EmpresaDAO.cambiarEstatus(id);
         return ban;
     }
 

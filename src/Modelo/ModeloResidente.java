@@ -23,6 +23,16 @@ public class ModeloResidente {
     private boolean esResidenteActivo = false;
 
     public ModeloResidente() {
+        numeroControl = 0;
+        nombre = null;
+        apellidoPaterno = null;
+        apellidoMaterno = null;
+        carrera = null;
+        semestre = 0;
+        correo = null;
+        telefono = null;
+        idProyecto = 0;
+
         this.estatus = true;
         this.esValido = true;
         this.motivoInvalido = "";
@@ -64,14 +74,6 @@ public class ModeloResidente {
         this.motivoInvalido = otro.motivoInvalido;
         this.erroresValidacion = new ArrayList<>(otro.erroresValidacion);
     }
-
-
-
-
-
-
-
-
 
 
     public boolean validarCamposBasicos() {
@@ -751,6 +753,43 @@ public class ModeloResidente {
         }
 
         return false;
+    }
+
+    // *** CAMBIO: Buscar solo activos ***
+    public static ArrayList<ModeloResidente> buscarPorIDProyecto(int id_proyecto) {
+        ArrayList<ModeloResidente> residentes = new ArrayList<>();
+        String sql = "SELECT * FROM residente WHERE id_proyecto = ? AND estatus = TRUE";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, String.valueOf(id_proyecto));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                ModeloResidente residente = new ModeloResidente();
+                residente.setIdResidente(rs.getInt("id_residente"));
+                residente.setNumeroControl(Integer.parseInt(rs.getString("numero_control")));
+                residente.setNombre(rs.getString("nombre"));
+                residente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                residente.setApellidoMaterno(rs.getString("apellido_materno"));
+                residente.setCarrera(rs.getString("carrera"));
+                residente.setSemestre(rs.getInt("semestre"));
+                residente.setCorreo(rs.getString("correo"));
+                residente.setTelefono(rs.getString("telefono"));
+                residente.setIdProyecto(rs.getInt("id_proyecto"));
+                residente.setEstatus(rs.getBoolean("estatus"));
+                residentes.add(residente);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al buscar residente: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.err.println("Error al convertir numero_control: " + e.getMessage());
+        }
+
+        return residentes;
     }
 
     // ==================== IMPORTACIÓN MEJORADA ====================
