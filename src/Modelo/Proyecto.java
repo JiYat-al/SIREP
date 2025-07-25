@@ -160,4 +160,8 @@ public class Proyecto {
     public void setEstado(boolean estado) {
         this.estado = estado;
     }
+
+    public String toString() {
+        return nombre;
+    }
 }

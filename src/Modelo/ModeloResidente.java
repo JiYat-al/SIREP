@@ -461,7 +461,6 @@ public class ModeloResidente {
                     residente.setNombre(rs.getString("nombre"));
                     residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                     residente.setApellidoMaterno(rs.getString("apellido_materno"));
-                    residente.setCarrera(rs.getString("carrera"));
                     residente.setSemestre(rs.getInt("semestre"));
                     residente.setCorreo(rs.getString("correo"));
                     residente.setTelefono(rs.getString("telefono"));

@@ -538,7 +538,6 @@ public class AnteproyectoInterfaz extends JFrame {
             estadoLabel.setBackground(Color.WHITE);
             estadoLabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
             headerPanel.add(estadoLabel, BorderLayout.EAST);
-n
             // Contenido principal con scroll
             JPanel contenidoPanel = new JPanel();
             contenidoPanel.setLayout(new BoxLayout(contenidoPanel, BoxLayout.Y_AXIS));
