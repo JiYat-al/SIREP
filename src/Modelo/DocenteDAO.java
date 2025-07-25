@@ -37,8 +37,8 @@ public class DocenteDAO {
         //String sql = "SELECT * FROM docente";
 
         try (Connection con = Conexion_bd.getConnection();
-                           PreparedStatement stmt = con.prepareStatement(sql);
-                           ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = con.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Docente d = new Docente();
@@ -136,9 +136,65 @@ public class DocenteDAO {
         return false;
     }
 
+    public static Docente docentePorID(int numero_tarjeta){
+        Docente docente = new Docente();
 
-    /**Obtener docentes por asesor*/
+        String sql = "SELECT * FROM docente WHERE numero_tarjeta = ?";
 
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, numero_tarjeta);
 
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    docente.setNumeroTarjeta(numero_tarjeta);
+                    docente.setNombre(rs.getString("nombre"));
+                    docente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                    docente.setApellidoMaterno(rs.getString("apellido_materno"));
+                    docente.setCorreo(rs.getString("correo"));
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return docente; // Si no encontró resultados
+    }
+
+    public static ArrayList<Docente> revisoresPorIDProyecto(int id_proyecto){
+        Docente docente;
+        ArrayList<Docente> revisores = new ArrayList<>();
+
+        String sql = "SELECT d.numero_tarjeta, d.nombre, d.apellido_paterno, d.apellido_materno, correo\n" +
+                "FROM docente d\n" +
+                "JOIN docente_proyecto dp\n" +
+                "\tON dp.numero_tarjeta = d.numero_tarjeta\n" +
+                "WHERE dp.id_proyecto = ?\n" +
+                "\tAND dp.rol = 'Revisor';";
+
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id_proyecto);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    docente = new Docente();
+                    docente.setNumeroTarjeta(rs.getInt("numero_tarjeta"));
+                    docente.setNombre(rs.getString("nombre"));
+                    docente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                    docente.setApellidoMaterno(rs.getString("apellido_materno"));
+                    docente.setCorreo(rs.getString("correo"));
+                    revisores.add(docente);
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return revisores; // Si no encontró resultados
+    }
 }

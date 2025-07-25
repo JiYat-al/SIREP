@@ -1,9 +1,8 @@
 package Controlador;
 
 import Modelo.ProyectoDAO;
-import Modelo.Proyectos;
+import Modelo.Proyecto;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -14,7 +13,8 @@ public class ControladorProyectos {
         this.proyectoDAO = proyectoDAO;
     }
 
-    public List<Proyectos> ObProyectosBanco(){
+    public List<Proyecto> ObProyectosBanco(){
+
         return proyectoDAO.ObtenerProyectosBanco();
     }
 
@@ -33,11 +33,12 @@ public class ControladorProyectos {
         return datos;
     }
 
-    public boolean EditarInformacionProyectoResidencia(Proyectos proyecto){
+    public boolean EditarInformacionProyectoResidencia(Proyecto proyecto){
         return proyectoDAO.EditarInfoBanco(proyecto);
     }
 
-    public boolean NuevoProyectoBanco(Proyectos proyecto){
+    public boolean NuevoProyectoBanco(Proyecto proyecto){
         return proyectoDAO.nuevoProyecto(proyecto);
     }
 }
+

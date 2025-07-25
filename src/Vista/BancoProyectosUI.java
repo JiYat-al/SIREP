@@ -4,18 +4,19 @@ import Controlador.ControladorProyectos;
 import Modelo.ConsultasEmpresa;
 import Modelo.Empresa;
 import Modelo.ProyectoDAO;
-import Modelo.Proyectos;
+import Modelo.Proyecto;
 import java.awt.*;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.table.*;
+import Modelo.EmpresaDAO;
 
 public class BancoProyectosUI extends JFrame {
     private ControladorProyectos controladorProyectos = new ControladorProyectos(new ProyectoDAO());
     private DefaultTableModel modelo;
     private JTable tabla;
     private final Color colorPrincipal = new Color(92, 93, 169);
-    private ArrayList<Proyectos> listaProyectos = new ArrayList<>();
+    private ArrayList<Proyecto> listaProyectos = new ArrayList<>();
 
     public BancoProyectosUI() {
         setTitle("Banco de Proyectos - SIREP");
@@ -365,7 +366,7 @@ public class BancoProyectosUI extends JFrame {
     private void cargarTablaBancoProyectos() {
         modelo.setRowCount(0);
         listaProyectos = new ArrayList<>(controladorProyectos.ObProyectosBanco());
-        for (Proyectos p : listaProyectos) {
+        for (Proyecto p : listaProyectos) {
             modelo.addRow(new Object[]{p.getId_proyecto(), p.getNombre(), p.getDescripcion(), p.getNombreOrigen()});
         }
     }
@@ -406,7 +407,7 @@ public class BancoProyectosUI extends JFrame {
         JSpinner spinnerAlumnos = new JSpinner(new SpinnerNumberModel(1, 1, 5, 1));
 
         JComboBox<Empresa> comboEmpresa = new JComboBox<>();
-        ArrayList<Empresa> empresas = ConsultasEmpresa.recuperarDatos();
+        ArrayList<Empresa> empresas = EmpresaDAO.recuperarDatos();
         for (Empresa empresa : empresas) {
             comboEmpresa.addItem(empresa);
         }
@@ -469,7 +470,8 @@ public class BancoProyectosUI extends JFrame {
                 return;
             }
 
-            Proyectos proyecto = new Proyectos(nombre, descripcion, duracion, numAlumnos, empresa.getId());
+            Proyecto proyecto = new Proyecto(nombre, descripcion, duracion, numAlumnos, empresa.getId());
+
             if (controladorProyectos.NuevoProyectoBanco(proyecto)) {
                 JOptionPane.showMessageDialog(dialogo, "Proyecto registrado exitosamente.");
                 dialogo.dispose();
@@ -493,7 +495,8 @@ public class BancoProyectosUI extends JFrame {
         int fila = tabla.getSelectedRow();
         if (fila == -1) return;
 
-        Proyectos proyecto = listaProyectos.get(fila);
+
+        Proyecto proyecto = listaProyectos.get(fila);
         String[] datos = controladorProyectos.InformacionProyectoBanco(proyecto.getId_proyecto());
         if (datos == null) return;
 
@@ -532,7 +535,7 @@ public class BancoProyectosUI extends JFrame {
         JSpinner spinnerAlumnos = new JSpinner(new SpinnerNumberModel(Integer.parseInt(datos[3]), 1, 100, 1));
 
         JComboBox<Empresa> comboEmpresa = new JComboBox<>();
-        ArrayList<Empresa> empresas = ConsultasEmpresa.recuperarDatos();
+        ArrayList<Empresa> empresas = EmpresaDAO.recuperarDatos();
         for (Empresa empresa : empresas) {
             comboEmpresa.addItem(empresa);
         }
@@ -592,7 +595,7 @@ public class BancoProyectosUI extends JFrame {
                 return;
             }
 
-            Proyectos proyectoActualizado = new Proyectos();
+            Proyecto proyectoActualizado = new Proyecto();
             proyectoActualizado.setId_proyecto(proyecto.getId_proyecto());
             proyectoActualizado.setNombre(txtNombre.getText().trim());
             proyectoActualizado.setDescripcion(txtDescripcion.getText().trim());

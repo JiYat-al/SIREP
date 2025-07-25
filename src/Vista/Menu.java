@@ -410,7 +410,7 @@ public class Menu extends JFrame {
         lblFrase.setFont(new Font("Segoe UI", Font.ITALIC, 28));
         lblFrase.setForeground(new Color(92, 93, 169));
         lblFrase.setHorizontalAlignment(SwingConstants.CENTER);
-        
+
         String[][] frases = {
             {"El futuro pertenece a quienes creen en la belleza de sus sueños.", "Eleanor Roosevelt"},
             {"La educación es el arma más poderosa que puedes usar para cambiar el mundo.", "Nelson Mandela"},
@@ -432,7 +432,7 @@ public class Menu extends JFrame {
         lblFrase.setText("<html><center>'" + frases[0][0] + 
                         "'<br><span style='font-size:18px;color:#5c5da9;'>- " + 
                         frases[0][1] + "</span></center></html>");
-        
+
         timerFrases.start();
         panelCentral.add(lblFrase, gbc);
 

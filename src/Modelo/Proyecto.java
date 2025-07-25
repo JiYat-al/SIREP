@@ -2,7 +2,7 @@ package Modelo;
 
 import java.util.Date;
 
-public class Proyectos {
+public class Proyecto {
     private int id_proyecto;
     private String nombre;
     private String descripcion;
@@ -18,11 +18,11 @@ public class Proyectos {
     private int id_estatus_anteproyecto;
     private boolean estado;
 
-    public Proyectos() {
+    public Proyecto() {
 
     }
 
-    public Proyectos( String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa) {
+    public Proyecto(String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa) {
 
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -31,7 +31,7 @@ public class Proyectos {
         this.id_empresa = id_empresa;
     }
 
-    public Proyectos(int id_proyecto, String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa, boolean estado) {
+    public Proyecto(int id_proyecto, String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa, boolean estado) {
         this.id_proyecto = id_proyecto;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -41,7 +41,7 @@ public class Proyectos {
         this.estado = estado;
     }
 
-    public Proyectos(String nombre, String descripcion, int id_origen) {  /**Constructor para obtener datos para vista*/
+    public Proyecto(String nombre, String descripcion, int id_origen) {  /**Constructor para obtener datos para vista*/
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.id_origen = id_origen;
