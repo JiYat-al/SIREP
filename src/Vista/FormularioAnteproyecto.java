@@ -611,10 +611,20 @@ public class FormularioAnteproyecto extends JFrame {
         JButton btnGuardar = crearBotonCompacto("Guardar", colorPrincipal);
         JButton btnCancelar = crearBotonCompacto("Cancelar", new Color(120, 120, 130));
 
+        btnCancelar.addActionListener(e -> {
+            this.dispose();
+        });
+
+        btnGuardar.addActionListener(e -> {
+            Anteproyecto anteproyecto = new Anteproyecto();
+
+        });
+
         panelBotones.add(btnGuardar);
         panelBotones.add(btnCancelar);
         mainPanel.add(panelBotones, BorderLayout.SOUTH);
     }
+
 
     private JButton crearBotonCompacto(String texto, Color colorBoton) {
         JButton boton = new JButton(texto) {
