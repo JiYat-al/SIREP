@@ -160,14 +160,15 @@ public class DocenteDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null; // Si no encontró resultados
+        return docente; // Si no encontró resultados
     }
 
     public static ArrayList<Docente> revisoresPorIDProyecto(int id_proyecto){
-        Docente docente = new Docente();
+        Docente docente;
         ArrayList<Docente> revisores = new ArrayList<>();
 
-        String sql = "SELECT * FROM docente d\n" +
+        String sql = "SELECT d.numero_tarjeta, d.nombre, d.apellido_paterno, d.apellido_materno, correo\n" +
+                "FROM docente d\n" +
                 "JOIN docente_proyecto dp\n" +
                 "\tON dp.numero_tarjeta = d.numero_tarjeta\n" +
                 "WHERE dp.id_proyecto = ?\n" +
@@ -179,6 +180,7 @@ public class DocenteDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    docente = new Docente();
                     docente.setNumeroTarjeta(rs.getInt("numero_tarjeta"));
                     docente.setNombre(rs.getString("nombre"));
                     docente.setApellidoPaterno(rs.getString("apellido_paterno"));
@@ -193,7 +195,6 @@ public class DocenteDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null; // Si no encontró resultados
+        return revisores; // Si no encontró resultados
     }
-
 }

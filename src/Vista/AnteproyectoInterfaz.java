@@ -1,5 +1,10 @@
 package Vista;
 
+import Modelo.Anteproyecto;
+import Modelo.AnteproyectoDAO;
+import Modelo.Docente;
+import Modelo.ModeloResidente;
+
 import java.awt.*;
 import java.util.ArrayList;
 import javax.swing.*;
@@ -9,85 +14,8 @@ public class AnteproyectoInterfaz extends JFrame {
     private DefaultTableModel modelo;
     private JTable tabla;
     private final Color colorPrincipal = new Color(92, 93, 169);
-    private ArrayList<AnteproyectoData> listaAnteproyectos = new ArrayList<>();
+    private ArrayList<Anteproyecto> listaAnteproyectos = new ArrayList<>();
 
-    // Clase para datos de anteproyecto
-    static class AnteproyectoData {
-        private String nombre;
-        private String descripcion;
-        private String alumnos;
-        private String asesor;
-        private String revisores;
-        // Campos adicionales del formulario completo
-        private String empresa;
-        private String correoEmpresa;
-        private String origen;
-        private String periodo;
-        private String fechaEntrega;
-        private String fechaInicio;
-        private String fechaFinal;
-        private String archivo;
-        private boolean aceptado;
-
-        public AnteproyectoData(String nombre, String descripcion, String alumnos,
-                                String asesor, String revisores) {
-            this.nombre = nombre;
-            this.descripcion = descripcion;
-            this.alumnos = alumnos;
-            this.asesor = asesor;
-            this.revisores = revisores;
-            // Valores por defecto para campos adicionales
-            this.empresa = "Tecnológicas Avanzadas S.A.";
-            this.correoEmpresa = "contacto@tecavanzadas.com";
-            this.origen = "Externo";
-            this.periodo = "AGOSTO-DICIEMBRE";
-            this.fechaEntrega = "15/12/2024";
-            this.fechaInicio = "20/08/2024";
-            this.fechaFinal = "10/12/2024";
-            this.archivo = "anteproyecto_" + nombre.toLowerCase().replace(" ", "_") + ".pdf";
-            this.aceptado = true;
-        }
-
-        // Constructor completo
-        public AnteproyectoData(String nombre, String descripcion, String alumnos,
-                                String asesor, String revisores, String empresa,
-                                String correoEmpresa, String origen, String periodo,
-                                String fechaEntrega, String fechaInicio, String fechaFinal,
-                                String archivo, boolean aceptado) {
-            this.nombre = nombre;
-            this.descripcion = descripcion;
-            this.alumnos = alumnos;
-            this.asesor = asesor;
-            this.revisores = revisores;
-            this.empresa = empresa;
-            this.correoEmpresa = correoEmpresa;
-            this.origen = origen;
-            this.periodo = periodo;
-            this.fechaEntrega = fechaEntrega;
-            this.fechaInicio = fechaInicio;
-            this.fechaFinal = fechaFinal;
-            this.archivo = archivo;
-            this.aceptado = aceptado;
-        }
-
-        // Getters básicos
-        public String getNombre() { return nombre; }
-        public String getDescripcion() { return descripcion; }
-        public String getAlumnos() { return alumnos; }
-        public String getAsesor() { return asesor; }
-        public String getRevisores() { return revisores; }
-
-        // Getters adicionales
-        public String getEmpresa() { return empresa; }
-        public String getCorreoEmpresa() { return correoEmpresa; }
-        public String getOrigen() { return origen; }
-        public String getPeriodo() { return periodo; }
-        public String getFechaEntrega() { return fechaEntrega; }
-        public String getFechaInicio() { return fechaInicio; }
-        public String getFechaFinal() { return fechaFinal; }
-        public String getArchivo() { return archivo; }
-        public boolean isAceptado() { return aceptado; }
-    }
 
     public AnteproyectoInterfaz() {
         setTitle("Banco de Anteproyectos - SIREP");
@@ -456,109 +384,29 @@ public class AnteproyectoInterfaz extends JFrame {
 
     private void cargarTablaAnteproyectos() {
         modelo.setRowCount(0);
-        listaAnteproyectos.clear();
 
-        // Datos de ejemplo de anteproyectos con información completa
-        listaAnteproyectos.add(new AnteproyectoData(
-                "Sistema de Control Escolar",
-                "Desarrollo de aplicación web para gestión académica institucional con módulos de inscripciones, calificaciones, horarios y reportes administrativos",
-                "Juan Pérez López, María González Ruiz",
-                "Dr. Carlos Mendoza",
-                "Ing. Ana Torres, M.C. Luis Ramírez",
-                "Instituto Tecnológico Superior",
-                "administracion@its.edu.mx",
-                "Interno",
-                "AGOSTO-DICIEMBRE",
-                "15/12/2024",
-                "20/08/2024",
-                "10/12/2024",
-                "sistema_control_escolar.pdf",
-                true
-        ));
+        // Obtener lista desde DAO
+        listaAnteproyectos = AnteproyectoDAO.listaAnteproyectos();
+        System.out.println(listaAnteproyectos.toString());
 
-        listaAnteproyectos.add(new AnteproyectoData(
-                "App Móvil de Inventarios",
-                "Aplicación móvil multiplataforma para control de inventarios en tiempo real con códigos QR y sincronización en la nube",
-                "Roberto Silva Castro, Carmen Díaz Vera",
-                "M.C. Patricia Núñez",
-                "Dr. Sergio Vargas, Ing. Rosa Morales",
-                "Comercializadora Moderna S.A.",
-                "sistemas@comercializadora.com",
-                "Externo",
-                "ENERO-JUNIO",
-                "20/06/2024",
-                "15/01/2024",
-                "15/06/2024",
-                "app_inventarios_movil.pdf",
-                true
-        ));
+        for (Anteproyecto a : listaAnteproyectos) {
+            String nombre = a.getProyecto().getNombre();
+            String descripcion = a.getProyecto().getDescripcion();
 
-        listaAnteproyectos.add(new AnteproyectoData(
-                "Sistema de Recursos Humanos",
-                "Plataforma web integral para gestión de recursos humanos con módulos de nómina, vacaciones, evaluaciones de desempeño y capacitación",
-                "Diego Martín Soto, Elena Jiménez Cruz, Pablo Herrera Vega",
-                "Dr. Fernando Castro",
-                "M.C. Gabriel Ortiz, Ing. Lucia Ramos",
-                "Corporativo Empresarial XYZ",
-                "rh@corporativoxyz.com",
-                "Externo",
-                "VERANO",
-                "25/08/2024",
-                "01/06/2024",
-                "20/08/2024",
-                "sistema_recursos_humanos.pdf",
-                false
-        ));
+            String alumnos = a.getResidentes().stream()
+                    .map(ModeloResidente::getNombre)  // asumiendo que ModeloResidente tiene getNombre()
+                    .reduce((s1, s2) -> s1 + ", " + s2)
+                    .orElse("Sin alumnos");
 
-        // Algunos con datos básicos (usando constructor simple)
-        listaAnteproyectos.add(new AnteproyectoData(
-                "Plataforma E-Learning",
-                "Sistema de educación virtual con herramientas interactivas",
-                "Andrea López Mesa, Javier Ruiz Peña",
-                "M.C. Isabel Guerrero",
-                "Dr. Miguel Flores, Ing. Sandra Aguilar"
-        ));
+            String asesor = a.getAsesor().getNombre(); // asumiendo que Docente tiene getNombre()
 
-        listaAnteproyectos.add(new AnteproyectoData(
-                "Sistema de Facturación",
-                "Aplicación para gestión y emisión de facturas electrónicas",
-                "Carlos Vázquez Lara, Sofía Medina Rojas",
-                "Ing. Ricardo Maldonado",
-                "M.C. Alejandra Campos, Dr. Raúl Santana"
-        ));
+            String revisores = a.getRevisores().stream()
+                    .map(Docente::getNombre)
+                    .reduce((s1, s2) -> s1 + ", " + s2)
+                    .orElse("Sin revisores");
 
-        listaAnteproyectos.add(new AnteproyectoData(
-                "App de Delivery",
-                "Aplicación móvil para servicio de entrega a domicilio",
-                "Fernando Castillo Nava, Daniela Reyes Mora",
-                "M.C. Octavio Delgado",
-                "Ing. Mónica Espinoza, Dr. Héctor Blanco"
-        ));
-
-        listaAnteproyectos.add(new AnteproyectoData(
-                "Sistema de Telemedicina",
-                "Plataforma para consultas médicas remotas y seguimiento",
-                "Rodrigo Fuentes Gil, Paola Herrera Sosa, Andrés Cortés Valle",
-                "Dr. Claudia Monterrubio",
-                "M.C. Eduardo Salinas, Ing. Valeria Cruz"
-        ));
-
-        listaAnteproyectos.add(new AnteproyectoData(
-                "Portal de Servicios Municipales",
-                "Sistema web para trámites y servicios gubernamentales",
-                "Ximena Paredes Luna, Emilio Zavala Rivas",
-                "Ing. Norma Alcántara",
-                "Dr. Arturo Mendoza, M.C. Irene Vásquez"
-        ));
-
-        // Agregar datos a la tabla
-        for (AnteproyectoData ap : listaAnteproyectos) {
             modelo.addRow(new Object[]{
-                    ap.getNombre(),
-                    ap.getDescripcion(),
-                    ap.getAlumnos(),
-                    ap.getAsesor(),
-                    ap.getRevisores()
+                    nombre, descripcion, alumnos, asesor, revisores
             });
         }
     }
@@ -578,19 +426,19 @@ public class AnteproyectoInterfaz extends JFrame {
     private void editarAnteproyecto() {
         int filaSeleccionada = tabla.getSelectedRow();
         if (filaSeleccionada >= 0) {
-            AnteproyectoData ap = listaAnteproyectos.get(filaSeleccionada);
+            Anteproyecto ap = listaAnteproyectos.get(filaSeleccionada);
 
             // Abrir el formulario de registro con los datos del anteproyecto seleccionado
             try {
                 FormularioAnteproyecto formulario = new FormularioAnteproyecto();
 
                 // Cambiar el título para indicar que es edición
-                formulario.setTitle("Editar Anteproyecto - " + ap.getNombre());
+                formulario.setTitle("Editar Anteproyecto - " + ap.getProyecto().getNombre());
 
                 // Prellenar los campos con los datos del anteproyecto seleccionado
-                formulario.setNombreProyecto(ap.getNombre());
-                formulario.setDescripcionProyecto(ap.getDescripcion());
-                formulario.setAlumnosTexto(ap.getAlumnos());
+                formulario.setNombreProyecto(ap.getProyecto().getNombre());
+                formulario.setDescripcionProyecto(ap.getProyecto().getDescripcion());
+                //formulario.setAlumnosTexto(ap.getResidentes());
 
                 formulario.setVisible(true);
 
@@ -606,9 +454,9 @@ public class AnteproyectoInterfaz extends JFrame {
     private void eliminarAnteproyecto() {
         int filaSeleccionada = tabla.getSelectedRow();
         if (filaSeleccionada >= 0) {
-            AnteproyectoData ap = listaAnteproyectos.get(filaSeleccionada);
+            Anteproyecto ap = listaAnteproyectos.get(filaSeleccionada);
             int confirmacion = JOptionPane.showConfirmDialog(this,
-                    "¿Está seguro de eliminar el anteproyecto:\n" + ap.getNombre() + "?",
+                    "¿Está seguro de eliminar el anteproyecto:\n" + ap.getProyecto().getNombre() + "?",
                     "Confirmar Eliminación",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.WARNING_MESSAGE);
@@ -624,7 +472,7 @@ public class AnteproyectoInterfaz extends JFrame {
     private void verInformacion() {
         int filaSeleccionada = tabla.getSelectedRow();
         if (filaSeleccionada >= 0) {
-            AnteproyectoData ap = listaAnteproyectos.get(filaSeleccionada);
+            Anteproyecto ap = listaAnteproyectos.get(filaSeleccionada);
 
             // Crear diálogo moderno y elegante
             JDialog dialogo = new JDialog(this, "Información del Anteproyecto", true);
@@ -679,15 +527,15 @@ public class AnteproyectoInterfaz extends JFrame {
             headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
             headerPanel.setPreferredSize(new Dimension(0, 80));
 
-            JLabel tituloHeader = new JLabel("📋 " + ap.getNombre());
+            JLabel tituloHeader = new JLabel("📋 " + ap.getProyecto().getNombre());
             tituloHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
             tituloHeader.setForeground(Color.WHITE);
             headerPanel.add(tituloHeader, BorderLayout.WEST);
 
             // Indicador de estado elegante
-            JLabel estadoLabel = new JLabel(ap.isAceptado() ? "✅ APROBADO" : "⏳ PENDIENTE");
+            JLabel estadoLabel = new JLabel();//ap.isAceptado() ? "✅ APROBADO" : "⏳ PENDIENTE");
             estadoLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            estadoLabel.setForeground(ap.isAceptado() ? new Color(46, 204, 113) : new Color(255, 193, 7));
+            estadoLabel.setForeground(new Color(46, 204, 113));//ap.isAceptado() ? new Color(46, 204, 113) : new Color(255, 193, 7));
             estadoLabel.setOpaque(true);
             estadoLabel.setBackground(Color.WHITE);
             estadoLabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
@@ -700,30 +548,30 @@ public class AnteproyectoInterfaz extends JFrame {
             contenidoPanel.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
 
             // Crear secciones elegantes
-            contenidoPanel.add(crearSeccionInfo("📄 DESCRIPCIÓN DEL PROYECTO", ap.getDescripcion()));
+            contenidoPanel.add(crearSeccionInfo("📄 DESCRIPCIÓN DEL PROYECTO", ap.getProyecto().getDescripcion()));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
             contenidoPanel.add(crearSeccionInfo("🏢 INFORMACIÓN EMPRESARIAL",
-                    "Empresa: " + ap.getEmpresa() + "\n" +
-                            "Contacto: " + ap.getCorreoEmpresa() + "\n" +
-                            "Origen: " + ap.getOrigen()));
+                    "Empresa: " + ap.getProyecto().getId_empresa() + "\n" +
+                            "Contacto: " + ap.getProyecto().getId_empresa() + "\n" +
+                            "Origen: " + ap.getProyecto().getId_origen()));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
             contenidoPanel.add(crearSeccionInfo("📅 CRONOGRAMA",
                     "Periodo: " + ap.getPeriodo() + "\n" +
                             "Inicio: " + ap.getFechaInicio() + "\n" +
-                            "Entrega: " + ap.getFechaEntrega() + "\n" +
-                            "Finalización: " + ap.getFechaFinal()));
+                            "Entrega: " + ap.getFechaFin() + "\n" +
+                            "Finalización: " + ap.getFechaFin()));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
             contenidoPanel.add(crearSeccionInfo("👥 EQUIPO DE TRABAJO",
-                    "Alumnos:\n" + ap.getAlumnos() + "\n\n" +
+                    "Alumnos:\n" + ap.getResidentes() + "\n\n" +
                             "Asesor:\n" + ap.getAsesor() + "\n\n" +
                             "Revisores:\n" + ap.getRevisores()));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
             contenidoPanel.add(crearSeccionInfo("📁 DOCUMENTACIÓN",
-                    "Archivo: " + ap.getArchivo()));
+                    "Archivo: " + ap.getArchivoAnteproyecto()));
 
             JScrollPane scrollPane = new JScrollPane(contenidoPanel);
             scrollPane.setOpaque(false);

@@ -132,4 +132,40 @@ public class EmpresaDAO {
             }
         }
     }
+
+    public static Empresa buscarPorID(int id_empresa) {
+        Empresa empresa = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "SELECT * FROM empresa WHERE id_empresa = ? AND estatus_activo = true";
+
+        try {
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, id_empresa);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                empresa = new Empresa();
+                empresa.setId(rs.getInt("id_empresa"));
+                empresa.setNombre(rs.getString("nombre"));
+                empresa.setDireccion(rs.getString("direccion"));
+                empresa.setResponsable(rs.getString("responsable"));
+                empresa.setTelefono(rs.getString("telefono"));
+                empresa.setCorreo(rs.getString("correo"));
+                empresa.setRfc(rs.getString("rfc"));
+            }
+        } catch (SQLException e) {
+            System.err.println(e);
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                System.err.println(e);
+            }
+        }
+        return empresa;
+    }
+
 }

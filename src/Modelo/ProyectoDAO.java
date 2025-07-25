@@ -33,7 +33,7 @@ public class ProyectoDAO {
     /**Para cargar la tabla de proyectos del banco*/
     public List<Proyecto> ObtenerProyectosBanco(){
         List<Proyecto> lista = new ArrayList<>();
-        String sql="SELECT p.id_proyecto, p.nombre, p.descripcion, op.nombre_origen FROM public.proyecto AS p JOIN " +
+        String sql="SELECT p.id_proyecto, p.nombre, p.descripcion,p.id_empresa, op.nombre_origen FROM public.proyecto AS p JOIN " +
                 "public.origen_proyecto AS op ON p.id_origen = op.id_origen WHERE p.estado_actividad = true " +
                 "AND p.id_origen = 1 AND id_estatus_proyecto=2;";
         try (Connection con = Conexion_bd.getConnection();
@@ -46,6 +46,7 @@ public class ProyectoDAO {
                 p.setNombre(rs.getString("nombre"));
                 p.setDescripcion(rs.getString("descripcion"));
                 p.setNombreOrigen(rs.getString("nombre_origen"));
+                p.setId_empresa(rs.getInt("id_empresa"));
                 lista.add(p);
             }
         } catch (Exception e) {
@@ -142,10 +143,11 @@ public class ProyectoDAO {
     }
 
     public static Proyecto proyectoPorID (int id_proyecto){
-        Proyecto proyecto =  new Proyecto();
+        Proyecto proyecto = null;
 
-        String sql="SELECT p.id_proyecto,p.nombre, p.id_empresa, p.descripcion,p.n_alumnos, p.id_estatus_proyecto, p.id_origen\n" +
-                "    FROM proyecto p WHERE p.id_proyecto = ?;";
+        String sql="\tSELECT p.id_proyecto,p.nombre, p.id_empresa, p.descripcion,p.n_alumnos, p.id_estatus_proyecto, p.id_origen, p.duracion\n" +
+                "    FROM proyecto p\n" +
+                "\tWHERE p.id_proyecto = ?;";
 
         try (Connection con = Conexion_bd.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -153,6 +155,7 @@ public class ProyectoDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
+                    proyecto = new Proyecto();
                     proyecto.setId_proyecto(id_proyecto);
                     proyecto.setNombre(rs.getString("nombre"));
                     proyecto.setId_empresa(rs.getInt("id_empresa"));
@@ -169,6 +172,7 @@ public class ProyectoDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null; // Si no encontró resultados
+        return proyecto;
     }
+
 }

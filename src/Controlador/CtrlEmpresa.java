@@ -51,4 +51,7 @@ public class CtrlEmpresa  {
         return ban;
     }
 
+    public static Empresa obtenerEmpresaPorId(int id){
+        return EmpresaDAO.buscarPorID(id);
+    }
 }

@@ -10,19 +10,15 @@ import java.util.ArrayList;
 
 public class AnteproyectoDAO {
 
-    public ArrayList<Anteproyecto>  listaAnteproyectos () {
-        ArrayList<Anteproyecto> anteproyectos = null;
+    public static ArrayList<Anteproyecto>  listaAnteproyectos () {
+        ArrayList<Anteproyecto> anteproyectos = new ArrayList<>();
         Anteproyecto anteproyecto;
         PreparedStatement ps = null;
-        PreparedStatement ps2 = null;
-        PreparedStatement ps3 = null;
         ResultSet rs = null;
-        ResultSet rs2 = null;
-        ResultSet rs3 = null;
         Connection conn = Conexion_bd.getInstancia().getConexion();
 
         String  sql = "SELECT p.id_proyecto, p.ruta_archivo, dp.numero_tarjeta, p.perido_realizacion, p.estatus_anteproyecto,\n" +
-                "\t\tp.fecha_inicio, p.fecha_fin\n" +
+                "fecha_inicio, p.fecha_fin\n" +
                 "FROM proyecto p\n" +
                 "JOIN docente_proyecto dp\n" +
                 "  ON p.id_proyecto = dp.id_proyecto\n" +
@@ -41,11 +37,11 @@ public class AnteproyectoDAO {
                 anteproyecto.setResidentes(ModeloResidente.buscarPorIDProyecto(rs.getInt("id_proyecto")));
                 anteproyecto.setAsesor(DocenteDAO.docentePorID(rs.getInt("numero_tarjeta")));
                 anteproyecto.setRevisores(DocenteDAO.revisoresPorIDProyecto(rs.getInt("id_proyecto")));
-                anteproyecto.setPeriodo(Periodo.valueOf(rs.getString("periodo_realizacion")));
+                anteproyecto.setPeriodo(Periodo.valueOf(rs.getString("perido_realizacion")));
                 anteproyecto.setEstatusRevision(rs.getBoolean("estatus_anteproyecto"));
                 anteproyecto.setFechaInicio(rs.getDate("fecha_inicio"));
                 anteproyecto.setFechaFin(rs.getDate("fecha_fin"));
-
+                anteproyectos.add(anteproyecto);
             }
 
 

@@ -1,49 +1,25 @@
 package Vista;
 
-import Modelo.Proyecto;
+import Controlador.ControladorAnteproyecto;
+import Controlador.CtrlEmpresa;
+import Modelo.*;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-// Clases de ejemplo para demostración visual
-class Empresa {
-    private String nombre;
-    private String direccion;
-    private String responsable;
-    private String telefono;
-    private String correo;
-    private String rfc;
-
-    public Empresa(String nombre, String direccion, String responsable,
-                   String telefono, String correo, String rfc) {
-        this.nombre = nombre;
-        this.direccion = direccion;
-        this.responsable = responsable;
-        this.telefono = telefono;
-        this.correo = correo;
-        this.rfc = rfc;
-    }
-
-    public String getCorreo() { return correo; }
-    @Override
-    public String toString() { return nombre; }
-}
-
-class Docente {
-    private String nombre;
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    @Override
-    public String toString() { return nombre; }
-}
+import javax.swing.table.DefaultTableModel;
 
 public class FormularioAnteproyecto extends JFrame {
+    private DocenteDAO docenteDAO;
+    private ControladorAnteproyecto ctrlAnteproyecto;
     private JTextField txtNombreProyecto;
     private JTextArea txtDescripcion;
-    private JComboBox<Empresa> comboEmpresa;
+    private JTextField txtEmpresa;
     private JComboBox<Proyecto> comboBanco;
     private JTextField txtCorreoEmpresa;
     private JComboBox<String> comboOrigen;
@@ -54,13 +30,14 @@ public class FormularioAnteproyecto extends JFrame {
     private JLabel lblArchivo;
     private JList<String> listaAlumnos;
     private JList<Docente> listaAsesores;
-    private JList<Docente> listaRevisores;
+    private JList<String> listaRevisores;
     private JComboBox<String> comboPeriodo;
     private JCheckBox checkAceptado;
+    private JCheckBox checkRecahzado;
     private File archivoSeleccionado;
     private DefaultListModel<String> modeloAlumnos;
     private DefaultListModel<Docente> modeloAsesores;
-    private DefaultListModel<Docente> modeloRevisores;
+    private DefaultListModel<String> modeloRevisores;
     private final Color colorPrincipal = new Color(92, 93, 169);
     private final Color colorSecundario = new Color(103, 104, 189);
     private final Color colorFondo = new Color(245, 243, 255);
@@ -68,11 +45,17 @@ public class FormularioAnteproyecto extends JFrame {
     private final Color colorBordes = new Color(180, 180, 220);
     private JPanel mainPanel;
 
+    Proyecto proyecto;
+
     public FormularioAnteproyecto() {
         configurarVentana();
         inicializarComponentes();
         cargarDatos();
         configurarEventos();
+        ctrlAnteproyecto = new ControladorAnteproyecto();
+        docenteDAO = new DocenteDAO();
+
+        proyecto = new Proyecto();
     }
 
     private void configurarVentana() {
@@ -138,7 +121,13 @@ public class FormularioAnteproyecto extends JFrame {
         txtDescripcion = new JTextArea(3, 30);
         txtDescripcion.setLineWrap(true);
         txtDescripcion.setWrapStyleWord(true);
-        comboEmpresa = new JComboBox<>();
+
+        txtEmpresa = new JTextField(30);
+        txtEmpresa.setEditable(false);
+        txtEmpresa.setBackground(new Color(245, 245, 245)); // Gris claro
+        txtEmpresa.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+        txtEmpresa.setForeground(colorTexto); // Para que combine con tu estilo
+
 
         comboBanco = new JComboBox<>();
 
@@ -185,6 +174,7 @@ public class FormularioAnteproyecto extends JFrame {
         });
 
         checkAceptado = new JCheckBox("Anteproyecto Aceptado");
+        checkRecahzado = new JCheckBox("Anteproyecto Recahzado");
     }
 
     private void agregarComponentes(JPanel panel, GridBagConstraints gbc) {
@@ -215,9 +205,29 @@ public class FormularioAnteproyecto extends JFrame {
         btnElegirBanco.setFocusPainted(false);
 
         btnElegirBanco.addActionListener( e -> {
+            comboBanco.setModel(ctrlAnteproyecto.cargarComboProyectosBanco());
+
             txtNombreProyecto.setVisible(false); // ocultar el campo de texto
             comboBanco.setVisible(true);         // mostrar el combo
         });
+
+
+
+        comboBanco.addActionListener(e -> {
+            Proyecto seleccionado = (Proyecto) comboBanco.getSelectedItem();
+            if (seleccionado != null) {
+                int id_empresa = seleccionado.getId_empresa();
+                System.out.println(seleccionado.getId_empresa());
+                Empresa emp = CtrlEmpresa.obtenerEmpresaPorId(id_empresa);
+                txtEmpresa.setText(emp.getNombre());
+                txtCorreoEmpresa.setText(emp.getCorreo());
+                txtNombreProyecto.setText(seleccionado.getNombre());
+                this.proyecto = seleccionado;
+            } else {
+                txtEmpresa.setText("");
+            }
+        });
+
 
         JButton btnCrearProyecto = new JButton("Crear Proyecto Nuevo");
         btnCrearProyecto.setBackground(colorSecundario);
@@ -233,7 +243,7 @@ public class FormularioAnteproyecto extends JFrame {
         y++;
 
         btnCrearProyecto.addActionListener(e -> {
-            new Vista.FormularioNuevoProyecto(FormularioAnteproyecto.this, proyecto -> {
+            FormularioNuevoProyecto frmFormNuevo = new FormularioNuevoProyecto(FormularioAnteproyecto.this, proyecto -> {
                 // Aquí puedes actualizar comboBanco o cualquier campo con el proyecto creado
                 JOptionPane.showMessageDialog(this,
                         "Proyecto creado: " + proyecto.getNombre(),
@@ -241,25 +251,31 @@ public class FormularioAnteproyecto extends JFrame {
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-                // Por ejemplo, lo agregas al combo
-                comboBanco.addItem(proyecto);
-                comboBanco.setSelectedItem(proyecto);
                 txtNombreProyecto.setText(proyecto.getNombre());
+                int id_empresa = proyecto.getId_empresa();
+                Empresa emp = CtrlEmpresa.obtenerEmpresaPorId(id_empresa);
+                txtEmpresa.setText(emp.getNombre());
+                txtCorreoEmpresa.setText(emp.getCorreo());
+                this.proyecto = proyecto;
+
+                if (!txtNombreProyecto.isVisible()) {
+                    txtNombreProyecto.setVisible(true);
+                    comboBanco.setVisible(false);
+                }
             });
+
         });
 
         // EMPRESA
         agregarTitulo(panel, "INFORMACIÓN DE LA EMPRESA", gbc, y++);
-        agregarCampo(panel, "Empresa:", comboEmpresa, gbc, y++);
+        agregarCampo(panel, "Empresa:", txtEmpresa, gbc, y++);
         agregarCampo(panel, "Correo de la Empresa:", txtCorreoEmpresa, gbc, y++);
 
         // CONFIGURACIÓN
         agregarTitulo(panel, "CONFIGURACIÓN DEL PROYECTO", gbc, y++);
-        agregarCampo(panel, "Origen del Proyecto:", comboOrigen, gbc, y++);
         agregarCampo(panel, "Periodo:", comboPeriodo, gbc, y++);
 
         // FECHAS
-        agregarCampo(panel, "Fecha de Entrega:", fechaEntrega, gbc, y++);
         agregarCampo(panel, "Fecha de Inicio:", fechaInicio, gbc, y++);
         agregarCampo(panel, "Fecha Final:", fechaFinal, gbc, y++);
 
@@ -276,6 +292,7 @@ public class FormularioAnteproyecto extends JFrame {
         // ESTADO
         agregarTitulo(panel, "ESTADO", gbc, y++);
         agregarCheckbox(panel, checkAceptado, gbc, y++);
+        agregarCheckbox(panel, checkRecahzado, gbc, y++);
     }
 
     private void agregarTitulo(JPanel panel, String titulo, GridBagConstraints gbc, int y) {
@@ -332,30 +349,6 @@ public class FormularioAnteproyecto extends JFrame {
         }
 
         panel.add(campo, gbc);
-
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-    }
-
-    private void agregarCampoDescripcion(JPanel panel, String etiqueta, JTextArea campo,
-                                         GridBagConstraints gbc, int y) {
-        // Etiqueta
-        gbc.gridx = 0;
-        gbc.gridy = y;
-        JLabel lblEtiqueta = new JLabel(etiqueta);
-        lblEtiqueta.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblEtiqueta.setForeground(colorPrincipal);
-        panel.add(lblEtiqueta, gbc);
-
-        // Campo
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
-        JScrollPane scrollCampo = new JScrollPane(campo);
-        scrollCampo.setPreferredSize(new Dimension(400, 60));
-        scrollCampo.setBorder(BorderFactory.createLineBorder(colorPrincipal, 2));
-        panel.add(scrollCampo, gbc);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
@@ -690,38 +683,13 @@ public class FormularioAnteproyecto extends JFrame {
     }
 
     private void cargarDatos() {
-        // Empresas de ejemplo
-        Empresa empresa1 = new Empresa("Empresa 1", "Dir 1", "Resp 1", "123", "emp1@mail.com", "RFC1");
-        Empresa empresa2 = new Empresa("Empresa 2", "Dir 2", "Resp 2", "456", "emp2@mail.com", "RFC2");
-        comboEmpresa.addItem(empresa1);
-        comboEmpresa.addItem(empresa2);
+        modeloAsesores.clear();
+        modeloRevisores.clear();
+        modeloAlumnos.clear(); // Si quieres limpiar alumnos también
 
-        // Docentes de ejemplo
-        Docente docente1 = new Docente();
-        docente1.setNombre("Dr. Juan Pérez");
-        Docente docente2 = new Docente();
-        docente2.setNombre("Dra. María García");
-
-        modeloAsesores.addElement(docente1);
-        modeloAsesores.addElement(docente2);
-        modeloRevisores.addElement(docente1);
-        modeloRevisores.addElement(docente2);
-
-        // Alumnos de ejemplo
-        String[] alumnosEjemplo = {"19680001 - Ana López", "19680002 - Carlos Ramírez"};
-        for (String alumno : alumnosEjemplo) {
-            modeloAlumnos.addElement(alumno);
-        }
     }
 
     private void configurarEventos() {
-        comboEmpresa.addActionListener(e -> {
-            Empresa empresaSeleccionada = (Empresa) comboEmpresa.getSelectedItem();
-            if (empresaSeleccionada != null) {
-                txtCorreoEmpresa.setText(empresaSeleccionada.getCorreo());
-            }
-        });
-
         btnArchivo.addActionListener(e -> seleccionarArchivo());
     }
 
@@ -818,30 +786,25 @@ public class FormularioAnteproyecto extends JFrame {
         panelBusqueda.add(lblBuscar, BorderLayout.WEST);
         panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
 
-        // Datos completos de residentes (simulando base de datos)
-        String[][] datosResidentes = {
-                {"19680001", "Ana López Martínez", "Ingeniería en Sistemas", "ana.lopez@estudiantes.itm.edu.mx", "9° Semestre"},
-                {"19680002", "Carlos Ramírez Sánchez", "Ingeniería Industrial", "carlos.ramirez@estudiantes.itm.edu.mx", "8° Semestre"},
-                {"19680003", "María González Hernández", "Ingeniería Química", "maria.gonzalez@estudiantes.itm.edu.mx", "9° Semestre"},
-                {"19680004", "José Pérez García", "Ingeniería en Sistemas", "jose.perez@estudiantes.itm.edu.mx", "8° Semestre"},
-                {"19680005", "Laura Rodríguez López", "Ingeniería Mecánica", "laura.rodriguez@estudiantes.itm.edu.mx", "9° Semestre"},
-                {"19680006", "David Martínez Ruiz", "Ingeniería Electrónica", "david.martinez@estudiantes.itm.edu.mx", "8° Semestre"},
-                {"19680007", "Carmen Sánchez Torres", "Ingeniería Industrial", "carmen.sanchez@estudiantes.itm.edu.mx", "9° Semestre"},
-                {"19680008", "Miguel Hernández Vega", "Ingeniería en Sistemas", "miguel.hernandez@estudiantes.itm.edu.mx", "8° Semestre"},
-                {"19680009", "Patricia Morales Castro", "Ingeniería Química", "patricia.morales@estudiantes.itm.edu.mx", "9° Semestre"},
-                {"19680010", "Roberto Silva Mendoza", "Ingeniería Mecánica", "roberto.silva@estudiantes.itm.edu.mx", "8° Semestre"}
-        };
+        java.util.List<ModeloResidente> listaResidentes = new ArrayList<>();
+        listaResidentes = ModeloResidente.obtenerCandidatos();
+        String[] columnas = {"No. Control", "Nombre Completo", "Correo", "Semestre"};
+        Object[][] datosResidentes = new Object[listaResidentes.size()][4];
 
-        // Tabla para mostrar los datos
-        String[] columnas = {"No. Control", "Nombre Completo", "Carrera", "Correo", "Semestre"};
-        javax.swing.table.DefaultTableModel modeloTabla = new javax.swing.table.DefaultTableModel(datosResidentes, columnas) {
+        for (int i = 0; i < listaResidentes.size(); i++) {
+            ModeloResidente r = listaResidentes.get(i);
+            datosResidentes[i][0] = r.getNumeroControl();
+            datosResidentes[i][1] = r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno();
+            datosResidentes[i][2] = r.getCorreo();
+            datosResidentes[i][3] = r.getSemestre();
+        }
+
+        DefaultTableModel modeloTabla = new DefaultTableModel(datosResidentes, columnas) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // No editable
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
-
         JTable tabla = new JTable(modeloTabla);
+
         tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tabla.setRowHeight(25);
         tabla.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -855,7 +818,6 @@ public class FormularioAnteproyecto extends JFrame {
         tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
         tabla.getColumnModel().getColumn(2).setPreferredWidth(150); // Carrera
         tabla.getColumnModel().getColumn(3).setPreferredWidth(200); // Correo
-        tabla.getColumnModel().getColumn(4).setPreferredWidth(80);  // Semestre
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
         scrollTabla.setBorder(BorderFactory.createTitledBorder(
@@ -926,7 +888,7 @@ public class FormularioAnteproyecto extends JFrame {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                String noControl = (String) modeloTabla.getValueAt(filaModelo, 0);
+                String noControl = modeloTabla.getValueAt(filaModelo, 0).toString();
                 String nombre = (String) modeloTabla.getValueAt(filaModelo, 1);
                 String residente = noControl + " - " + nombre;
 
@@ -977,30 +939,26 @@ public class FormularioAnteproyecto extends JFrame {
         panelBusqueda.add(lblBuscar, BorderLayout.WEST);
         panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
 
-        // Datos completos de docentes asesores
-        String[][] datosAsesores = {
-                {"Dr.", "Juan Pérez García", "Ingeniería en Sistemas", "juan.perez@docentes.itm.edu.mx", "Sistemas Distribuidos"},
-                {"Dra.", "María González López", "Ingeniería Industrial", "maria.gonzalez@docentes.itm.edu.mx", "Optimización de Procesos"},
-                {"M.C.", "Carlos Rodríguez Sánchez", "Ingeniería Química", "carlos.rodriguez@docentes.itm.edu.mx", "Procesos Químicos"},
-                {"Dra.", "Ana Martínez Hernández", "Ingeniería en Sistemas", "ana.martinez@docentes.itm.edu.mx", "Inteligencia Artificial"},
-                {"Dr.", "José Luis Torres Vega", "Ingeniería Mecánica", "jose.torres@docentes.itm.edu.mx", "Diseño Mecánico"},
-                {"M.C.", "Laura Sánchez Ruiz", "Ingeniería Electrónica", "laura.sanchez@docentes.itm.edu.mx", "Microelectrónica"},
-                {"Dr.", "Miguel Hernández Castro", "Ingeniería Industrial", "miguel.hernandez@docentes.itm.edu.mx", "Calidad y Productividad"},
-                {"Dra.", "Carmen López Martín", "Ingeniería Química", "carmen.lopez@docentes.itm.edu.mx", "Biotecnología"},
-                {"M.C.", "Ricardo Morales Vega", "Ingeniería en Sistemas", "ricardo.morales@docentes.itm.edu.mx", "Redes y Seguridad"},
-                {"Dr.", "Patricia Silva Mendoza", "Ingeniería Mecánica", "patricia.silva@docentes.itm.edu.mx", "Automatización"}
-        };
-
         // Tabla para mostrar los datos
-        String[] columnas = {"Grado", "Nombre Completo", "Departamento", "Correo", "Especialidad"};
-        javax.swing.table.DefaultTableModel modeloTabla = new javax.swing.table.DefaultTableModel(datosAsesores, columnas) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        List<Docente> listaAsesores = docenteDAO.obtenerTodos();
 
+        String[] columnas = {"No. Tarjeta", "Nombre Completo", "Correo"};
+        Object[][] datosAsesores = new Object[listaAsesores.size()][3];
+
+        for (int i = 0; i < listaAsesores.size(); i++) {
+            Docente d = listaAsesores.get(i);
+            datosAsesores[i][0] = d.getNumeroTarjeta();
+            datosAsesores[i][1] = d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno();
+            datosAsesores[i][2] = d.getCorreo();
+        }
+
+        DefaultTableModel modeloTabla = new DefaultTableModel(datosAsesores, columnas) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
         JTable tabla = new JTable(modeloTabla);
+
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Solo uno
+
         tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tabla.setRowHeight(25);
         tabla.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -1013,8 +971,6 @@ public class FormularioAnteproyecto extends JFrame {
         tabla.getColumnModel().getColumn(0).setPreferredWidth(60);  // Grado
         tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
         tabla.getColumnModel().getColumn(2).setPreferredWidth(140); // Departamento
-        tabla.getColumnModel().getColumn(3).setPreferredWidth(200); // Correo
-        tabla.getColumnModel().getColumn(4).setPreferredWidth(150); // Especialidad
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
         scrollTabla.setBorder(BorderFactory.createTitledBorder(
@@ -1082,21 +1038,26 @@ public class FormularioAnteproyecto extends JFrame {
         btnCancelar.setFocusPainted(false);
 
         btnAgregar.addActionListener(e -> {
-            int[] filasSeleccionadas = tabla.getSelectedRows();
-            for (int fila : filasSeleccionadas) {
-                int filaModelo = tabla.convertRowIndexToModel(fila);
-                String grado = (String) modeloTabla.getValueAt(filaModelo, 0);
-                String nombre = (String) modeloTabla.getValueAt(filaModelo, 1);
+            int filaSeleccionada = tabla.getSelectedRow();
+            if (filaSeleccionada >= 0) {
+                int filaModelo = tabla.convertRowIndexToModel(filaSeleccionada);
+
+                String numeroTarjeta = modeloTabla.getValueAt(filaModelo, 0).toString();
+                String nombreCompleto = modeloTabla.getValueAt(filaModelo, 1).toString();
+                String correo = modeloTabla.getValueAt(filaModelo, 2).toString();
 
                 Docente docente = new Docente();
-                docente.setNombre(grado + " " + nombre);
+                docente.setNumeroTarjeta(Integer.parseInt(numeroTarjeta));
+                docente.setNombre(nombreCompleto);
+                docente.setCorreo(correo);
 
-                if (!modeloAsesores.contains(docente)) {
-                    modeloAsesores.addElement(docente);
-                }
+                modeloAsesores.clear(); // Solo uno
+                modeloAsesores.addElement(docente); // O asigna a tu variable asesorSeleccionado si así lo prefieres
+
+                dialogo.dispose();
             }
-            dialogo.dispose();
         });
+
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
 
@@ -1138,30 +1099,24 @@ public class FormularioAnteproyecto extends JFrame {
         panelBusqueda.add(lblBuscar, BorderLayout.WEST);
         panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
 
-        // Datos completos de docentes revisores (diferentes a asesores)
-        String[][] datosRevisores = {
-                {"Dr.", "Roberto Vázquez Morales", "Ingeniería en Sistemas", "roberto.vazquez@docentes.itm.edu.mx", "Base de Datos"},
-                {"Dra.", "Patricia Ruiz González", "Ingeniería Industrial", "patricia.ruiz@docentes.itm.edu.mx", "Gestión de Proyectos"},
-                {"M.C.", "Fernando Castro López", "Ingeniería Química", "fernando.castro@docentes.itm.edu.mx", "Control de Procesos"},
-                {"Dra.", "Silvia Moreno Sánchez", "Ingeniería en Sistemas", "silvia.moreno@docentes.itm.edu.mx", "Desarrollo de Software"},
-                {"Dr.", "Alejandro Jiménez Torres", "Ingeniería Mecánica", "alejandro.jimenez@docentes.itm.edu.mx", "Manufactura"},
-                {"M.C.", "Mónica Herrera Vega", "Ingeniería Electrónica", "monica.herrera@docentes.itm.edu.mx", "Telecomunicaciones"},
-                {"Dr.", "Ricardo Mendoza Castro", "Ingeniería Industrial", "ricardo.mendoza@docentes.itm.edu.mx", "Logística"},
-                {"Dra.", "Elena Vargas Martín", "Ingeniería Química", "elena.vargas@docentes.itm.edu.mx", "Medio Ambiente"},
-                {"M.C.", "Gabriel Ortega Ruiz", "Ingeniería en Sistemas", "gabriel.ortega@docentes.itm.edu.mx", "Ciberseguridad"},
-                {"Dr.", "Claudia Ramírez Torres", "Ingeniería Mecánica", "claudia.ramirez@docentes.itm.edu.mx", "Energías Renovables"}
-        };
-
         // Tabla para mostrar los datos
-        String[] columnas = {"Grado", "Nombre Completo", "Departamento", "Correo", "Especialidad"};
-        javax.swing.table.DefaultTableModel modeloTabla = new javax.swing.table.DefaultTableModel(datosRevisores, columnas) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        List<Docente> listaRevisores = docenteDAO.obtenerTodos();
 
+        String[] columnas = {"No. Tarjeta", "Nombre Completo", "Correo"};
+        Object[][] datosAsesores = new Object[listaRevisores.size()][3];
+
+        for (int i = 0; i < listaRevisores.size(); i++) {
+            Docente d = listaRevisores.get(i);
+            datosAsesores[i][0] = d.getNumeroTarjeta();
+            datosAsesores[i][1] = d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno();
+            datosAsesores[i][2] = d.getCorreo();
+        }
+
+        DefaultTableModel modeloTabla = new DefaultTableModel(datosAsesores, columnas) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
         JTable tabla = new JTable(modeloTabla);
+
         tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tabla.setRowHeight(25);
         tabla.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -1174,8 +1129,7 @@ public class FormularioAnteproyecto extends JFrame {
         tabla.getColumnModel().getColumn(0).setPreferredWidth(60);  // Grado
         tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
         tabla.getColumnModel().getColumn(2).setPreferredWidth(140); // Departamento
-        tabla.getColumnModel().getColumn(3).setPreferredWidth(200); // Correo
-        tabla.getColumnModel().getColumn(4).setPreferredWidth(150); // Especialidad
+
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
         scrollTabla.setBorder(BorderFactory.createTitledBorder(
@@ -1246,17 +1200,17 @@ public class FormularioAnteproyecto extends JFrame {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                String grado = (String) modeloTabla.getValueAt(filaModelo, 0);
-                String nombre = (String) modeloTabla.getValueAt(filaModelo, 1);
+                String grado = modeloTabla.getValueAt(filaModelo, 0).toString();
+                String nombre = modeloTabla.getValueAt(filaModelo, 1).toString();
 
-                Docente docente = new Docente();
-                docente.setNombre(grado + " " + nombre);
+                String docente = grado + " - " + nombre;
 
                 if (!modeloRevisores.contains(docente)) {
                     modeloRevisores.addElement(docente);
                 }
             }
             dialogo.dispose();
+
         });
 
         btnCancelar.addActionListener(e -> dialogo.dispose());

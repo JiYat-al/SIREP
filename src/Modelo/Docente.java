@@ -63,4 +63,8 @@ public class Docente {
     public void setCorreo(String correo) {
         this.correo = correo;
     }
+
+    public String toString() {
+        return numeroTarjeta + " - " + nombre + " " + apellidoPaterno + " " + apellidoMaterno;
+    }
 }

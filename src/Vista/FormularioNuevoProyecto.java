@@ -1,8 +1,10 @@
 package Vista;
 
+import Controlador.ControladorProyectos;
 import Modelo.Empresa;
 import Modelo.Proyecto;
 import Modelo.EmpresaDAO;
+import Modelo.ProyectoDAO;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,12 +12,15 @@ import java.util.function.Consumer;
 
 public class FormularioNuevoProyecto extends JDialog {
     private final Color colorPrincipal = new Color(92, 93, 169);
+    ControladorProyectos controladorProyectos;
 
     public FormularioNuevoProyecto(JFrame parent, Consumer<Proyecto> onProyectoGuardado) {
         super(parent, "Nuevo Proyecto", true);
         setSize(500, 400);
         setLocationRelativeTo(parent);
         setLayout(new BorderLayout());
+
+        controladorProyectos = new ControladorProyectos(new ProyectoDAO());
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
@@ -41,8 +46,8 @@ public class FormularioNuevoProyecto extends JDialog {
         JSpinner spinnerAlumnos = new JSpinner(new SpinnerNumberModel(1, 1, 5, 1));
         JComboBox<Empresa> comboEmpresa = new JComboBox<>();
         JComboBox<String> comboOrigen = new JComboBox<>();
-        comboOrigen.addItem("Externo");
         comboOrigen.addItem("Banco de Proyectos");
+        comboOrigen.addItem("Externo");
         for (Empresa empresa : EmpresaDAO.recuperarDatos()) {
             comboEmpresa.addItem(empresa);
         }
@@ -86,6 +91,7 @@ public class FormularioNuevoProyecto extends JDialog {
             String duracion = txtDuracion.getText().trim();
             int numAlumnos = (int) spinnerAlumnos.getValue();
             Empresa empresa = (Empresa) comboEmpresa.getSelectedItem();
+            int origen = comboOrigen.getSelectedIndex() + 1;
 
             if (nombre.isEmpty() || descripcion.isEmpty() || duracion.isEmpty() || empresa == null) {
                 JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -100,6 +106,8 @@ public class FormularioNuevoProyecto extends JDialog {
             }
 
             Proyecto proyecto = new Proyecto(nombre, descripcion, duracion, numAlumnos, empresa.getId());
+
+            controladorProyectos.NuevoProyectoBanco(proyecto);
 
             if (onProyectoGuardado != null) {
                 onProyectoGuardado.accept(proyecto);

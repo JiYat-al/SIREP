@@ -417,7 +417,6 @@ public class ModeloResidente {
                     residente.setNombre(rs.getString("nombre"));
                     residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                     residente.setApellidoMaterno(rs.getString("apellido_materno"));
-                    residente.setCarrera(rs.getString("carrera"));
                     residente.setSemestre(rs.getInt("semestre"));
                     residente.setCorreo(rs.getString("correo"));
                     residente.setTelefono(rs.getString("telefono"));
@@ -764,7 +763,7 @@ public class ModeloResidente {
             Connection conn = getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setString(1, String.valueOf(id_proyecto));
+            stmt.setInt(1, id_proyecto);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -774,7 +773,6 @@ public class ModeloResidente {
                 residente.setNombre(rs.getString("nombre"));
                 residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                 residente.setApellidoMaterno(rs.getString("apellido_materno"));
-                residente.setCarrera(rs.getString("carrera"));
                 residente.setSemestre(rs.getInt("semestre"));
                 residente.setCorreo(rs.getString("correo"));
                 residente.setTelefono(rs.getString("telefono"));
