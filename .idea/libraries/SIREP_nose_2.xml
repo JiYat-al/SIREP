@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="SIREP-nose-2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/commons-compress-1.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/log4j-api-2.18.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/postgresql-42.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/commons-io-2.11.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/commons-collections4-4.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/jbcrypt-0.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/poi-5.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/poi-ooxml-5.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/poi-ooxml-lite-5.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SIREP-nose-1/xmlbeans-5.1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
