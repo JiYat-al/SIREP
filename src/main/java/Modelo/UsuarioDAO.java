@@ -183,8 +183,8 @@ public class UsuarioDAO {
             props.put("mail.smtp.starttls.enable", "true");
 
             // Credenciales de Gmail
-            final String emailRemitente = "nierikaginer@gmail.com"; // Tu email de Gmail
-            final String passwordRemitente = "TU_APP_PASSWORD_AQUI"; // App Password de Gmail
+            final String emailRemitente = "jefaturasirep@gmail.com"; // Tu email de Gmail
+            final String passwordRemitente = "dgza ofcz cbfx owgp"; // App Password de Gmail
 
             // Crear sesión
             javax.mail.Session session = javax.mail.Session.getInstance(props,
