@@ -981,6 +981,37 @@ public class ModeloResidente {
         }
     }
 
+    public static boolean asigancionAlumnosProyecto(Anteproyecto anteproyecto) {
+        PreparedStatement ps = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "UPDATE residente\n" +
+                "SET id_proyecto = ?\n" +
+                "WHERE id_residente = ?;";
+
+        try {
+
+            ps = conn.prepareStatement(sql);
+
+            for(int i = 0; i < anteproyecto.getResidentes().size(); i++) {
+                ps.setInt(1,  anteproyecto.getProyecto().getId_proyecto());
+                ps.setInt(2, anteproyecto.getResidentes().get(i).idResidente);
+                ps.execute();
+            }
+            return true;
+
+        } catch (SQLException e){
+            System.err.println(e);
+            return false;
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+    }
+
     public static void crearProyectoDefecto() {
         System.out.println("DEBUG: === VERIFICANDO PROYECTO POR DEFECTO ===");
 
@@ -1038,6 +1069,8 @@ public class ModeloResidente {
         public List<String> getErrores() { return errores; }
         public int getTotal() { return exitosos + fallidos + duplicados; }
     }
+
+
 
 
     public int getIdResidente() { return idResidente; }

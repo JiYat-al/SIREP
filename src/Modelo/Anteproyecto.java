@@ -10,21 +10,21 @@ public class Anteproyecto {
     private ArrayList<ModeloResidente> residentes;
     private Docente asesor;
     private ArrayList<Docente> revisores;
+    private Docente revisorAnteproyecto;
     private Periodo periodo;
-    private boolean estatusRevision;
     private Date fechaInicio;
     private Date fechaFin;
 
     public Anteproyecto(Proyecto proyecto, String archivoAnteproyecto, ArrayList<ModeloResidente> residentes,
-                        Docente asesor, ArrayList<Docente> revisores, Periodo periodo, boolean estatusRevision, Date fechaInicio,
+                        Docente asesor, ArrayList<Docente> revisores, Docente revisorAnteproyecto, Periodo periodo, boolean estatusRevision, Date fechaInicio,
                         Date fechaFin) {
         this.proyecto = proyecto;
         this.archivoAnteproyecto = archivoAnteproyecto;
         this.residentes = residentes;
         this.asesor = asesor;
         this.revisores = revisores;
+        this.revisorAnteproyecto = revisorAnteproyecto;
         this.periodo = periodo;
-        this.estatusRevision = estatusRevision;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
     }
@@ -35,8 +35,8 @@ public class Anteproyecto {
         residentes = null;
         asesor = null;
         revisores = null;
+        revisorAnteproyecto = null;
         periodo = null;
-        estatusRevision = false;
         fechaInicio = null;
         fechaFin = null;
     }
@@ -81,20 +81,16 @@ public class Anteproyecto {
         this.revisores = revisores;
     }
 
+    public Docente getRevisorAnteproyecto() {return revisorAnteproyecto;}
+
+    public void setRevisorAnteproyecto(Docente revisorAnteproyecto) {this.revisorAnteproyecto = revisorAnteproyecto;}
+
     public Periodo getPeriodo() {
         return periodo;
     }
 
     public void setPeriodo(Periodo periodo) {
         this.periodo = periodo;
-    }
-
-    public boolean isEstatusRevision() {
-        return estatusRevision;
-    }
-
-    public void setEstatusRevision(boolean estatusRevision) {
-        this.estatusRevision = estatusRevision;
     }
 
     public Date getFechaInicio() {

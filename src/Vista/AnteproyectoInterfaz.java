@@ -1,9 +1,7 @@
 package Vista;
 
-import Modelo.Anteproyecto;
-import Modelo.AnteproyectoDAO;
-import Modelo.Docente;
-import Modelo.ModeloResidente;
+import Modelo.*;
+
 import java.awt.*;
 import java.util.ArrayList;
 import javax.swing.*;
@@ -196,7 +194,10 @@ public class AnteproyectoInterfaz extends JFrame {
         panelBotonesHeader.setOpaque(false);
 
         JButton btnNuevo = crearBotonAccion("Nuevo Anteproyecto", new Color(63, 81, 181));
-        btnNuevo.addActionListener(e -> mostrarDialogoNuevo());
+        btnNuevo.addActionListener(e -> {
+            mostrarDialogoNuevo();
+            cargarTablaAnteproyectos();
+        });
 
         panelBotonesHeader.add(btnNuevo);
         header.add(panelBotonesHeader, BorderLayout.EAST);
@@ -437,7 +438,10 @@ public class AnteproyectoInterfaz extends JFrame {
 
                 // Prellenar los campos con los datos del anteproyecto seleccionado
                 formulario.setNombreProyecto(ap.getProyecto().getNombre());
-                formulario.setDescripcionProyecto(ap.getProyecto().getDescripcion());
+
+                Empresa emps = EmpresaDAO.buscarPorID(ap.getProyecto().getId_empresa());
+                formulario.setEmpresa(emps);
+
                 //formulario.setAlumnosTexto(ap.getResidentes());
 
                 formulario.setVisible(true);

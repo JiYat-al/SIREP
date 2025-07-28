@@ -197,4 +197,125 @@ public class DocenteDAO {
         }
         return revisores; // Si no encontró resultados
     }
+
+    public static Docente revisorAnteproyectoPorIDProyecto(int id_proyecto){
+        Docente docente;
+        Docente revisor = new Docente();
+
+        String sql = "SELECT d.numero_tarjeta, d.nombre, d.apellido_paterno, d.apellido_materno, correo\n" +
+                "FROM docente d\n" +
+                "JOIN docente_proyecto dp\n" +
+                "\tON dp.numero_tarjeta = d.numero_tarjeta\n" +
+                "WHERE dp.id_proyecto = ?\n" +
+                "\tAND dp.rol = 'Revisor'" +
+                "\tAND dp.etapa = 'Anteproyecto';";
+
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id_proyecto);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    docente = new Docente();
+                    docente.setNumeroTarjeta(rs.getInt("numero_tarjeta"));
+                    docente.setNombre(rs.getString("nombre"));
+                    docente.setApellidoPaterno(rs.getString("apellido_paterno"));
+                    docente.setApellidoMaterno(rs.getString("apellido_materno"));
+                    docente.setCorreo(rs.getString("correo"));
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return revisor; // Si no encontró resultados
+    }
+
+    public static boolean asginarRevisoresProyecto(Anteproyecto anteproyecto) {
+        PreparedStatement ps = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "INSERT INTO docente_proyecto(numero_tarjeta, id_proyecto, rol, etapa)\n" +
+                "\tVALUES (?, ?, 'Revisor', 'proyecto');";
+
+        try {
+
+            ps = conn.prepareStatement(sql);
+            int id_proyecto = anteproyecto.getProyecto().getId_proyecto();
+
+            for (Docente revisor : anteproyecto.getRevisores()) {
+                ps.setInt(1, revisor.getNumeroTarjeta());
+                ps.setInt(2, id_proyecto); // Primer parámetro: id_proyecto
+// Segundo parámetro: id_residente
+                ps.executeUpdate();
+            }
+            return true;
+
+        } catch (SQLException e){
+            System.err.println(e);
+            return false;
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+    }
+
+    public static boolean asignarAsesorProyecto(Anteproyecto anteproyecto) {
+        PreparedStatement ps = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "INSERT INTO docente_proyecto(numero_tarjeta, id_proyecto, rol, etapa)\n" +
+                "\tVALUES (?, ?, 'Asesor', 'proyecto');";
+
+        try {
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1,anteproyecto.getAsesor().getNumeroTarjeta());
+            ps.setInt(2,anteproyecto.getProyecto().getId_proyecto());
+            ps.execute();
+            return true;
+
+        } catch (SQLException e){
+            System.err.println(e);
+            return false;
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+    }
+
+    public static boolean asignarRevisorAnteproyecto(Anteproyecto anteproyecto) {
+        PreparedStatement ps = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "INSERT INTO docente_proyecto(numero_tarjeta, id_proyecto, rol, etapa)\n" +
+                "\tVALUES (?, ?, 'Revisor', 'anteproyecto');";
+
+        try {
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1,anteproyecto.getRevisorAnteproyecto().getNumeroTarjeta());
+            ps.setInt(2,anteproyecto.getProyecto().getId_proyecto());
+            ps.execute();
+            return true;
+
+        } catch (SQLException e){
+            System.err.println(e);
+            return false;
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+    }
 }

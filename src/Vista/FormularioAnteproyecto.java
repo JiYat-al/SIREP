@@ -28,16 +28,16 @@ public class FormularioAnteproyecto extends JFrame {
     private JSpinner fechaFinal;
     private JButton btnArchivo;
     private JLabel lblArchivo;
-    private JList<String> listaAlumnos;
+    private JList<Docente> listaRevisorAnteproyecto;
+    private JList<ModeloResidente> listaAlumnos;
     private JList<Docente> listaAsesores;
-    private JList<String> listaRevisores;
+    private JList<Docente> listaRevisores;
     private JComboBox<String> comboPeriodo;
-    private JCheckBox checkAceptado;
-    private JCheckBox checkRecahzado;
     private File archivoSeleccionado;
-    private DefaultListModel<String> modeloAlumnos;
+    private DefaultListModel<Docente> modeloRevisoresAnteproyecto;
+    private DefaultListModel<ModeloResidente> modeloAlumnos;
     private DefaultListModel<Docente> modeloAsesores;
-    private DefaultListModel<String> modeloRevisores;
+    private DefaultListModel<Docente> modeloRevisores;
     private final Color colorPrincipal = new Color(92, 93, 169);
     private final Color colorSecundario = new Color(103, 104, 189);
     private final Color colorFondo = new Color(245, 243, 255);
@@ -99,7 +99,7 @@ public class FormularioAnteproyecto extends JFrame {
         // Agregar componentes organizados
         agregarComponentes(panelCentral, gbc);
 
-        // Scroll pane
+        // Scroll panel
         JScrollPane scrollPane = new JScrollPane(panelCentral);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
@@ -157,24 +157,89 @@ public class FormularioAnteproyecto extends JFrame {
         btnArchivo = new JButton("Seleccionar Archivo");
         lblArchivo = new JLabel("No se ha seleccionado archivo");
 
+        modeloRevisoresAnteproyecto = new DefaultListModel<>();
         modeloAlumnos = new DefaultListModel<>();
         modeloAsesores = new DefaultListModel<>();
         modeloRevisores = new DefaultListModel<>();
 
-        listaAlumnos = new JList<>(modeloAlumnos);
-        listaAsesores = new JList<>(modeloAsesores);
-        listaRevisores = new JList<>(modeloRevisores);
+        listaRevisorAnteproyecto = new JList<>(modeloRevisoresAnteproyecto);
+        listaRevisorAnteproyecto.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                // Aquí 'value' es un ModeloResidente
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
+                if (value instanceof Docente) {
+                    Docente r = (Docente) value;
+                    // Personaliza cómo quieres mostrarlo:
+                    label.setText(r.getNumeroTarjeta() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
+                }
+                return label;
+            }
+        });
+
+        listaAlumnos = new JList<>(modeloAlumnos);
+        listaAlumnos.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                // Aquí 'value' es un ModeloResidente
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof ModeloResidente) {
+                    ModeloResidente r = (ModeloResidente) value;
+                    // Personaliza cómo quieres mostrarlo:
+                    label.setText(r.getNumeroControl() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
+                }
+                return label;
+            }
+        });
+
+        listaAsesores = new JList<>(modeloAsesores);
+        listaAsesores.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                // Aquí 'value' es un ModeloResidente
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof Docente) {
+                    Docente r = (Docente) value;
+                    // Personaliza cómo quieres mostrarlo:
+                    label.setText(r.getNumeroTarjeta() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
+                }
+                return label;
+            }
+        });
+
+        listaRevisores = new JList<>(modeloRevisores);
+        listaRevisores.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                // Aquí 'value' es un ModeloResidente
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof Docente) {
+                    Docente r = (Docente) value;
+                    // Personaliza cómo quieres mostrarlo:
+                    label.setText(r.getNumeroTarjeta() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
+                }
+                return label;
+            }
+        });
+
+
+        listaRevisorAnteproyecto.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listaAlumnos.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        listaAsesores.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        listaAsesores.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listaRevisores.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         comboPeriodo = new JComboBox<>(new String[]{
-                "ENERO-JUNIO", "VERANO", "AGOSTO-DICIEMBRE"
+                "ENERO_JUNIO", "JULIO_AGOSTO", "AGOSTO_DICIEMBRE"
         });
 
-        checkAceptado = new JCheckBox("Anteproyecto Aceptado");
-        checkRecahzado = new JCheckBox("Anteproyecto Recahzado");
     }
 
     private void agregarComponentes(JPanel panel, GridBagConstraints gbc) {
@@ -210,8 +275,6 @@ public class FormularioAnteproyecto extends JFrame {
             txtNombreProyecto.setVisible(false); // ocultar el campo de texto
             comboBanco.setVisible(true);         // mostrar el combo
         });
-
-
 
         comboBanco.addActionListener(e -> {
             Proyecto seleccionado = (Proyecto) comboBanco.getSelectedItem();
@@ -286,13 +349,10 @@ public class FormularioAnteproyecto extends JFrame {
         // PARTICIPANTES
         agregarTitulo(panel, "PARTICIPANTES", gbc, y++);
         agregarCampoAlumnos(panel, "Alumnos:", gbc, y++);
+        agregarListaSeleccion(panel,"Revisor del \nAnteproyecto:", listaRevisorAnteproyecto, gbc, y++);
         agregarListaSeleccion(panel, "Asesores:", listaAsesores, gbc, y++);
         agregarListaSeleccion(panel, "Revisores:", listaRevisores, gbc, y++);
 
-        // ESTADO
-        agregarTitulo(panel, "ESTADO", gbc, y++);
-        agregarCheckbox(panel, checkAceptado, gbc, y++);
-        agregarCheckbox(panel, checkRecahzado, gbc, y++);
     }
 
     private void agregarTitulo(JPanel panel, String titulo, GridBagConstraints gbc, int y) {
@@ -542,12 +602,16 @@ public class FormularioAnteproyecto extends JFrame {
         btnAgregarDocente.setToolTipText("Agregar " + etiqueta.toLowerCase().replace(":", ""));
         btnAgregarDocente.setFocusPainted(false);
 
-        // Determinar qué método llamar según el tipo
-        if (etiqueta.contains("Asesores")) {
+        // Determinar qué metodo llamar según el tipo
+        String etiquetaMin = etiqueta.toLowerCase();
+        if (etiquetaMin.contains("asesor")) {
             btnAgregarDocente.addActionListener(e -> mostrarBuscadorAsesores());
-        } else if (etiqueta.contains("Revisores")) {
+        } else if (etiquetaMin.contains("anteproyecto")) {
+            btnAgregarDocente.addActionListener(e -> mostrarBuscadorRevisorAnteproyecto());
+        } else if (etiquetaMin.contains("revisor")) {
             btnAgregarDocente.addActionListener(e -> mostrarBuscadorRevisores());
         }
+
 
         panelBuscador.add(txtBuscadorDocentes, BorderLayout.CENTER);
         panelBuscador.add(btnAgregarDocente, BorderLayout.EAST);
@@ -565,11 +629,13 @@ public class FormularioAnteproyecto extends JFrame {
         btnEliminarDocente.setToolTipText("Eliminar " + etiqueta.toLowerCase().replace(":", "") + " seleccionado de la lista");
         btnEliminarDocente.setFocusPainted(false);
 
-        // Determinar qué método llamar según el tipo
+        // Determinar qué metodo llamar según el tipo
         if (etiqueta.contains("Asesores")) {
             btnEliminarDocente.addActionListener(e -> eliminarAsesorSeleccionado());
         } else if (etiqueta.contains("Revisores")) {
             btnEliminarDocente.addActionListener(e -> eliminarRevisorSeleccionado());
+        } else if (etiqueta.contains("Revisor del\n Anteproyecto")) {
+            btnEliminarDocente.addActionListener(e -> eliminarAsesorDelAnteproyecto());
         }
 
         panelEliminar.add(btnEliminarDocente);
@@ -616,8 +682,12 @@ public class FormularioAnteproyecto extends JFrame {
         });
 
         btnGuardar.addActionListener(e -> {
-            Anteproyecto anteproyecto = new Anteproyecto();
-
+            ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado, modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto, fechaInicio, fechaFinal,
+                    (String) comboPeriodo.getSelectedItem());
+            for(int i = 0; i < modeloAlumnos.getSize(); i++) {
+                modeloAlumnos.get(i).convertirAResidenteActivo();
+            }
+            this.dispose();
         });
 
         panelBotones.add(btnGuardar);
@@ -693,6 +763,7 @@ public class FormularioAnteproyecto extends JFrame {
     }
 
     private void cargarDatos() {
+        modeloRevisoresAnteproyecto.clear();
         modeloAsesores.clear();
         modeloRevisores.clear();
         modeloAlumnos.clear(); // Si quieres limpiar alumnos también
@@ -752,7 +823,7 @@ public class FormularioAnteproyecto extends JFrame {
                 return;
             }
 
-            modeloAlumnos.addElement(numControl + " - " + nombre);
+            //modeloAlumnos.addElement(numControl + " - " + nombre);
             dialogo.dispose();
         });
 
@@ -894,20 +965,22 @@ public class FormularioAnteproyecto extends JFrame {
         btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnCancelar.setFocusPainted(false);
 
+        List<ModeloResidente> finalListaResidentes = listaResidentes;
         btnAgregar.addActionListener(e -> {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                String noControl = modeloTabla.getValueAt(filaModelo, 0).toString();
-                String nombre = (String) modeloTabla.getValueAt(filaModelo, 1);
-                String residente = noControl + " - " + nombre;
-
+                // Obtener el objeto ModeloResidente correspondiente
+                ModeloResidente residente = finalListaResidentes.get(filaModelo);
                 if (!modeloAlumnos.contains(residente)) {
                     modeloAlumnos.addElement(residente);
                 }
             }
+
             dialogo.dispose();
         });
+
+
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
 
@@ -1210,17 +1283,164 @@ public class FormularioAnteproyecto extends JFrame {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                String grado = modeloTabla.getValueAt(filaModelo, 0).toString();
-                String nombre = modeloTabla.getValueAt(filaModelo, 1).toString();
-
-                String docente = grado + " - " + nombre;
-
+                // Obtener el objeto ModeloResidente correspondiente
+                Docente docente = listaRevisores.get(filaModelo);
                 if (!modeloRevisores.contains(docente)) {
                     modeloRevisores.addElement(docente);
                 }
             }
             dialogo.dispose();
+        });
 
+
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+
+        panelBotones.add(btnAgregar);
+        panelBotones.add(btnCancelar);
+
+        panelPrincipal.add(panelBusqueda, BorderLayout.NORTH);
+        panelPrincipal.add(scrollTabla, BorderLayout.CENTER);
+        panelPrincipal.add(panelBotones, BorderLayout.SOUTH);
+
+        dialogo.add(panelPrincipal);
+        dialogo.setVisible(true);
+    }
+
+    private void mostrarBuscadorRevisorAnteproyecto() {
+        JDialog dialogo = new JDialog(this, "Seleccionar Revisor de Anteproyecto", true);
+        dialogo.setSize(750, 500);
+        dialogo.setLocationRelativeTo(this);
+
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        // Buscador en la parte superior
+        JPanel panelBusqueda = new JPanel(new BorderLayout(10, 0));
+        JTextField txtBusqueda = new JTextField();
+        txtBusqueda.setPreferredSize(new Dimension(0, 35));
+        txtBusqueda.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(colorPrincipal, 2),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+        txtBusqueda.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtBusqueda.setForeground(Color.GRAY);
+        txtBusqueda.setText("Escriba para buscar por nombre o número de tarjeta...");
+
+        JLabel lblBuscar = new JLabel("Buscar Revisor de anteproyecto:");
+        lblBuscar.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblBuscar.setForeground(colorPrincipal);
+
+        panelBusqueda.add(lblBuscar, BorderLayout.WEST);
+        panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
+
+        // Tabla para mostrar los datos
+        List<Docente> listaRevisorAnteproyecto = docenteDAO.obtenerTodos();
+
+        String[] columnas = {"No. Tarjeta", "Nombre Completo", "Correo"};
+        Object[][] datosAsesores = new Object[listaRevisorAnteproyecto.size()][3];
+
+        for (int i = 0; i < listaRevisorAnteproyecto.size(); i++) {
+            Docente d = listaRevisorAnteproyecto.get(i);
+            datosAsesores[i][0] = d.getNumeroTarjeta();
+            datosAsesores[i][1] = d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno();
+            datosAsesores[i][2] = d.getCorreo();
+        }
+
+        DefaultTableModel modeloTabla = new DefaultTableModel(datosAsesores, columnas) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        JTable tabla = new JTable(modeloTabla);
+
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabla.setRowHeight(25);
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabla.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tabla.getTableHeader().setBackground(colorPrincipal);
+        tabla.getTableHeader().setForeground(Color.WHITE);
+        tabla.setGridColor(new Color(220, 220, 220));
+
+        // Ajustar ancho de columnas
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);  // Grado
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(140); // Departamento
+
+
+        JScrollPane scrollTabla = new JScrollPane(tabla);
+        scrollTabla.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(colorPrincipal, 2),
+                "Docentes Disponibles para Revisión de Anteproyecto - Seleccione uno o varios",
+                0, 0, new Font("Segoe UI", Font.BOLD, 12), colorPrincipal
+        ));
+
+        // Funcionalidad de búsqueda
+        txtBusqueda.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (txtBusqueda.getText().equals("Escriba para buscar por nombre o número de tarjeta...")) {
+                    txtBusqueda.setText("");
+                    txtBusqueda.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (txtBusqueda.getText().trim().isEmpty()) {
+                    txtBusqueda.setText("Escriba para buscar por nombre o número de tarjeta...");
+                    txtBusqueda.setForeground(Color.GRAY);
+                }
+            }
+        });
+
+        javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter =
+                new javax.swing.table.TableRowSorter<>(modeloTabla);
+        tabla.setRowSorter(sorter);
+
+        txtBusqueda.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { filtrar(); }
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { filtrar(); }
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { filtrar(); }
+
+            private void filtrar() {
+                String texto = txtBusqueda.getText().trim();
+                if (texto.equals("Escriba para buscar por nombre o número de tarjeta...") || texto.isEmpty()) {
+                    sorter.setRowFilter(null);
+                } else {
+                    sorter.setRowFilter(javax.swing.RowFilter.regexFilter("(?i)" + texto));
+                }
+            }
+        });
+
+        // Botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        JButton btnAgregar = new JButton("Agregar Selecciona");
+        JButton btnCancelar = new JButton("Cancelar");
+
+        btnAgregar.setBackground(colorPrincipal);
+        btnAgregar.setForeground(Color.WHITE);
+        btnAgregar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnAgregar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btnAgregar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnAgregar.setFocusPainted(false);
+
+        btnCancelar.setBackground(new Color(200, 200, 200));
+        btnCancelar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnCancelar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCancelar.setFocusPainted(false);
+
+        btnAgregar.addActionListener(e -> {
+            int[] filasSeleccionadas = tabla.getSelectedRows();
+            for (int fila : filasSeleccionadas) {
+                int filaModelo = tabla.convertRowIndexToModel(fila);
+                // Obtener el objeto ModeloResidente correspondiente
+                Docente docente = listaRevisorAnteproyecto.get(filaModelo);
+                if (!modeloRevisoresAnteproyecto.contains(docente)) {
+                    modeloRevisoresAnteproyecto.addElement(docente);
+                }
+            }
+            dialogo.dispose();
         });
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
@@ -1235,6 +1455,7 @@ public class FormularioAnteproyecto extends JFrame {
         dialogo.add(panelPrincipal);
         dialogo.setVisible(true);
     }
+
 
     // Métodos para eliminar elementos seleccionados de las listas
     private void eliminarAlumnoSeleccionado() {
@@ -1309,6 +1530,30 @@ public class FormularioAnteproyecto extends JFrame {
         }
     }
 
+    private void eliminarAsesorDelAnteproyecto() {
+        int[] indicesSeleccionados = listaRevisorAnteproyecto.getSelectedIndices();
+        if (indicesSeleccionados.length == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Por favor seleccione el revisor para eliminar.",
+                    "Selección requerida",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de eliminar el revisor del anteproyecto?",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            // Eliminar en orden inverso para evitar problemas de índices
+            for (int i = indicesSeleccionados.length - 1; i >= 0; i--) {
+                modeloRevisoresAnteproyecto.removeElementAt(indicesSeleccionados[i]);
+            }
+        }
+    }
+
     // Métodos públicos para prellenar campos en modo edición
     public void setNombreProyecto(String nombre) {
         if (txtNombreProyecto != null) {
@@ -1316,20 +1561,17 @@ public class FormularioAnteproyecto extends JFrame {
         }
     }
 
-    public void setDescripcionProyecto(String descripcion) {
-        if (txtDescripcion != null) {
-            txtDescripcion.setText(descripcion);
-        }
+    public void setEmpresa (Empresa empresa) {
+        txtEmpresa.setText(empresa.getNombre());
+        txtCorreoEmpresa.setText(empresa.getCorreo());
     }
 
-    public void setAlumnosTexto(String alumnos) {
-        if (modeloAlumnos != null && alumnos != null && !alumnos.trim().isEmpty()) {
-            String[] alumnosArray = alumnos.split(",");
-            modeloAlumnos.clear();
-            for (String alumno : alumnosArray) {
-                modeloAlumnos.addElement(alumno.trim());
-            }
-        }
+    public void setTodo(Anteproyecto anteproyecto) {
+        comboPeriodo.setSelectedItem(anteproyecto.getPeriodo());
+
+        fechaInicio.setValue(anteproyecto.getFechaInicio());
+
+        fechaFinal.setValue(anteproyecto.getFechaFin());
     }
 
     public static void main(String[] args) {

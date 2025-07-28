@@ -19,7 +19,7 @@ public class ProyectoDAO {
             ps.setString(3, p.getDuracion());
             ps.setInt(4, p.getNumero_alumnos());
             ps.setInt(5, p.getId_empresa());
-            ps.setInt(6,1);
+            ps.setInt(6,2);
             ps.setInt(7,1);
 
             return ps.executeUpdate() > 0;

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.ListSelectionModel;
 
 public class GenerarReportes extends JDialog {
     private final Color colorPrincipal = new Color(92, 93, 169);
@@ -30,45 +31,84 @@ public class GenerarReportes extends JDialog {
     public GenerarReportes(JFrame parent, String tipoReporte) {
         super(parent, "Generar Reporte", true);
         this.tipoReporte = tipoReporte;
-        setSize(650, 450);
+        System.out.println("Inicializando GenerarReportes para: " + tipoReporte);
+        setSize(650, 500);
         setLocationRelativeTo(parent);
         setResizable(false);
         setUndecorated(true);
 
-        // Animación de entrada
-        setOpacity(0.0f);
-        inicializarComponentes();
-        iniciarAnimacionEntrada();
-
+        try {
+            // Animación de entrada
+            setOpacity(0.0f);
+            inicializarComponentes();
+            iniciarAnimacionEntrada();
+            System.out.println("GenerarReportes inicializado correctamente");
+        } catch (Exception e) {
+            System.err.println("Error al inicializar GenerarReportes: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void cargarDatosPorTipoReporte() {
-        ControladorReporte controladorReporte = new ControladorReporte();
+        try {
+            ControladorReporte controladorReporte = new ControladorReporte();
 
-        switch (tipoReporte) {
-            case "Reporte de Asesores":
-                docentes = controladorReporte.obtenerAsesores();
-                docentesFiltrados = new ArrayList<>(docentes);
-                break;
-            case "Reporte de Revisores":
-                docentes = controladorReporte.obtenerRevisores();
-                docentesFiltrados = new ArrayList<>(docentes);
-                break;
-            case "Reporte de Alumnos":
-                residentes = controladorReporte.obtenerResidentes();
-                residentesFiltrados = new ArrayList<>(residentes);
-                break;
-            default:
-                docentes = new ArrayList<>();
-                docentesFiltrados = new ArrayList<>();
-                residentes = new ArrayList<>();
-                residentesFiltrados = new ArrayList<>();
-                break;
+            switch (tipoReporte) {
+                case "Reporte de Asesores":
+                    docentes = controladorReporte.obtenerAsesores();
+                    if (docentes == null) docentes = new ArrayList<>();
+                    docentesFiltrados = new ArrayList<>(docentes);
+                    System.out.println("Asesores cargados: " + docentes.size());
+                    break;
+                case "Reporte de Revisores":
+                    docentes = controladorReporte.obtenerRevisores();
+                    if (docentes == null) docentes = new ArrayList<>();
+                    docentesFiltrados = new ArrayList<>(docentes);
+                    System.out.println("Revisores cargados: " + docentes.size());
+                    break;
+                case "Reporte de Alumnos":
+                    residentes = controladorReporte.obtenerResidentes();
+                    if (residentes == null) residentes = new ArrayList<>();
+                    residentesFiltrados = new ArrayList<>(residentes);
+                    System.out.println("Residentes cargados: " + residentes.size());
+                    break;
+                default:
+                    docentes = new ArrayList<>();
+                    docentesFiltrados = new ArrayList<>();
+                    residentes = new ArrayList<>();
+                    residentesFiltrados = new ArrayList<>();
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("Error al cargar datos: " + e.getMessage());
+            e.printStackTrace();
+            // Inicializar con listas vacías en caso de error
+            docentes = new ArrayList<>();
+            docentesFiltrados = new ArrayList<>();
+            residentes = new ArrayList<>();
+            residentesFiltrados = new ArrayList<>();
         }
     }
 
     private void inicializarComponentes() {
         cargarDatosPorTipoReporte();
+
+        // Inicializar la lista de resultados PRIMERO
+        listaResultados = new JList<>();
+        listaResultados.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof ModeloResidente) {
+                    setText(((ModeloResidente) value).getNombre());
+                } else if (value instanceof Docente) {
+                    setText(((Docente) value).getNombre());
+                }
+                return this;
+            }
+        });
+
         // Panel principal con efectos avanzados
         JPanel panelPrincipal = new JPanel(new BorderLayout()) {
             @Override
@@ -131,45 +171,14 @@ public class GenerarReportes extends JDialog {
 
         setContentPane(panelPrincipal);
 
-        listaResultados = new JList<>();
-        listaResultados.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                          boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof ModeloResidente) {
-                    setText(((ModeloResidente) value).getNombre());
-                }
-                return this;
-            }
-        });
-
-        listaResultados.setVisibleRowCount(8);
-        listaResultados.setFixedCellWidth(400);
-        listaResultados.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-// Puedes añadir scroll
-        JScrollPane scrollPane = new JScrollPane(listaResultados);
-        scrollPane.setPreferredSize(new Dimension(450, 180));
-
-// Luego añádelo a contenidoPanel con GridBagConstraints:
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.insets = new Insets(10, 0, 10, 0);
-        gbc.fill = GridBagConstraints.BOTH;  // que ocupe todo el espacio disponible
-        gbc.weightx = 1.0;                   // que crezca horizontalmente
-        gbc.weighty = 1.0;                   // que crezca verticalmente
-        contenidoPanel.add(scrollPane, gbc);
-
     }
 
 
 
     private void iniciarAnimacionEntrada() {
-        animacionTimer = new Timer(30, e -> {
-            animacionFrame += 2;
-            float alpha = Math.min(1.0f, animacionFrame / 100.0f);
+        animacionTimer = new Timer(15, e -> {
+            animacionFrame += 5;
+            float alpha = Math.min(1.0f, animacionFrame / 60.0f);
             setOpacity(alpha);
             repaint();
 
@@ -288,7 +297,7 @@ public class GenerarReportes extends JDialog {
 
         // Descripción del reporte
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 20, 0);
+        gbc.insets = new Insets(0, 0, 15, 0);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JPanel descripcionPanel = crearPanelDescripcion();
@@ -296,14 +305,26 @@ public class GenerarReportes extends JDialog {
 
         // Campo de búsqueda mejorado
         gbc.gridy = 1;
-        gbc.insets = new Insets(10, 0, 20, 0);
+        gbc.insets = new Insets(5, 0, 10, 0);
 
         JPanel panelCampo = crearCampoBusquedaMejorado();
         contenidoPanel.add(panelCampo, gbc);
 
-        // Panel de botones mejorado
+        // Lista de selección (arriba de los botones)
         gbc.gridy = 2;
+        gbc.insets = new Insets(5, 0, 15, 0);
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        JPanel panelSeleccion = crearPanelSeleccion();
+        contenidoPanel.add(panelSeleccion, gbc);
+
+        // Panel de botones mejorado (ahora abajo)
+        gbc.gridy = 3;
         gbc.insets = new Insets(0, 0, 10, 0);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0.0;
 
         JPanel panelBotones = crearPanelBotonesMejorado();
         contenidoPanel.add(panelBotones, gbc);
@@ -473,6 +494,82 @@ public class GenerarReportes extends JDialog {
 
     }
 
+    private JPanel crearPanelSeleccion() {
+        JPanel panelSeleccion = new JPanel(new BorderLayout());
+        panelSeleccion.setOpaque(false);
+
+        // Etiqueta descriptiva
+        JLabel lblSeleccion = new JLabel(obtenerTextoSeleccion());
+        lblSeleccion.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblSeleccion.setForeground(new Color(80, 80, 100));
+        lblSeleccion.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        lblSeleccion.setHorizontalAlignment(SwingConstants.LEFT);
+
+        panelSeleccion.add(lblSeleccion, BorderLayout.NORTH);
+        panelSeleccion.add(crearListaSeleccion(), BorderLayout.CENTER);
+
+        return panelSeleccion;
+    }
+
+    private String obtenerTextoSeleccion() {
+        switch (tipoReporte) {
+            case "Reporte de Asesores":
+                return "Seleccione un asesor para generar el reporte:";
+            case "Reporte de Revisores":
+                return "Seleccione un revisor para generar el reporte:";
+            case "Reporte de Alumnos":
+                return "Seleccione un alumno para generar el reporte:";
+            default:
+                return "Seleccione un elemento para generar el reporte:";
+        }
+    }
+
+    private JScrollPane crearListaSeleccion() {
+        // Configurar la lista de resultados
+        listaResultados.setVisibleRowCount(5);
+        listaResultados.setFixedCellWidth(400);
+        listaResultados.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        listaResultados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Estilo personalizado para la lista
+        listaResultados.setBackground(new Color(250, 250, 255));
+        listaResultados.setSelectionBackground(new Color(colorPrincipal.getRed(), colorPrincipal.getGreen(), colorPrincipal.getBlue(), 100));
+        listaResultados.setSelectionForeground(Color.BLACK);
+        listaResultados.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+        // Crear el scroll pane con estilo
+        JScrollPane scrollPane = new JScrollPane(listaResultados) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Fondo con gradiente sutil
+                GradientPaint grad = new GradientPaint(
+                        0, 0, new Color(255, 255, 255, 230),
+                        0, getHeight(), new Color(248, 248, 255, 200)
+                );
+                g2.setPaint(grad);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+
+                super.paintComponent(g);
+            }
+        };
+
+        scrollPane.setPreferredSize(new Dimension(450, 130));
+        scrollPane.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(colorPrincipal.getRed(), colorPrincipal.getGreen(), colorPrincipal.getBlue(), 80), 2, true),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+        scrollPane.setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(new Color(250, 250, 255));
+
+        // Cargar datos iniciales en la lista
+        filtrarDatos();
+
+        return scrollPane;
+    }
+
     private void filtrarDatos() {
         String texto = getTextoFiltro().toLowerCase();
 
@@ -495,25 +592,25 @@ public class GenerarReportes extends JDialog {
         }
     }
 
-   /** private void filtrarDatos() {
-        String texto = getTextoFiltro().toLowerCase();
-        if (tipoReporte.equals("Reporte de Alumnos")) {
-            residentesFiltrados = residentes.stream()
-                    .filter(r -> r.getNombre().toLowerCase().contains(texto))
-                    .collect(Collectors.toList());  // sin toMap, sin eliminar duplicados
-            listaResultados.setListData(residentesFiltrados.toArray(new ModeloResidente[0]));
-        } else {
-            // mantén el código de docentes igual
-            docentesFiltrados = docentes.stream()
-                    .filter(d -> d.getNombre().toLowerCase().contains(texto))
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toMap(Docente::getNombre, d -> d, (a, b) -> a),
-                            m -> new ArrayList<>(m.values())
-                    ));
-            listaResultados.setListData(docentesFiltrados.toArray(new Docente[0]));
-        }
-    }
-*/
+    /** private void filtrarDatos() {
+     String texto = getTextoFiltro().toLowerCase();
+     if (tipoReporte.equals("Reporte de Alumnos")) {
+     residentesFiltrados = residentes.stream()
+     .filter(r -> r.getNombre().toLowerCase().contains(texto))
+     .collect(Collectors.toList());  // sin toMap, sin eliminar duplicados
+     listaResultados.setListData(residentesFiltrados.toArray(new ModeloResidente[0]));
+     } else {
+     // mantén el código de docentes igual
+     docentesFiltrados = docentes.stream()
+     .filter(d -> d.getNombre().toLowerCase().contains(texto))
+     .collect(Collectors.collectingAndThen(
+     Collectors.toMap(Docente::getNombre, d -> d, (a, b) -> a),
+     m -> new ArrayList<>(m.values())
+     ));
+     listaResultados.setListData(docentesFiltrados.toArray(new Docente[0]));
+     }
+     }
+     */
 
 
 
@@ -556,22 +653,22 @@ public class GenerarReportes extends JDialog {
 
                             Docente asesorSeleccionado = (Docente) listaResultados.getSelectedValue();
                             /**if (asesorSeleccionado == null) {
-                                JOptionPane.showMessageDialog(this, "Por favor selecciona un asesor.");
+                             JOptionPane.showMessageDialog(this, "Por favor selecciona un asesor.");
 
-                                return;
-                            /**}else{*/
-                                String rutaArchivo = seleccionarRutaGuardarArchivo();
-                                if (rutaArchivo == null) {
-                                    System.out.println("Guardado cancelado");
-                                    dispose();
-                                }
-                                ControladorReporte controlador = new ControladorReporte();
-                                int tarjeta= asesorSeleccionado.getNumeroTarjeta();
-                                controlador.generarReporteAsesor(tarjeta,rutaArchivo);
-                                abrirArchivo(rutaArchivo);
-                                break;
+                             return;
+                             /**}else{*/
+                            String rutaArchivo = seleccionarRutaGuardarArchivo();
+                            if (rutaArchivo == null) {
+                                System.out.println("Guardado cancelado");
+                                dispose();
+                            }
+                            ControladorReporte controlador = new ControladorReporte();
+                            int tarjeta= asesorSeleccionado.getNumeroTarjeta();
+                            controlador.generarReporteAsesor(tarjeta,rutaArchivo);
+                            abrirArchivo(rutaArchivo);
+                            break;
                         }
-                            /*}*/
+                        /*}*/
                         case "Reporte de Revisores":{
                             Docente revisorSeleccionado = (Docente) listaResultados.getSelectedValue();
                             String rutaArchivo2 = seleccionarRutaGuardarArchivo();
@@ -583,7 +680,7 @@ public class GenerarReportes extends JDialog {
                             int tarjetarevisor= revisorSeleccionado.getNumeroTarjeta();
                             controlador2.generarReporteRevisor(tarjetarevisor,rutaArchivo2);
                             abrirArchivo(rutaArchivo2);
-                        break;
+                            break;
                         }
                         case "Reporte de Alumnos":{
                             ModeloResidente residenteSeleccionado= (ModeloResidente) listaResultados.getSelectedValue();
@@ -594,7 +691,7 @@ public class GenerarReportes extends JDialog {
                             }
                             ControladorReporte controlador3 = new ControladorReporte();
                             int id= residenteSeleccionado.getIdResidente();
-                                System.out.println(id);
+                            System.out.println(id);
                             controlador3.generarReporteResidente(id,rutaArchivo3);
                             abrirArchivo(rutaArchivo3);
                             break;
@@ -712,8 +809,15 @@ public class GenerarReportes extends JDialog {
 
     // Método estático de conveniencia para mostrar el diálogo
     public static void mostrar(JFrame parent, String tipoReporte) {
-        GenerarReportes dialogo = new GenerarReportes(parent, tipoReporte);
-        dialogo.setVisible(true);
+        try {
+            System.out.println("Llamando a GenerarReportes.mostrar() con tipo: " + tipoReporte);
+            GenerarReportes dialogo = new GenerarReportes(parent, tipoReporte);
+            System.out.println("Mostrando el diálogo...");
+            dialogo.setVisible(true);
+        } catch (Exception e) {
+            System.err.println("Error en mostrar(): " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 }
