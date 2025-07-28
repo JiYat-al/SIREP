@@ -15,8 +15,14 @@ public class UsuarioDAO {
     private static final long TIEMPO_EXPIRACION = 5 * 60 * 1000; // 5 minutos
 
     public Usuario validarUsuario(String usuario, String contrasenaIngresada) {
-        String sql = "SELECT * FROM usuario WHERE usuario = ?";
-        System.out.println(contrasenaIngresada);
+        String sql = "SELECT u.id_usuario, u.usuario, u.contrasena, u.numero_tarjeta, " +
+                "d.nombre, d.apellido_paterno, d.apellido_materno, d.correo " +
+                "FROM usuario u " +
+                "INNER JOIN docente d ON u.numero_tarjeta = d.numero_tarjeta " +
+                "WHERE u.usuario = ?";
+
+        System.out.println("Intentando validar usuario: " + usuario);
+
         try (Connection conn = Conexion_bd.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -28,14 +34,19 @@ public class UsuarioDAO {
 
                 // Validar la contraseña ingresada contra el hash almacenado
                 if (Seguridad.verificar(contrasenaIngresada, hashGuardado)) {
-                    // Crear objeto Usuario solo con id y nombre
+                    // Crear objeto Usuario con información completa
                     Usuario u = new Usuario();
                     u.setIdUsuario(rs.getInt("id_usuario"));
                     u.setUsuario(rs.getString("usuario"));
+                    u.setNumeroTarjeta(rs.getInt("numero_tarjeta"));
+
+                    System.out.println("Usuario validado: " + rs.getString("nombre") + " " +
+                            rs.getString("apellido_paterno"));
                     return u;
                 }
             }
         } catch (Exception ex) {
+            System.err.println("Error al validar usuario: " + ex.getMessage());
             ex.printStackTrace();
         }
 
@@ -45,10 +56,12 @@ public class UsuarioDAO {
     // ========== MÉTODOS PARA RECUPERACIÓN DE CONTRASEÑA ==========
 
     /**
-     * Verifica si un usuario existe y el email coincide con el registrado
+     * Verifica si un usuario existe y el email coincide con el registrado en la tabla docente
      */
     public boolean verificarUsuarioYEmail(String nombreUsuario, String emailIngresado) {
-        String sql = "SELECT email FROM usuario WHERE usuario = ?";
+        String sql = "SELECT d.correo FROM usuario u " +
+                "INNER JOIN docente d ON u.numero_tarjeta = d.numero_tarjeta " +
+                "WHERE u.usuario = ?";
 
         try (Connection conn = Conexion_bd.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -57,7 +70,7 @@ public class UsuarioDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                String emailRegistrado = rs.getString("email");
+                String emailRegistrado = rs.getString("correo");
 
                 // Verificar que el email no sea nulo y coincida (sin distinción de mayúsculas)
                 if (emailRegistrado != null &&
@@ -75,10 +88,13 @@ public class UsuarioDAO {
     }
 
     /**
-     * Verifica si un usuario existe en la base de datos (método auxiliar)
+     * Obtiene información completa del docente asociado al usuario
      */
-    public boolean existeUsuario(String nombreUsuario) {
-        String sql = "SELECT COUNT(*) FROM usuario WHERE usuario = ?";
+    public DocenteInfo obtenerInfoDocente(String nombreUsuario) {
+        String sql = "SELECT d.numero_tarjeta, d.nombre, d.apellido_paterno, d.apellido_materno, d.correo " +
+                "FROM usuario u " +
+                "INNER JOIN docente d ON u.numero_tarjeta = d.numero_tarjeta " +
+                "WHERE u.usuario = ?";
 
         try (Connection conn = Conexion_bd.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -87,15 +103,36 @@ public class UsuarioDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getInt(1) > 0;
+                DocenteInfo docente = new DocenteInfo();
+                docente.numeroTarjeta = rs.getInt("numero_tarjeta");
+                docente.nombre = rs.getString("nombre");
+                docente.apellidoPaterno = rs.getString("apellido_paterno");
+                docente.apellidoMaterno = rs.getString("apellido_materno");
+                docente.correo = rs.getString("correo");
+                return docente;
             }
 
         } catch (Exception e) {
-            System.err.println("Error al verificar usuario: " + e.getMessage());
+            System.err.println("Error al obtener información del docente: " + e.getMessage());
             e.printStackTrace();
         }
 
-        return false;
+        return null;
+    }
+
+    /**
+     * Clase interna para representar información del docente
+     */
+    public static class DocenteInfo {
+        public int numeroTarjeta;
+        public String nombre;
+        public String apellidoPaterno;
+        public String apellidoMaterno;
+        public String correo;
+
+        public String getNombreCompleto() {
+            return nombre + " " + apellidoPaterno + " " + apellidoMaterno;
+        }
     }
 
     /**
@@ -107,6 +144,12 @@ public class UsuarioDAO {
             return null;
         }
 
+        // Obtener información completa del docente
+        DocenteInfo docente = obtenerInfoDocente(nombreUsuario);
+        if (docente == null) {
+            return null;
+        }
+
         // Generar código de verificación
         String codigo = String.format("%06d", (int)(Math.random() * 1000000));
 
@@ -114,9 +157,9 @@ public class UsuarioDAO {
         codigosVerificacion.put(nombreUsuario, codigo);
         tiempoExpiracion.put(nombreUsuario, System.currentTimeMillis() + TIEMPO_EXPIRACION);
 
-        // Enviar código por email (usando el email ingresado que ya fue verificado)
-        if (enviarEmailVerificacion(emailIngresado, nombreUsuario, codigo)) {
-            System.out.println("Código de verificación enviado a: " + emailIngresado);
+        // Enviar código por email usando el correo del docente y su nombre completo
+        if (enviarEmailVerificacion(docente.correo, docente.getNombreCompleto(), codigo)) {
+            System.out.println("Código de verificación enviado a: " + docente.correo);
             return codigo;
         } else {
             // Si falla el envío, limpiar el código generado
@@ -140,8 +183,8 @@ public class UsuarioDAO {
             props.put("mail.smtp.starttls.enable", "true");
 
             // Credenciales de Gmail
-            final String emailRemitente = "amnebyun@gmail.com"; // Tu email de Gmail
-            final String passwordRemitente = "dlre cldm qdbw ihhs"; // App Password de Gmail
+            final String emailRemitente = "nierikaginer@gmail.com"; // Tu email de Gmail
+            final String passwordRemitente = "TU_APP_PASSWORD_AQUI"; // App Password de Gmail
 
             // Crear sesión
             javax.mail.Session session = javax.mail.Session.getInstance(props,

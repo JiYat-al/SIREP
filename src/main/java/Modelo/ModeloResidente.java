@@ -217,14 +217,14 @@ public class ModeloResidente {
             System.out.println("DEBUG: SQL ejecutado, filas afectadas: " + filasAfectadas);
 
             if (filasAfectadas > 0) {
-                System.out.println("DEBUG: ✅ Inserción exitosa, obteniendo ID generado...");
+                System.out.println("DEBUG: Inserción exitosa, obteniendo ID generado...");
 
                 // Obtener el ID generado
                 try {
                     ResultSet generatedKeys = stmt.getGeneratedKeys();
                     if (generatedKeys.next()) {
                         this.idResidente = generatedKeys.getInt(1);
-                        System.out.println("DEBUG: ✅ ID generado obtenido: " + this.idResidente);
+                        System.out.println("DEBUG: ID generado obtenido: " + this.idResidente);
                     } else {
                         System.out.println("DEBUG: ⚠️ No se generaron keys, pero la inserción fue exitosa");
                     }
