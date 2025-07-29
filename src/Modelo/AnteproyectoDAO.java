@@ -1,7 +1,5 @@
 package Modelo;
 
-import org.postgresql.replication.ReplicationSlotInfo;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
