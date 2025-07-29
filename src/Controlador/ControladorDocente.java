@@ -6,11 +6,16 @@ import Vista.DocentesUI;
 
 public class ControladorDocente {
     private DocentesUI vistaDocentes;
-    private DocenteDAO ModDocenteDao;
+    protected DocenteDAO ModDocenteDao;
     public ControladorDocente() {
 
         this.ModDocenteDao = new DocenteDAO();
 
+    }
+
+    /**CONTROLADOR MOCK PARA PRUEBAS*/
+    public ControladorDocente(DocenteDAO dao) {
+        this.ModDocenteDao = dao;
     }
 
     public java.util.List<Docente> obtenerDocentes() {

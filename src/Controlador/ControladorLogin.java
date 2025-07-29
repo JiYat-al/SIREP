@@ -12,7 +12,7 @@ import java.awt.event.ActionListener;
 public class ControladorLogin {
 
     private LoginITO vista;
-    private UsuarioDAO usuarioDAO;
+    protected UsuarioDAO usuarioDAO;
 
     private int intentosFallidos = 0;
     private final int MAX_INTENTOS = 3;

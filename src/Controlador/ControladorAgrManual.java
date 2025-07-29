@@ -9,6 +9,9 @@ public class ControladorAgrManual {
     private AgregarManual vista;
     private ModeloResidente modelo;
 
+    public ControladorAgrManual() {
+    }
+
     public ControladorAgrManual(AgregarManual vista) {
         this.vista = vista;
         this.modelo = new ModeloResidente();
@@ -178,7 +181,7 @@ public class ControladorAgrManual {
     }
 
 
-    private boolean validarFormatoCorreo(String correo) {
+    public boolean validarFormatoCorreo(String correo) {
         String patronEmail = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
         if (!correo.matches(patronEmail)) {
