@@ -40,5 +40,9 @@ public class ControladorProyectos {
     public boolean NuevoProyectoBanco(Proyecto proyecto){
         return proyectoDAO.nuevoProyecto(proyecto);
     }
+
+    public Proyecto proyectoPorNombre (String nombre){
+        return proyectoDAO.proyectoPorNombre(nombre);
+    }
 }
 

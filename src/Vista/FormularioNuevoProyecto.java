@@ -110,6 +110,8 @@ public class FormularioNuevoProyecto extends JDialog {
 
             controladorProyectos.NuevoProyectoBanco(proyecto);
 
+            proyecto = controladorProyectos.proyectoPorNombre(nombre);
+
             if (onProyectoGuardado != null) {
                 onProyectoGuardado.accept(proyecto);
             }

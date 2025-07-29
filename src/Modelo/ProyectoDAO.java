@@ -187,7 +187,7 @@ public class ProyectoDAO {
         return proyecto;
     }
 
-    public static Proyecto proyectoPorombre (String nombre_proyecto){
+    public static Proyecto proyectoPorNombre (String nombre_proyecto){
         Proyecto proyecto = null;
 
         String sql="SELECT p.id_proyecto,p.nombre, p.id_empresa, p.descripcion,p.n_alumnos, p.id_estatus_proyecto,\n" +
