@@ -15,6 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 public class FormularioAnteproyecto extends JFrame {
+    AnteproyectoInterfaz anteproyectoInterfaz;
     private DocenteDAO docenteDAO;
     private ControladorAnteproyecto ctrlAnteproyecto;
     private JTextField txtNombreProyecto;
@@ -47,14 +48,14 @@ public class FormularioAnteproyecto extends JFrame {
 
     Proyecto proyecto;
 
-    public FormularioAnteproyecto() {
+    public FormularioAnteproyecto(AnteproyectoInterfaz anteproyectoInterfaz) {
         configurarVentana();
         inicializarComponentes();
         cargarDatos();
         configurarEventos();
         ctrlAnteproyecto = new ControladorAnteproyecto();
         docenteDAO = new DocenteDAO();
-
+        this.anteproyectoInterfaz = anteproyectoInterfaz;
         proyecto = new Proyecto();
     }
 
@@ -688,6 +689,7 @@ public class FormularioAnteproyecto extends JFrame {
                 modeloAlumnos.get(i).convertirAResidenteActivo();
             }
             this.dispose();
+            anteproyectoInterfaz.cargarTablaAnteproyectos();
         });
 
         panelBotones.add(btnGuardar);
@@ -1574,14 +1576,4 @@ public class FormularioAnteproyecto extends JFrame {
         fechaFinal.setValue(anteproyecto.getFechaFin());
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            new FormularioAnteproyecto().setVisible(true);
-        });
-    }
 }
