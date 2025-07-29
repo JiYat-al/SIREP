@@ -9,6 +9,7 @@ import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -44,6 +45,7 @@ public class FormularioAnteproyecto extends JFrame {
     private final Color colorTexto = new Color(50, 50, 93);
     private final Color colorBordes = new Color(180, 180, 220);
     private JPanel mainPanel;
+    private ValidadorAnteproyecto validador;
 
     Proyecto proyecto;
 
@@ -54,7 +56,7 @@ public class FormularioAnteproyecto extends JFrame {
         configurarEventos();
         ctrlAnteproyecto = new ControladorAnteproyecto();
         docenteDAO = new DocenteDAO();
-
+        validador = new ValidadorAnteproyecto();
         proyecto = new Proyecto();
     }
 
@@ -112,8 +114,8 @@ public class FormularioAnteproyecto extends JFrame {
 
     private void inicializarCampos() {
         txtNombreProyecto = new JTextField(30);
-        txtNombreProyecto.setEditable(false); // <- evita que el usuario escriba manualmente
-        txtNombreProyecto.setBackground(new Color(245, 245, 245)); // gris claro
+        txtNombreProyecto.setEditable(false);
+        txtNombreProyecto.setBackground(new Color(245, 245, 245));
         txtNombreProyecto.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
         txtNombreProyecto.setText("Selecciona un proyecto...");
         txtNombreProyecto.setForeground(Color.GRAY);
@@ -124,19 +126,16 @@ public class FormularioAnteproyecto extends JFrame {
 
         txtEmpresa = new JTextField(30);
         txtEmpresa.setEditable(false);
-        txtEmpresa.setBackground(new Color(245, 245, 245)); // Gris claro
+        txtEmpresa.setBackground(new Color(245, 245, 245));
         txtEmpresa.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
-        txtEmpresa.setForeground(colorTexto); // Para que combine con tu estilo
-
+        txtEmpresa.setForeground(colorTexto);
 
         comboBanco = new JComboBox<>();
-
-        comboBanco.setVisible(false); // oculto al inicio
+        comboBanco.setVisible(false);
         comboBanco.setPreferredSize(new Dimension(400, 28));
         comboBanco.setBorder(BorderFactory.createLineBorder(colorPrincipal, 2));
         comboBanco.setBackground(new Color(248, 248, 255));
         comboBanco.setForeground(colorPrincipal.darker());
-
 
         txtCorreoEmpresa = new JTextField(30);
         txtCorreoEmpresa.setEditable(false);
@@ -167,12 +166,9 @@ public class FormularioAnteproyecto extends JFrame {
             @Override
             public Component getListCellRendererComponent(
                     JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                // Aquí 'value' es un ModeloResidente
                 JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
                 if (value instanceof Docente) {
                     Docente r = (Docente) value;
-                    // Personaliza cómo quieres mostrarlo:
                     label.setText(r.getNumeroTarjeta() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
                 }
                 return label;
@@ -184,12 +180,9 @@ public class FormularioAnteproyecto extends JFrame {
             @Override
             public Component getListCellRendererComponent(
                     JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                // Aquí 'value' es un ModeloResidente
                 JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
                 if (value instanceof ModeloResidente) {
                     ModeloResidente r = (ModeloResidente) value;
-                    // Personaliza cómo quieres mostrarlo:
                     label.setText(r.getNumeroControl() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
                 }
                 return label;
@@ -201,12 +194,9 @@ public class FormularioAnteproyecto extends JFrame {
             @Override
             public Component getListCellRendererComponent(
                     JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                // Aquí 'value' es un ModeloResidente
                 JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
                 if (value instanceof Docente) {
                     Docente r = (Docente) value;
-                    // Personaliza cómo quieres mostrarlo:
                     label.setText(r.getNumeroTarjeta() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
                 }
                 return label;
@@ -218,18 +208,14 @@ public class FormularioAnteproyecto extends JFrame {
             @Override
             public Component getListCellRendererComponent(
                     JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                // Aquí 'value' es un ModeloResidente
                 JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
                 if (value instanceof Docente) {
                     Docente r = (Docente) value;
-                    // Personaliza cómo quieres mostrarlo:
                     label.setText(r.getNumeroTarjeta() + " - " + r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno());
                 }
                 return label;
             }
         });
-
 
         listaRevisorAnteproyecto.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listaAlumnos.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -239,7 +225,6 @@ public class FormularioAnteproyecto extends JFrame {
         comboPeriodo = new JComboBox<>(new String[]{
                 "ENERO_JUNIO", "JULIO_AGOSTO", "AGOSTO_DICIEMBRE"
         });
-
     }
 
     private void agregarComponentes(JPanel panel, GridBagConstraints gbc) {
@@ -249,8 +234,7 @@ public class FormularioAnteproyecto extends JFrame {
         agregarTitulo(panel, "INFORMACIÓN DEL PROYECTO", gbc, y++);
         agregarCampo(panel, "Proyecto:", txtNombreProyecto, gbc, y);
         agregarCampo(panel, "", comboBanco, gbc, y++);
-        comboBanco.setVisible(false); // iniciar oculto
-
+        comboBanco.setVisible(false);
 
         // Reemplazo de campos por botones
         gbc.gridx = 0;
@@ -269,11 +253,10 @@ public class FormularioAnteproyecto extends JFrame {
         btnElegirBanco.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnElegirBanco.setFocusPainted(false);
 
-        btnElegirBanco.addActionListener( e -> {
+        btnElegirBanco.addActionListener(e -> {
             comboBanco.setModel(ctrlAnteproyecto.cargarComboProyectosBanco());
-
-            txtNombreProyecto.setVisible(false); // ocultar el campo de texto
-            comboBanco.setVisible(true);         // mostrar el combo
+            txtNombreProyecto.setVisible(false);
+            comboBanco.setVisible(true);
         });
 
         comboBanco.addActionListener(e -> {
@@ -291,7 +274,6 @@ public class FormularioAnteproyecto extends JFrame {
             }
         });
 
-
         JButton btnCrearProyecto = new JButton("Crear Proyecto Nuevo");
         btnCrearProyecto.setBackground(colorSecundario);
         btnCrearProyecto.setForeground(Color.WHITE);
@@ -307,7 +289,6 @@ public class FormularioAnteproyecto extends JFrame {
 
         btnCrearProyecto.addActionListener(e -> {
             FormularioNuevoProyecto frmFormNuevo = new FormularioNuevoProyecto(FormularioAnteproyecto.this, proyecto -> {
-                // Aquí puedes actualizar comboBanco o cualquier campo con el proyecto creado
                 JOptionPane.showMessageDialog(this,
                         "Proyecto creado: " + proyecto.getNombre(),
                         "Nuevo Proyecto",
@@ -326,7 +307,6 @@ public class FormularioAnteproyecto extends JFrame {
                     comboBanco.setVisible(false);
                 }
             });
-
         });
 
         // EMPRESA
@@ -349,10 +329,9 @@ public class FormularioAnteproyecto extends JFrame {
         // PARTICIPANTES
         agregarTitulo(panel, "PARTICIPANTES", gbc, y++);
         agregarCampoAlumnos(panel, "Alumnos:", gbc, y++);
-        agregarListaSeleccion(panel,"Revisor del \nAnteproyecto:", listaRevisorAnteproyecto, gbc, y++);
+        agregarListaSeleccion(panel, "Revisor del Anteproyecto:", listaRevisorAnteproyecto, gbc, y++);
         agregarListaSeleccion(panel, "Asesores:", listaAsesores, gbc, y++);
         agregarListaSeleccion(panel, "Revisores:", listaRevisores, gbc, y++);
-
     }
 
     private void agregarTitulo(JPanel panel, String titulo, GridBagConstraints gbc, int y) {
@@ -519,7 +498,7 @@ public class FormularioAnteproyecto extends JFrame {
         JButton btnEliminarAlumno = new JButton("Eliminar Seleccionado");
         btnEliminarAlumno.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         btnEliminarAlumno.setForeground(Color.WHITE);
-        btnEliminarAlumno.setBackground(new Color(220, 53, 69)); // Color rojo
+        btnEliminarAlumno.setBackground(new Color(220, 53, 69));
         btnEliminarAlumno.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
         btnEliminarAlumno.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnEliminarAlumno.setToolTipText("Eliminar alumno seleccionado de la lista");
@@ -612,7 +591,6 @@ public class FormularioAnteproyecto extends JFrame {
             btnAgregarDocente.addActionListener(e -> mostrarBuscadorRevisores());
         }
 
-
         panelBuscador.add(txtBuscadorDocentes, BorderLayout.CENTER);
         panelBuscador.add(btnAgregarDocente, BorderLayout.EAST);
 
@@ -623,7 +601,7 @@ public class FormularioAnteproyecto extends JFrame {
         JButton btnEliminarDocente = new JButton("Eliminar Seleccionado");
         btnEliminarDocente.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         btnEliminarDocente.setForeground(Color.WHITE);
-        btnEliminarDocente.setBackground(new Color(220, 53, 69)); // Color rojo
+        btnEliminarDocente.setBackground(new Color(220, 53, 69));
         btnEliminarDocente.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
         btnEliminarDocente.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnEliminarDocente.setToolTipText("Eliminar " + etiqueta.toLowerCase().replace(":", "") + " seleccionado de la lista");
@@ -634,7 +612,7 @@ public class FormularioAnteproyecto extends JFrame {
             btnEliminarDocente.addActionListener(e -> eliminarAsesorSeleccionado());
         } else if (etiqueta.contains("Revisores")) {
             btnEliminarDocente.addActionListener(e -> eliminarRevisorSeleccionado());
-        } else if (etiqueta.contains("Revisor del\n Anteproyecto")) {
+        } else if (etiqueta.contains("Revisor del Anteproyecto")) {
             btnEliminarDocente.addActionListener(e -> eliminarAsesorDelAnteproyecto());
         }
 
@@ -655,20 +633,6 @@ public class FormularioAnteproyecto extends JFrame {
         gbc.weightx = 0;
     }
 
-    private void agregarCheckbox(JPanel panel, JCheckBox checkbox, GridBagConstraints gbc, int y) {
-        gbc.gridx = 0;
-        gbc.gridy = y;
-        gbc.gridwidth = 2;
-
-        checkbox.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        checkbox.setForeground(colorPrincipal);
-        checkbox.setOpaque(false);
-
-        panel.add(checkbox, gbc);
-
-        gbc.gridwidth = 1;
-    }
-
     private void crearPanelBotones() {
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
         panelBotones.setBackground(Color.WHITE);
@@ -677,17 +641,64 @@ public class FormularioAnteproyecto extends JFrame {
         JButton btnGuardar = crearBotonCompacto("Guardar", colorPrincipal);
         JButton btnCancelar = crearBotonCompacto("Cancelar", new Color(120, 120, 130));
 
-        btnCancelar.addActionListener(e -> {
-            this.dispose();
-        });
+        btnCancelar.addActionListener(e -> this.dispose());
 
         btnGuardar.addActionListener(e -> {
-            ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado, modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto, fechaInicio, fechaFinal,
-                    (String) comboPeriodo.getSelectedItem());
-            for(int i = 0; i < modeloAlumnos.getSize(); i++) {
-                modeloAlumnos.get(i).convertirAResidenteActivo();
+            // Validar antes de guardar
+            boolean esValido = validador.validarFormularioCompleto(
+                    proyecto,
+                    archivoSeleccionado,
+                    modeloAlumnos,
+                    modeloAsesores,
+                    modeloRevisores,
+                    modeloRevisoresAnteproyecto,
+                    (Date) fechaInicio.getValue(),
+                    (Date) fechaFinal.getValue(),
+                    (String) comboPeriodo.getSelectedItem()
+            );
+
+            if (!esValido) {
+                mostrarErroresValidacion();
+                return;
             }
-            this.dispose();
+
+            if (validador.tieneAdvertencias()) {
+                int respuesta = mostrarAdvertenciasValidacion();
+                if (respuesta != JOptionPane.YES_OPTION) {
+                    return;
+                }
+            }
+
+            try {
+                ControladorAnteproyecto.registrarAnteproyecto(
+                        proyecto,
+                        archivoSeleccionado,
+                        modeloAlumnos,
+                        modeloAsesores,
+                        modeloRevisores,
+                        modeloRevisoresAnteproyecto,
+                        fechaInicio,
+                        fechaFinal,
+                        (String) comboPeriodo.getSelectedItem()
+                );
+
+                for(int i = 0; i < modeloAlumnos.getSize(); i++) {
+                    modeloAlumnos.get(i).convertirAResidenteActivo();
+                }
+
+                JOptionPane.showMessageDialog(this,
+                        "Anteproyecto registrado exitosamente.",
+                        "Registro Exitoso",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                this.dispose();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al registrar el anteproyecto: " + ex.getMessage(),
+                        "Error de Registro",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         panelBotones.add(btnGuardar);
@@ -695,61 +706,8 @@ public class FormularioAnteproyecto extends JFrame {
         mainPanel.add(panelBotones, BorderLayout.SOUTH);
     }
 
-
     private JButton crearBotonCompacto(String texto, Color colorBoton) {
-        JButton boton = new JButton(texto) {
-            private boolean isMouseOver = false;
-
-            {
-                addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        isMouseOver = true;
-                        repaint();
-                    }
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        isMouseOver = false;
-                        repaint();
-                    }
-                });
-            }
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                Color colorBase = isMouseOver ? colorBoton.brighter() : colorBoton;
-                Color colorFinal = colorBoton.darker();
-
-                // Sombra
-                g2d.setColor(new Color(0, 0, 0, 20));
-                g2d.fillRoundRect(1, 2, getWidth()-1, getHeight()-1, 15, 15);
-
-                // Gradiente
-                GradientPaint gradiente = new GradientPaint(
-                        0, 0, colorBase, 0, getHeight(), colorFinal
-                );
-                g2d.setPaint(gradiente);
-                g2d.fillRoundRect(0, 0, getWidth()-1, getHeight()-2, 15, 15);
-
-                // Borde
-                g2d.setStroke(new BasicStroke(1.5f));
-                g2d.setColor(colorBoton.darker());
-                g2d.drawRoundRect(0, 0, getWidth()-2, getHeight()-3, 15, 15);
-
-                // Texto
-                FontMetrics fm = g2d.getFontMetrics();
-                Rectangle2D textBounds = fm.getStringBounds(texto, g2d);
-                int textX = (getWidth() - (int) textBounds.getWidth()) / 2;
-                int textY = (getHeight() - (int) textBounds.getHeight()) / 2 + fm.getAscent();
-
-                g2d.setColor(Color.WHITE);
-                g2d.setFont(new Font("Segoe UI", Font.BOLD, 14));
-                g2d.drawString(texto, textX, textY);
-            }
-        };
+        JButton boton = new JButton(texto);
 
         boton.setPreferredSize(new Dimension(110, 35));
         boton.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -758,6 +716,50 @@ public class FormularioAnteproyecto extends JFrame {
         boton.setContentAreaFilled(false);
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         boton.setOpaque(false);
+        boton.setBackground(colorBoton);
+        boton.setForeground(Color.WHITE);
+
+        boton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                boton.setBackground(colorBoton.brighter());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                boton.setBackground(colorBoton);
+            }
+        });
+
+        boton.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+            @Override
+            public void paint(Graphics g, JComponent c) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                Color colorActual = boton.getModel().isRollover() ?
+                        colorBoton.brighter() : colorBoton;
+
+                g2d.setColor(new Color(0, 0, 0, 20));
+                g2d.fillRoundRect(1, 2, boton.getWidth()-1, boton.getHeight()-1, 15, 15);
+
+                g2d.setColor(colorActual);
+                g2d.fillRoundRect(0, 0, boton.getWidth()-1, boton.getHeight()-2, 15, 15);
+
+                g2d.setStroke(new BasicStroke(1.5f));
+                g2d.setColor(colorBoton.darker());
+                g2d.drawRoundRect(0, 0, boton.getWidth()-2, boton.getHeight()-3, 15, 15);
+
+                FontMetrics fm = g2d.getFontMetrics();
+                Rectangle2D textBounds = fm.getStringBounds(texto, g2d);
+                int textX = (boton.getWidth() - (int) textBounds.getWidth()) / 2;
+                int textY = (boton.getHeight() - (int) textBounds.getHeight()) / 2 + fm.getAscent();
+
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                g2d.drawString(texto, textX, textY);
+            }
+        });
 
         return boton;
     }
@@ -766,8 +768,7 @@ public class FormularioAnteproyecto extends JFrame {
         modeloRevisoresAnteproyecto.clear();
         modeloAsesores.clear();
         modeloRevisores.clear();
-        modeloAlumnos.clear(); // Si quieres limpiar alumnos también
-
+        modeloAlumnos.clear();
     }
 
     private void configurarEventos() {
@@ -823,7 +824,6 @@ public class FormularioAnteproyecto extends JFrame {
                 return;
             }
 
-            //modeloAlumnos.addElement(numControl + " - " + nombre);
             dialogo.dispose();
         });
 
@@ -848,7 +848,6 @@ public class FormularioAnteproyecto extends JFrame {
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
         panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Buscador en la parte superior
         JPanel panelBusqueda = new JPanel(new BorderLayout(10, 0));
         JTextField txtBusqueda = new JTextField();
         txtBusqueda.setPreferredSize(new Dimension(0, 35));
@@ -867,8 +866,7 @@ public class FormularioAnteproyecto extends JFrame {
         panelBusqueda.add(lblBuscar, BorderLayout.WEST);
         panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
 
-        java.util.List<ModeloResidente> listaResidentes = new ArrayList<>();
-        listaResidentes = ModeloResidente.obtenerCandidatos();
+        List<ModeloResidente> listaResidentes = ModeloResidente.obtenerCandidatos();
         String[] columnas = {"No. Control", "Nombre Completo", "Correo", "Semestre"};
         Object[][] datosResidentes = new Object[listaResidentes.size()][4];
 
@@ -894,11 +892,10 @@ public class FormularioAnteproyecto extends JFrame {
         tabla.getTableHeader().setForeground(Color.WHITE);
         tabla.setGridColor(new Color(220, 220, 220));
 
-        // Ajustar ancho de columnas
-        tabla.getColumnModel().getColumn(0).setPreferredWidth(80);  // No. Control
-        tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
-        tabla.getColumnModel().getColumn(2).setPreferredWidth(150); // Carrera
-        tabla.getColumnModel().getColumn(3).setPreferredWidth(200); // Correo
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(80);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(180);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(150);
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(200);
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
         scrollTabla.setBorder(BorderFactory.createTitledBorder(
@@ -907,7 +904,6 @@ public class FormularioAnteproyecto extends JFrame {
                 0, 0, new Font("Segoe UI", Font.BOLD, 12), colorPrincipal
         ));
 
-        // Funcionalidad de búsqueda en tiempo real
         txtBusqueda.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -947,7 +943,6 @@ public class FormularioAnteproyecto extends JFrame {
             }
         });
 
-        // Botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         JButton btnAgregar = new JButton("Agregar Seleccionados");
         JButton btnCancelar = new JButton("Cancelar");
@@ -965,22 +960,17 @@ public class FormularioAnteproyecto extends JFrame {
         btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnCancelar.setFocusPainted(false);
 
-        List<ModeloResidente> finalListaResidentes = listaResidentes;
         btnAgregar.addActionListener(e -> {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                // Obtener el objeto ModeloResidente correspondiente
-                ModeloResidente residente = finalListaResidentes.get(filaModelo);
+                ModeloResidente residente = listaResidentes.get(filaModelo);
                 if (!modeloAlumnos.contains(residente)) {
                     modeloAlumnos.addElement(residente);
                 }
             }
-
             dialogo.dispose();
         });
-
-
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
 
@@ -1003,7 +993,6 @@ public class FormularioAnteproyecto extends JFrame {
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
         panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Buscador en la parte superior
         JPanel panelBusqueda = new JPanel(new BorderLayout(10, 0));
         JTextField txtBusqueda = new JTextField();
         txtBusqueda.setPreferredSize(new Dimension(0, 35));
@@ -1022,9 +1011,7 @@ public class FormularioAnteproyecto extends JFrame {
         panelBusqueda.add(lblBuscar, BorderLayout.WEST);
         panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
 
-        // Tabla para mostrar los datos
         List<Docente> listaAsesores = docenteDAO.obtenerTodos();
-
         String[] columnas = {"No. Tarjeta", "Nombre Completo", "Correo"};
         Object[][] datosAsesores = new Object[listaAsesores.size()][3];
 
@@ -1040,29 +1027,25 @@ public class FormularioAnteproyecto extends JFrame {
         };
         JTable tabla = new JTable(modeloTabla);
 
-        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Solo uno
-
         tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tabla.setRowHeight(25);
-        tabla.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabla.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tabla.getTableHeader().setBackground(colorPrincipal);
         tabla.getTableHeader().setForeground(Color.WHITE);
         tabla.setGridColor(new Color(220, 220, 220));
 
-        // Ajustar ancho de columnas
-        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);  // Grado
-        tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
-        tabla.getColumnModel().getColumn(2).setPreferredWidth(140); // Departamento
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(180);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(140);
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
         scrollTabla.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(colorPrincipal, 2),
-                "Docentes Disponibles para Asesoría - Seleccione uno o varios",
+                "Docentes Disponibles para Asesoría - Seleccione uno",
                 0, 0, new Font("Segoe UI", Font.BOLD, 12), colorPrincipal
         ));
 
-        // Funcionalidad de búsqueda
         txtBusqueda.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -1102,9 +1085,8 @@ public class FormularioAnteproyecto extends JFrame {
             }
         });
 
-        // Botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        JButton btnAgregar = new JButton("Agregar Seleccionados");
+        JButton btnAgregar = new JButton("Agregar Seleccionado");
         JButton btnCancelar = new JButton("Cancelar");
 
         btnAgregar.setBackground(colorPrincipal);
@@ -1124,23 +1106,12 @@ public class FormularioAnteproyecto extends JFrame {
             int filaSeleccionada = tabla.getSelectedRow();
             if (filaSeleccionada >= 0) {
                 int filaModelo = tabla.convertRowIndexToModel(filaSeleccionada);
-
-                String numeroTarjeta = modeloTabla.getValueAt(filaModelo, 0).toString();
-                String nombreCompleto = modeloTabla.getValueAt(filaModelo, 1).toString();
-                String correo = modeloTabla.getValueAt(filaModelo, 2).toString();
-
-                Docente docente = new Docente();
-                docente.setNumeroTarjeta(Integer.parseInt(numeroTarjeta));
-                docente.setNombre(nombreCompleto);
-                docente.setCorreo(correo);
-
-                modeloAsesores.clear(); // Solo uno
-                modeloAsesores.addElement(docente); // O asigna a tu variable asesorSeleccionado si así lo prefieres
-
+                Docente docente = listaAsesores.get(filaModelo);
+                modeloAsesores.clear();
+                modeloAsesores.addElement(docente);
                 dialogo.dispose();
             }
         });
-
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
 
@@ -1163,7 +1134,6 @@ public class FormularioAnteproyecto extends JFrame {
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
         panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Buscador en la parte superior
         JPanel panelBusqueda = new JPanel(new BorderLayout(10, 0));
         JTextField txtBusqueda = new JTextField();
         txtBusqueda.setPreferredSize(new Dimension(0, 35));
@@ -1182,20 +1152,18 @@ public class FormularioAnteproyecto extends JFrame {
         panelBusqueda.add(lblBuscar, BorderLayout.WEST);
         panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
 
-        // Tabla para mostrar los datos
         List<Docente> listaRevisores = docenteDAO.obtenerTodos();
-
         String[] columnas = {"No. Tarjeta", "Nombre Completo", "Correo"};
-        Object[][] datosAsesores = new Object[listaRevisores.size()][3];
+        Object[][] datosRevisores = new Object[listaRevisores.size()][3];
 
         for (int i = 0; i < listaRevisores.size(); i++) {
             Docente d = listaRevisores.get(i);
-            datosAsesores[i][0] = d.getNumeroTarjeta();
-            datosAsesores[i][1] = d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno();
-            datosAsesores[i][2] = d.getCorreo();
+            datosRevisores[i][0] = d.getNumeroTarjeta();
+            datosRevisores[i][1] = d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno();
+            datosRevisores[i][2] = d.getCorreo();
         }
 
-        DefaultTableModel modeloTabla = new DefaultTableModel(datosAsesores, columnas) {
+        DefaultTableModel modeloTabla = new DefaultTableModel(datosRevisores, columnas) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         JTable tabla = new JTable(modeloTabla);
@@ -1208,11 +1176,9 @@ public class FormularioAnteproyecto extends JFrame {
         tabla.getTableHeader().setForeground(Color.WHITE);
         tabla.setGridColor(new Color(220, 220, 220));
 
-        // Ajustar ancho de columnas
-        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);  // Grado
-        tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
-        tabla.getColumnModel().getColumn(2).setPreferredWidth(140); // Departamento
-
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(180);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(140);
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
         scrollTabla.setBorder(BorderFactory.createTitledBorder(
@@ -1221,7 +1187,6 @@ public class FormularioAnteproyecto extends JFrame {
                 0, 0, new Font("Segoe UI", Font.BOLD, 12), colorPrincipal
         ));
 
-        // Funcionalidad de búsqueda
         txtBusqueda.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -1261,7 +1226,6 @@ public class FormularioAnteproyecto extends JFrame {
             }
         });
 
-        // Botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         JButton btnAgregar = new JButton("Agregar Seleccionados");
         JButton btnCancelar = new JButton("Cancelar");
@@ -1283,7 +1247,6 @@ public class FormularioAnteproyecto extends JFrame {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                // Obtener el objeto ModeloResidente correspondiente
                 Docente docente = listaRevisores.get(filaModelo);
                 if (!modeloRevisores.contains(docente)) {
                     modeloRevisores.addElement(docente);
@@ -1291,7 +1254,6 @@ public class FormularioAnteproyecto extends JFrame {
             }
             dialogo.dispose();
         });
-
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
 
@@ -1314,7 +1276,6 @@ public class FormularioAnteproyecto extends JFrame {
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
         panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Buscador en la parte superior
         JPanel panelBusqueda = new JPanel(new BorderLayout(10, 0));
         JTextField txtBusqueda = new JTextField();
         txtBusqueda.setPreferredSize(new Dimension(0, 35));
@@ -1333,20 +1294,18 @@ public class FormularioAnteproyecto extends JFrame {
         panelBusqueda.add(lblBuscar, BorderLayout.WEST);
         panelBusqueda.add(txtBusqueda, BorderLayout.CENTER);
 
-        // Tabla para mostrar los datos
         List<Docente> listaRevisorAnteproyecto = docenteDAO.obtenerTodos();
-
         String[] columnas = {"No. Tarjeta", "Nombre Completo", "Correo"};
-        Object[][] datosAsesores = new Object[listaRevisorAnteproyecto.size()][3];
+        Object[][] datosRevisorAnteproyecto = new Object[listaRevisorAnteproyecto.size()][3];
 
         for (int i = 0; i < listaRevisorAnteproyecto.size(); i++) {
             Docente d = listaRevisorAnteproyecto.get(i);
-            datosAsesores[i][0] = d.getNumeroTarjeta();
-            datosAsesores[i][1] = d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno();
-            datosAsesores[i][2] = d.getCorreo();
+            datosRevisorAnteproyecto[i][0] = d.getNumeroTarjeta();
+            datosRevisorAnteproyecto[i][1] = d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno();
+            datosRevisorAnteproyecto[i][2] = d.getCorreo();
         }
 
-        DefaultTableModel modeloTabla = new DefaultTableModel(datosAsesores, columnas) {
+        DefaultTableModel modeloTabla = new DefaultTableModel(datosRevisorAnteproyecto, columnas) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         JTable tabla = new JTable(modeloTabla);
@@ -1359,20 +1318,17 @@ public class FormularioAnteproyecto extends JFrame {
         tabla.getTableHeader().setForeground(Color.WHITE);
         tabla.setGridColor(new Color(220, 220, 220));
 
-        // Ajustar ancho de columnas
-        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);  // Grado
-        tabla.getColumnModel().getColumn(1).setPreferredWidth(180); // Nombre
-        tabla.getColumnModel().getColumn(2).setPreferredWidth(140); // Departamento
-
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(180);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(140);
 
         JScrollPane scrollTabla = new JScrollPane(tabla);
         scrollTabla.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(colorPrincipal, 2),
-                "Docentes Disponibles para Revisión de Anteproyecto - Seleccione uno o varios",
+                "Docentes Disponibles para Revisión de Anteproyecto - Seleccione uno",
                 0, 0, new Font("Segoe UI", Font.BOLD, 12), colorPrincipal
         ));
 
-        // Funcionalidad de búsqueda
         txtBusqueda.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -1390,9 +1346,9 @@ public class FormularioAnteproyecto extends JFrame {
             }
         });
 
-        javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter =
+        javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter2 =
                 new javax.swing.table.TableRowSorter<>(modeloTabla);
-        tabla.setRowSorter(sorter);
+        tabla.setRowSorter(sorter2);
 
         txtBusqueda.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
@@ -1405,16 +1361,15 @@ public class FormularioAnteproyecto extends JFrame {
             private void filtrar() {
                 String texto = txtBusqueda.getText().trim();
                 if (texto.equals("Escriba para buscar por nombre o número de tarjeta...") || texto.isEmpty()) {
-                    sorter.setRowFilter(null);
+                    sorter2.setRowFilter(null);
                 } else {
-                    sorter.setRowFilter(javax.swing.RowFilter.regexFilter("(?i)" + texto));
+                    sorter2.setRowFilter(javax.swing.RowFilter.regexFilter("(?i)" + texto));
                 }
             }
         });
 
-        // Botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        JButton btnAgregar = new JButton("Agregar Selecciona");
+        JButton btnAgregar = new JButton("Agregar Seleccionado");
         JButton btnCancelar = new JButton("Cancelar");
 
         btnAgregar.setBackground(colorPrincipal);
@@ -1431,16 +1386,14 @@ public class FormularioAnteproyecto extends JFrame {
         btnCancelar.setFocusPainted(false);
 
         btnAgregar.addActionListener(e -> {
-            int[] filasSeleccionadas = tabla.getSelectedRows();
-            for (int fila : filasSeleccionadas) {
-                int filaModelo = tabla.convertRowIndexToModel(fila);
-                // Obtener el objeto ModeloResidente correspondiente
+            int filaSeleccionada = tabla.getSelectedRow();
+            if (filaSeleccionada >= 0) {
+                int filaModelo = tabla.convertRowIndexToModel(filaSeleccionada);
                 Docente docente = listaRevisorAnteproyecto.get(filaModelo);
-                if (!modeloRevisoresAnteproyecto.contains(docente)) {
-                    modeloRevisoresAnteproyecto.addElement(docente);
-                }
+                modeloRevisoresAnteproyecto.clear();
+                modeloRevisoresAnteproyecto.addElement(docente);
+                dialogo.dispose();
             }
-            dialogo.dispose();
         });
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
@@ -1455,7 +1408,6 @@ public class FormularioAnteproyecto extends JFrame {
         dialogo.add(panelPrincipal);
         dialogo.setVisible(true);
     }
-
 
     // Métodos para eliminar elementos seleccionados de las listas
     private void eliminarAlumnoSeleccionado() {
@@ -1475,7 +1427,6 @@ public class FormularioAnteproyecto extends JFrame {
                 JOptionPane.QUESTION_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            // Eliminar en orden inverso para evitar problemas de índices
             for (int i = indicesSeleccionados.length - 1; i >= 0; i--) {
                 modeloAlumnos.removeElementAt(indicesSeleccionados[i]);
             }
@@ -1499,7 +1450,6 @@ public class FormularioAnteproyecto extends JFrame {
                 JOptionPane.QUESTION_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            // Eliminar en orden inverso para evitar problemas de índices
             for (int i = indicesSeleccionados.length - 1; i >= 0; i--) {
                 modeloAsesores.removeElementAt(indicesSeleccionados[i]);
             }
@@ -1523,7 +1473,6 @@ public class FormularioAnteproyecto extends JFrame {
                 JOptionPane.QUESTION_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            // Eliminar en orden inverso para evitar problemas de índices
             for (int i = indicesSeleccionados.length - 1; i >= 0; i--) {
                 modeloRevisores.removeElementAt(indicesSeleccionados[i]);
             }
@@ -1547,11 +1496,60 @@ public class FormularioAnteproyecto extends JFrame {
                 JOptionPane.QUESTION_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            // Eliminar en orden inverso para evitar problemas de índices
             for (int i = indicesSeleccionados.length - 1; i >= 0; i--) {
                 modeloRevisoresAnteproyecto.removeElementAt(indicesSeleccionados[i]);
             }
         }
+    }
+
+    // Métodos de validación
+    private void mostrarErroresValidacion() {
+        StringBuilder mensaje = new StringBuilder();
+        mensaje.append("No se puede guardar el anteproyecto. Corrija los siguientes errores:\n\n");
+
+        List<String> errores = validador.getErrores();
+        for (int i = 0; i < errores.size(); i++) {
+            mensaje.append((i + 1)).append(". ").append(errores.get(i)).append("\n");
+        }
+
+        JOptionPane.showMessageDialog(this,
+                mensaje.toString(),
+                "Errores de Validación",
+                JOptionPane.ERROR_MESSAGE);
+    }
+
+    private int mostrarAdvertenciasValidacion() {
+        StringBuilder mensaje = new StringBuilder();
+        mensaje.append("Se encontraron las siguientes advertencias:\n\n");
+
+        List<String> advertencias = validador.getAdvertencias();
+        for (int i = 0; i < advertencias.size(); i++) {
+            mensaje.append((i + 1)).append(". ").append(advertencias.get(i)).append("\n");
+        }
+
+        mensaje.append("\n¿Desea continuar con el registro del anteproyecto?");
+
+        return JOptionPane.showConfirmDialog(this,
+                mensaje.toString(),
+                "Advertencias de Validación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+    }
+
+    private void validarEnTiempoReal() {
+        boolean esValido = validador.validarFormularioCompleto(
+                proyecto,
+                archivoSeleccionado,
+                modeloAlumnos,
+                modeloAsesores,
+                modeloRevisores,
+                modeloRevisoresAnteproyecto,
+                (Date) fechaInicio.getValue(),
+                (Date) fechaFinal.getValue(),
+                (String) comboPeriodo.getSelectedItem()
+        );
+
+        System.out.println("Formulario válido: " + esValido);
     }
 
     // Métodos públicos para prellenar campos en modo edición
@@ -1561,16 +1559,14 @@ public class FormularioAnteproyecto extends JFrame {
         }
     }
 
-    public void setEmpresa (Empresa empresa) {
+    public void setEmpresa(Empresa empresa) {
         txtEmpresa.setText(empresa.getNombre());
         txtCorreoEmpresa.setText(empresa.getCorreo());
     }
 
     public void setTodo(Anteproyecto anteproyecto) {
         comboPeriodo.setSelectedItem(anteproyecto.getPeriodo());
-
         fechaInicio.setValue(anteproyecto.getFechaInicio());
-
         fechaFinal.setValue(anteproyecto.getFechaFin());
     }
 
