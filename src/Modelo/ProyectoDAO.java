@@ -148,9 +148,12 @@ public class ProyectoDAO {
     public static Proyecto proyectoPorID (int id_proyecto){
         Proyecto proyecto = null;
 
-        String sql="\tSELECT p.id_proyecto,p.nombre, p.id_empresa, p.descripcion,p.n_alumnos, p.id_estatus_proyecto, p.id_origen, p.duracion\n" +
-                "    FROM proyecto p\n" +
-                "\tWHERE p.id_proyecto = ?;";
+        String sql="SELECT p.id_proyecto,p.nombre, p.id_empresa, p.descripcion,p.n_alumnos, p.id_estatus_proyecto,\n" +
+                "\t\tp.id_origen, p.duracion, o.nombre_origen\n" +
+                "FROM proyecto p\n" +
+                "JOIN origen_proyecto o\n" +
+                "\tON p.id_origen = o.id_origen\n" +
+                "WHERE p.id_proyecto = ?";
 
         try (Connection con = Conexion_bd.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -167,6 +170,7 @@ public class ProyectoDAO {
                     proyecto.setId_estatus_proyecto(rs.getInt("id_estatus_proyecto"));
                     proyecto.setId_origen(rs.getInt("id_origen"));
                     proyecto.setDuracion(rs.getString("duracion"));
+                    proyecto.setNombreOrigen(rs.getString("nombre_origen"));
                 }
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);

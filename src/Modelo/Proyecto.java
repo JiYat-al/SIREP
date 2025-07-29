@@ -23,7 +23,6 @@ public class Proyecto {
     }
 
     public Proyecto(String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa) {
-
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.duracion = duracion;
@@ -46,8 +45,6 @@ public class Proyecto {
         this.descripcion = descripcion;
         this.id_origen = id_origen;
     }
-
-
 
     public String getNombreOrigen() {
         return NombreOrigen;
