@@ -17,5 +17,7 @@
     <orderEntry type="library" name="poi-ooxml-5.2.0" level="project" />
     <orderEntry type="library" name="poi-ooxml-lite-5.2.0" level="project" />
     <orderEntry type="library" name="xmlbeans-5.1.1" level="project" />
+    <orderEntry type="library" name="junit-jupiter-api-5.10.0" level="project" />
+    <orderEntry type="library" name="junit-jupiter-engine-5.10.0" level="project" />
   </component>
 </module>
