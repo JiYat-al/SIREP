@@ -198,7 +198,6 @@ public class AnteproyectoInterfaz extends JFrame {
         JButton btnNuevo = crearBotonAccion("Nuevo Anteproyecto", new Color(63, 81, 181));
         btnNuevo.addActionListener(e -> {
             mostrarDialogoNuevo();
-            cargarTablaAnteproyectos();
         });
 
         panelBotonesHeader.add(btnNuevo);
@@ -384,7 +383,7 @@ public class AnteproyectoInterfaz extends JFrame {
         JOptionPane.showMessageDialog(this, ayuda, "Ayuda - Banco de Anteproyectos", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void cargarTablaAnteproyectos() {
+    public void cargarTablaAnteproyectos() {
         modelo.setRowCount(0);
 
         // Obtener lista desde DAO
@@ -416,7 +415,7 @@ public class AnteproyectoInterfaz extends JFrame {
     private void mostrarDialogoNuevo() {
         // Abrir el formulario de registro de anteproyectos
         try {
-            new FormularioAnteproyecto().setVisible(true);
+            new FormularioAnteproyecto(this).setVisible(true);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 
                 "Error al abrir el formulario de registro:\n" + e.getMessage(),
@@ -433,7 +432,7 @@ public class AnteproyectoInterfaz extends JFrame {
 
             // Abrir el formulario de registro con los datos del anteproyecto seleccionado
             try {
-                FormularioAnteproyecto formulario = new FormularioAnteproyecto();
+                FormularioAnteproyecto formulario = new FormularioAnteproyecto(this);
 
                 // Cambiar el título para indicar que es edición
                 formulario.setTitle("Editar Anteproyecto - " + ap.getProyecto().getNombre());

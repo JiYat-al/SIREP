@@ -30,6 +30,16 @@ public class Proyecto {
         this.id_empresa = id_empresa;
     }
 
+    public Proyecto(String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa, int origen) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.duracion = duracion;
+        this.numero_alumnos = numero_alumnos;
+        this.id_empresa = id_empresa;
+        this.id_origen = origen;
+    }
+
+
     public Proyecto(int id_proyecto, String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa, boolean estado) {
         this.id_proyecto = id_proyecto;
         this.nombre = nombre;

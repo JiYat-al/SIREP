@@ -20,7 +20,12 @@ public class ProyectoDAO {
             ps.setInt(4, p.getNumero_alumnos());
             ps.setInt(5, p.getId_empresa());
             ps.setInt(6,2);
-            ps.setInt(7,1);
+
+            if(p.getId_origen() == 0){
+                ps.setInt(7,1);
+            } else {
+                ps.setInt(7,p.getId_origen());
+            }
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
@@ -164,6 +169,43 @@ public class ProyectoDAO {
                     proyecto = new Proyecto();
                     proyecto.setId_proyecto(id_proyecto);
                     proyecto.setNombre(rs.getString("nombre"));
+                    proyecto.setId_empresa(rs.getInt("id_empresa"));
+                    proyecto.setDescripcion(rs.getString("descripcion"));
+                    proyecto.setNumero_alumnos(rs.getInt("n_alumnos"));
+                    proyecto.setId_estatus_proyecto(rs.getInt("id_estatus_proyecto"));
+                    proyecto.setId_origen(rs.getInt("id_origen"));
+                    proyecto.setDuracion(rs.getString("duracion"));
+                    proyecto.setNombreOrigen(rs.getString("nombre_origen"));
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return proyecto;
+    }
+
+    public static Proyecto proyectoPorombre (String nombre_proyecto){
+        Proyecto proyecto = null;
+
+        String sql="SELECT p.id_proyecto,p.nombre, p.id_empresa, p.descripcion,p.n_alumnos, p.id_estatus_proyecto,\n" +
+                "\t\tp.id_origen, p.duracion, o.nombre_origen\n" +
+                "FROM proyecto p\n" +
+                "JOIN origen_proyecto o\n" +
+                "\tON p.id_origen = o.id_origen\n" +
+                "WHERE p.nombre = ?";
+
+        try (Connection con = Conexion_bd.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, nombre_proyecto);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    proyecto = new Proyecto();
+                    proyecto.setId_proyecto(rs.getInt("id_proyecto"));
+                    proyecto.setNombre(nombre_proyecto);
                     proyecto.setId_empresa(rs.getInt("id_empresa"));
                     proyecto.setDescripcion(rs.getString("descripcion"));
                     proyecto.setNumero_alumnos(rs.getInt("n_alumnos"));

@@ -92,6 +92,7 @@ public class FormularioNuevoProyecto extends JDialog {
             int numAlumnos = (int) spinnerAlumnos.getValue();
             Empresa empresa = (Empresa) comboEmpresa.getSelectedItem();
             int origen = comboOrigen.getSelectedIndex() + 1;
+            System.out.println(origen);
 
             if (nombre.isEmpty() || descripcion.isEmpty() || duracion.isEmpty() || empresa == null) {
                 JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -105,7 +106,7 @@ public class FormularioNuevoProyecto extends JDialog {
                 return;
             }
 
-            Proyecto proyecto = new Proyecto(nombre, descripcion, duracion, numAlumnos, empresa.getId());
+            Proyecto proyecto = new Proyecto(nombre, descripcion, duracion, numAlumnos, empresa.getId(), origen);
 
             controladorProyectos.NuevoProyectoBanco(proyecto);
 
