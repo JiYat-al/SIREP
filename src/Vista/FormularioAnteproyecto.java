@@ -45,7 +45,7 @@ public class FormularioAnteproyecto extends JFrame {
     private final Color colorTexto = new Color(50, 50, 93);
     private final Color colorBordes = new Color(180, 180, 220);
     private JPanel mainPanel;
-    private ValidadorAnteproyecto validador;
+
 
     Proyecto proyecto;
 
@@ -56,7 +56,6 @@ public class FormularioAnteproyecto extends JFrame {
         configurarEventos();
         ctrlAnteproyecto = new ControladorAnteproyecto();
         docenteDAO = new DocenteDAO();
-        validador = new ValidadorAnteproyecto();
         proyecto = new Proyecto();
     }
 
@@ -149,6 +148,18 @@ public class FormularioAnteproyecto extends JFrame {
         JSpinner.DateEditor dateEditorInicio = new JSpinner.DateEditor(fechaInicio, "dd/MM/yyyy");
         JSpinner.DateEditor dateEditorFinal = new JSpinner.DateEditor(fechaFinal, "dd/MM/yyyy");
 
+        // VALIDACIÓN DE FECHAS EN TIEMPO REAL
+        fechaInicio.addChangeListener(e -> {
+            Date inicio = (Date) fechaInicio.getValue();
+            Date fin = (Date) fechaFinal.getValue();
+            ValidadorAnteproyecto.validarFechas(inicio, fin);
+        });
+
+        fechaFinal.addChangeListener(e -> {
+            Date inicio = (Date) fechaInicio.getValue();
+            Date fin = (Date) fechaFinal.getValue();
+            ValidadorAnteproyecto.validarFechas(inicio, fin);
+        });
         fechaEntrega.setEditor(dateEditorEntrega);
         fechaInicio.setEditor(dateEditorInicio);
         fechaFinal.setEditor(dateEditorFinal);
@@ -644,8 +655,8 @@ public class FormularioAnteproyecto extends JFrame {
         btnCancelar.addActionListener(e -> this.dispose());
 
         btnGuardar.addActionListener(e -> {
-            // Validar antes de guardar
-            boolean esValido = validador.validarFormularioCompleto(
+            // VALIDACIÓN FINAL SIMPLIFICADA
+            boolean puedeGuardar = ValidadorAnteproyecto.validarFormularioCompleto(
                     proyecto,
                     archivoSeleccionado,
                     modeloAlumnos,
@@ -657,18 +668,11 @@ public class FormularioAnteproyecto extends JFrame {
                     (String) comboPeriodo.getSelectedItem()
             );
 
-            if (!esValido) {
-                mostrarErroresValidacion();
-                return;
+            if (!puedeGuardar) {
+                return; // Las validaciones ya mostraron el error
             }
 
-            if (validador.tieneAdvertencias()) {
-                int respuesta = mostrarAdvertenciasValidacion();
-                if (respuesta != JOptionPane.YES_OPTION) {
-                    return;
-                }
-            }
-
+            // Si pasa todas las validaciones, proceder con el guardado
             try {
                 ControladorAnteproyecto.registrarAnteproyecto(
                         proyecto,
@@ -781,8 +785,13 @@ public class FormularioAnteproyecto extends JFrame {
                 "Documentos (*.pdf, *.doc, *.docx)", "pdf", "doc", "docx"));
 
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            archivoSeleccionado = fileChooser.getSelectedFile();
-            lblArchivo.setText(archivoSeleccionado.getName());
+            File archivo = fileChooser.getSelectedFile();
+
+            // VALIDACIÓN EN TIEMPO REAL
+            if (ValidadorAnteproyecto.validarArchivo(archivo)) {
+                archivoSeleccionado = archivo;
+                lblArchivo.setText(archivo.getName());
+            }
         }
     }
 
@@ -965,12 +974,15 @@ public class FormularioAnteproyecto extends JFrame {
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
                 ModeloResidente residente = listaResidentes.get(filaModelo);
-                if (!modeloAlumnos.contains(residente)) {
+
+                // VALIDACIÓN EN TIEMPO REAL
+                if (ValidadorAnteproyecto.validarAgregarAlumno(residente, modeloAlumnos, proyecto)) {
                     modeloAlumnos.addElement(residente);
                 }
             }
             dialogo.dispose();
         });
+
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
 
@@ -1107,9 +1119,13 @@ public class FormularioAnteproyecto extends JFrame {
             if (filaSeleccionada >= 0) {
                 int filaModelo = tabla.convertRowIndexToModel(filaSeleccionada);
                 Docente docente = listaAsesores.get(filaModelo);
-                modeloAsesores.clear();
-                modeloAsesores.addElement(docente);
-                dialogo.dispose();
+
+                // VALIDACIÓN EN TIEMPO REAL
+                if (ValidadorAnteproyecto.validarAgregarAsesor(docente, modeloAsesores)) {
+                    modeloAsesores.clear();
+                    modeloAsesores.addElement(docente);
+                    dialogo.dispose();
+                }
             }
         });
 
@@ -1248,7 +1264,9 @@ public class FormularioAnteproyecto extends JFrame {
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
                 Docente docente = listaRevisores.get(filaModelo);
-                if (!modeloRevisores.contains(docente)) {
+
+                // VALIDACIÓN EN TIEMPO REAL
+                if (ValidadorAnteproyecto.validarAgregarRevisor(docente, modeloRevisores, modeloAsesores, modeloRevisoresAnteproyecto)) {
                     modeloRevisores.addElement(docente);
                 }
             }
@@ -1390,9 +1408,13 @@ public class FormularioAnteproyecto extends JFrame {
             if (filaSeleccionada >= 0) {
                 int filaModelo = tabla.convertRowIndexToModel(filaSeleccionada);
                 Docente docente = listaRevisorAnteproyecto.get(filaModelo);
-                modeloRevisoresAnteproyecto.clear();
-                modeloRevisoresAnteproyecto.addElement(docente);
-                dialogo.dispose();
+
+                // VALIDACIÓN EN TIEMPO REAL
+                if (ValidadorAnteproyecto.validarAgregarRevisorAnteproyecto(docente, modeloRevisoresAnteproyecto)) {
+                    modeloRevisoresAnteproyecto.clear();
+                    modeloRevisoresAnteproyecto.addElement(docente);
+                    dialogo.dispose();
+                }
             }
         });
 
@@ -1503,54 +1525,8 @@ public class FormularioAnteproyecto extends JFrame {
     }
 
     // Métodos de validación
-    private void mostrarErroresValidacion() {
-        StringBuilder mensaje = new StringBuilder();
-        mensaje.append("No se puede guardar el anteproyecto. Corrija los siguientes errores:\n\n");
 
-        List<String> errores = validador.getErrores();
-        for (int i = 0; i < errores.size(); i++) {
-            mensaje.append((i + 1)).append(". ").append(errores.get(i)).append("\n");
-        }
 
-        JOptionPane.showMessageDialog(this,
-                mensaje.toString(),
-                "Errores de Validación",
-                JOptionPane.ERROR_MESSAGE);
-    }
-
-    private int mostrarAdvertenciasValidacion() {
-        StringBuilder mensaje = new StringBuilder();
-        mensaje.append("Se encontraron las siguientes advertencias:\n\n");
-
-        List<String> advertencias = validador.getAdvertencias();
-        for (int i = 0; i < advertencias.size(); i++) {
-            mensaje.append((i + 1)).append(". ").append(advertencias.get(i)).append("\n");
-        }
-
-        mensaje.append("\n¿Desea continuar con el registro del anteproyecto?");
-
-        return JOptionPane.showConfirmDialog(this,
-                mensaje.toString(),
-                "Advertencias de Validación",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-    }
-
-    private void validarEnTiempoReal() {
-        boolean esValido = validador.validarFormularioCompleto(
-                proyecto,
-                archivoSeleccionado,
-                modeloAlumnos,
-                modeloAsesores,
-                modeloRevisores,
-                modeloRevisoresAnteproyecto,
-                (Date) fechaInicio.getValue(),
-                (Date) fechaFinal.getValue(),
-                (String) comboPeriodo.getSelectedItem()
-        );
-
-        System.out.println("Formulario válido: " + esValido);
-    }
 
     // Métodos públicos para prellenar campos en modo edición
     public void setNombreProyecto(String nombre) {
