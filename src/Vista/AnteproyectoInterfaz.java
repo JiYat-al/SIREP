@@ -3,7 +3,9 @@ package Vista;
 import Modelo.*;
 
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 import javax.swing.*;
 import javax.swing.table.*;
 
@@ -196,7 +198,6 @@ public class AnteproyectoInterfaz extends JFrame {
         JButton btnNuevo = crearBotonAccion("Nuevo Anteproyecto", new Color(63, 81, 181));
         btnNuevo.addActionListener(e -> {
             mostrarDialogoNuevo();
-            cargarTablaAnteproyectos();
         });
 
         panelBotonesHeader.add(btnNuevo);
@@ -382,7 +383,7 @@ public class AnteproyectoInterfaz extends JFrame {
         JOptionPane.showMessageDialog(this, ayuda, "Ayuda - Banco de Anteproyectos", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void cargarTablaAnteproyectos() {
+    public void cargarTablaAnteproyectos() {
         modelo.setRowCount(0);
 
         // Obtener lista desde DAO
@@ -414,7 +415,7 @@ public class AnteproyectoInterfaz extends JFrame {
     private void mostrarDialogoNuevo() {
         // Abrir el formulario de registro de anteproyectos
         try {
-            new FormularioAnteproyecto().setVisible(true);
+            new FormularioAnteproyecto(this).setVisible(true);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 
                 "Error al abrir el formulario de registro:\n" + e.getMessage(),
@@ -431,7 +432,7 @@ public class AnteproyectoInterfaz extends JFrame {
 
             // Abrir el formulario de registro con los datos del anteproyecto seleccionado
             try {
-                FormularioAnteproyecto formulario = new FormularioAnteproyecto();
+                FormularioAnteproyecto formulario = new FormularioAnteproyecto(this);
 
                 // Cambiar el título para indicar que es edición
                 formulario.setTitle("Editar Anteproyecto - " + ap.getProyecto().getNombre());
@@ -529,7 +530,7 @@ public class AnteproyectoInterfaz extends JFrame {
             };
             headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
             headerPanel.setPreferredSize(new Dimension(0, 80));
-            JLabel tituloHeader = new JLabel("📋 " + ap.getProyecto().getNombre());
+            JLabel tituloHeader = new JLabel( ap.getProyecto().getNombre());
             tituloHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
             tituloHeader.setForeground(Color.WHITE);
             headerPanel.add(tituloHeader, BorderLayout.WEST);
@@ -549,30 +550,58 @@ public class AnteproyectoInterfaz extends JFrame {
             contenidoPanel.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
 
             // Crear secciones elegantes
-            contenidoPanel.add(crearSeccionInfo("📄 DESCRIPCIÓN DEL PROYECTO", ap.getProyecto().getDescripcion()));
+            contenidoPanel.add(crearSeccionInfo("DESCRIPCIÓN DEL PROYECTO", ap.getProyecto().getDescripcion()));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
-            contenidoPanel.add(crearSeccionInfo("🏢 INFORMACIÓN EMPRESARIAL",
-                    "Empresa: " + ap.getProyecto().getId_empresa() + "\n" +
-                            "Contacto: " + ap.getProyecto().getId_empresa() + "\n" +
-                            "Origen: " + ap.getProyecto().getId_origen()));
+            Empresa emps = EmpresaDAO.buscarPorID(ap.getProyecto().getId_empresa());
+
+            contenidoPanel.add(crearSeccionInfo("INFORMACIÓN EMPRESARIAL",
+                    "Empresa: " + emps.getNombre() + "\n" +
+                            "Contacto: " + emps.getTelefono() + "\n" +
+                            "Origen: " + ap.getProyecto().getNombreOrigen()));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
-            contenidoPanel.add(crearSeccionInfo("📅 CRONOGRAMA",
+            SimpleDateFormat formato = new SimpleDateFormat("d MMMM yyyy", new Locale("es", "ES"));
+
+            contenidoPanel.add(crearSeccionInfo("CRONOGRAMA",
                     "Periodo: " + ap.getPeriodo() + "\n" +
-                            "Inicio: " + ap.getFechaInicio() + "\n" +
-                            "Entrega: " + ap.getFechaFin() + "\n" +
-                            "Finalización: " + ap.getFechaFin()));
+                            "Inicio: " + formato.format(ap.getFechaInicio()) + "\n" +
+                            "Finalización: " + formato.format(ap.getFechaFin())
+            ));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
-            contenidoPanel.add(crearSeccionInfo("👥 EQUIPO DE TRABAJO",
-                    "Alumnos:\n" + ap.getResidentes() + "\n\n" +
-                            "Asesor:\n" + ap.getAsesor() + "\n\n" +
-                            "Revisores:\n" + ap.getRevisores()));
+            String alumnos = "";
+            for (ModeloResidente r : ap.getResidentes()) {
+                alumnos += r.getNumeroControl() + " - " +
+                        r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno() + " - " +
+                        r.getCorreo() + "\n";
+            }
+            String asesor = ap.getAsesor().getNumeroTarjeta() + " - " + ap.getAsesor().getNombre() + " " + ap.getAsesor().getApellidoPaterno()
+                    + " " + ap.getAsesor().getApellidoMaterno() + " - " + ap.getAsesor().getCorreo();
+
+            String revisores = "";
+            for (Docente d : ap.getRevisores()) {
+                revisores += d.getNumeroTarjeta() + " - " + d.getNombre() + " " + d.getApellidoPaterno() + " " + d.getApellidoMaterno() + " - " +
+                        d.getCorreo() + "\n";
+            }
+
+            contenidoPanel.add(crearSeccionInfo("EQUIPO DE TRABAJO",
+                    "Alumnos:\n" + alumnos + "\n" +
+                            "Asesor:\n" + asesor + "\n\n" +
+                            "Revisores:\n" + revisores
+            ));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
-            contenidoPanel.add(crearSeccionInfo("📁 DOCUMENTACIÓN",
-                    "Archivo: " + ap.getArchivoAnteproyecto()));
+            String ruta = "";
+            if (ap.getArchivoAnteproyecto() != null) {
+                ruta = ap.getArchivoAnteproyecto().substring(ap.getArchivoAnteproyecto().lastIndexOf('/') + 1);
+            } else {
+                ruta = "Ningún archivo seleccionado";
+            }
+
+            contenidoPanel.add(crearSeccionInfo("DOCUMENTACIÓN",
+                    "Archivo: " + ruta
+            ));
 
             JScrollPane scrollPane = new JScrollPane(contenidoPanel);
             scrollPane.setOpaque(false);

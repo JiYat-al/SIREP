@@ -392,12 +392,17 @@ public class BancoProyectosUI extends JFrame {
         mainPanel.add(titulo);
 
         // Campos organizados
-        JPanel camposPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        JPanel camposPanel = new JPanel(new GridBagLayout());
         camposPanel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
 
         // Crear campos
         JTextField txtNombre = new JTextField();
-        JTextArea txtDescripcion = new JTextArea(2, 20);
+        JTextArea txtDescripcion = new JTextArea(3, 20); // líneas y columnas
         txtDescripcion.setLineWrap(true);
         txtDescripcion.setWrapStyleWord(true);
         JScrollPane scrollDesc = new JScrollPane(txtDescripcion);
@@ -412,17 +417,34 @@ public class BancoProyectosUI extends JFrame {
             comboEmpresa.addItem(empresa);
         }
 
-        // Añadir campos con etiquetas
-        camposPanel.add(new JLabel("Nombre:"));
-        camposPanel.add(txtNombre);
-        camposPanel.add(new JLabel("Descripción:"));
-        camposPanel.add(scrollDesc);
-        camposPanel.add(new JLabel("Duración (meses):"));
-        camposPanel.add(txtDuracion);
-        camposPanel.add(new JLabel("Número de alumnos:"));
-        camposPanel.add(spinnerAlumnos);
-        camposPanel.add(new JLabel("Empresa:"));
-        camposPanel.add(comboEmpresa);
+        // Añadir campos con etiquetas usando GridBagLayout
+        camposPanel.add(new JLabel("Nombre:"), gbc);
+        gbc.gridx = 1;
+        camposPanel.add(txtNombre, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        camposPanel.add(new JLabel("Descripción:"), gbc);
+        gbc.gridx = 1;
+        camposPanel.add(scrollDesc, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        camposPanel.add(new JLabel("Duración (meses):"), gbc);
+        gbc.gridx = 1;
+        camposPanel.add(txtDuracion, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        camposPanel.add(new JLabel("Número de alumnos:"), gbc);
+        gbc.gridx = 1;
+        camposPanel.add(spinnerAlumnos, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        camposPanel.add(new JLabel("Empresa:"), gbc);
+        gbc.gridx = 1;
+        camposPanel.add(comboEmpresa, gbc);
 
         mainPanel.add(camposPanel);
 
@@ -490,6 +512,7 @@ public class BancoProyectosUI extends JFrame {
         dialogo.add(mainPanel, BorderLayout.CENTER);
         dialogo.setVisible(true);
     }
+
 
     private void editarProyecto() {
         int fila = tabla.getSelectedRow();

@@ -23,13 +23,22 @@ public class Proyecto {
     }
 
     public Proyecto(String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa) {
-
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.duracion = duracion;
         this.numero_alumnos = numero_alumnos;
         this.id_empresa = id_empresa;
     }
+
+    public Proyecto(String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa, int origen) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.duracion = duracion;
+        this.numero_alumnos = numero_alumnos;
+        this.id_empresa = id_empresa;
+        this.id_origen = origen;
+    }
+
 
     public Proyecto(int id_proyecto, String nombre, String descripcion, String duracion, int numero_alumnos, int id_empresa, boolean estado) {
         this.id_proyecto = id_proyecto;
@@ -46,8 +55,6 @@ public class Proyecto {
         this.descripcion = descripcion;
         this.id_origen = id_origen;
     }
-
-
 
     public String getNombreOrigen() {
         return NombreOrigen;

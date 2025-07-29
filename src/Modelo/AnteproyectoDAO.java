@@ -1,7 +1,5 @@
 package Modelo;
 
-import org.postgresql.replication.ReplicationSlotInfo;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -59,8 +57,6 @@ public class AnteproyectoDAO {
                 "WHERE p.id_estatus_proyecto = 1\n" +
                 "  AND dp.rol = 'Asesor'\n" +
                 "  AND p.estado_actividad = true;";
-
-
         try {
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
