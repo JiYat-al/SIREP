@@ -15,7 +15,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 public class FormularioAnteproyecto extends JFrame {
-    private AnteproyectoInterfaz padre;
     private DocenteDAO docenteDAO;
     private ControladorAnteproyecto ctrlAnteproyecto;
     private JTextField txtNombreProyecto;
@@ -48,14 +47,14 @@ public class FormularioAnteproyecto extends JFrame {
 
     Proyecto proyecto;
 
-    public FormularioAnteproyecto(AnteproyectoInterfaz padre) {
+    public FormularioAnteproyecto() {
         configurarVentana();
         inicializarComponentes();
         cargarDatos();
         configurarEventos();
         ctrlAnteproyecto = new ControladorAnteproyecto();
         docenteDAO = new DocenteDAO();
-        this.padre = padre;
+
         proyecto = new Proyecto();
     }
 
@@ -320,15 +319,12 @@ public class FormularioAnteproyecto extends JFrame {
                 Empresa emp = CtrlEmpresa.obtenerEmpresaPorId(id_empresa);
                 txtEmpresa.setText(emp.getNombre());
                 txtCorreoEmpresa.setText(emp.getCorreo());
-
-                Proyecto proyectoNuevo = ProyectoDAO.proyectoPorombre(proyecto.getNombre());
-                this.proyecto = proyectoNuevo;
+                this.proyecto = proyecto;
 
                 if (!txtNombreProyecto.isVisible()) {
                     txtNombreProyecto.setVisible(true);
                     comboBanco.setVisible(false);
                 }
-
             });
 
         });
@@ -686,13 +682,11 @@ public class FormularioAnteproyecto extends JFrame {
         });
 
         btnGuardar.addActionListener(e -> {
-            boolean registroCorrecto = ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado, modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto, fechaInicio, fechaFinal,
+            ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado, modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto, fechaInicio, fechaFinal,
                     (String) comboPeriodo.getSelectedItem());
             for(int i = 0; i < modeloAlumnos.getSize(); i++) {
                 modeloAlumnos.get(i).convertirAResidenteActivo();
             }
-
-            padre.cargarTablaAnteproyectos();
             this.dispose();
         });
 
@@ -1580,4 +1574,14 @@ public class FormularioAnteproyecto extends JFrame {
         fechaFinal.setValue(anteproyecto.getFechaFin());
     }
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            new FormularioAnteproyecto().setVisible(true);
+        });
+    }
 }
