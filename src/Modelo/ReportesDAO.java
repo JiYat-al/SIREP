@@ -150,7 +150,7 @@ public class ReportesDAO {
         List<ModeloResidente> lista = new ArrayList<>();
 
         String sql = "SELECT id_residente,numero_control, nombre,apellido_paterno,apellido_materno " +
-                "FROM RESIDENTE WHERE estatus=true AND id_estatus_residente=1;";
+                "FROM RESIDENTE WHERE estatus=true AND id_estatus_residente=2;";
 
         try (Connection con = Conexion_bd.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {

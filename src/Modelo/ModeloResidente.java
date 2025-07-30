@@ -155,14 +155,13 @@ public class ModeloResidente {
     // *** FIX: Insertar con debug detallado para encontrar el problema ***
     public boolean insertar() {
         String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
-                "carrera, semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "semestre, correo, telefono, id_proyecto, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         System.out.println("DEBUG: Insertando residente con datos:");
         System.out.println("  - numero_control: " + this.numeroControl);
         System.out.println("  - nombre: " + this.nombre);
         System.out.println("  - apellido_paterno: " + this.apellidoPaterno);
         System.out.println("  - apellido_materno: " + this.apellidoMaterno);
-        System.out.println("  - carrera: " + this.carrera);
         System.out.println("  - semestre: " + this.semestre);
         System.out.println("  - correo: " + this.correo);
         System.out.println("  - telefono: " + this.telefono);
@@ -194,22 +193,20 @@ public class ModeloResidente {
             stmt.setString(4, this.apellidoMaterno);                // apellido_materno (VARCHAR)
             System.out.println("DEBUG: Parámetro 4 (apellido_materno) establecido: " + this.apellidoMaterno);
 
-            stmt.setString(5, this.carrera);                        // carrera (VARCHAR)
-            System.out.println("DEBUG: Parámetro 5 (carrera) establecido: " + this.carrera);
 
-            stmt.setInt(6, this.semestre);                          // semestre (INT)
+            stmt.setInt(5, this.semestre);                          // semestre (INT)
             System.out.println("DEBUG: Parámetro 6 (semestre) establecido: " + this.semestre);
 
-            stmt.setString(7, this.correo);                         // correo (VARCHAR)
+            stmt.setString(6, this.correo);                         // correo (VARCHAR)
             System.out.println("DEBUG: Parámetro 7 (correo) establecido: " + this.correo);
 
-            stmt.setString(8, this.telefono);                       // telefono (VARCHAR)
+            stmt.setString(7, this.telefono);                       // telefono (VARCHAR)
             System.out.println("DEBUG: Parámetro 8 (telefono) establecido: " + this.telefono);
 
-            stmt.setInt(9, this.idProyecto);                        // id_proyecto (INT)
+            stmt.setInt(8, this.idProyecto);                        // id_proyecto (INT)
             System.out.println("DEBUG: Parámetro 9 (id_proyecto) establecido: " + this.idProyecto);
 
-            stmt.setBoolean(10, true);                              // estatus (BOOLEAN)
+            stmt.setBoolean(9, true);                              // estatus (BOOLEAN)
             System.out.println("DEBUG: Parámetro 10 (estatus) establecido: true");
 
             System.out.println("DEBUG: Todos los parámetros establecidos, ejecutando SQL...");
@@ -974,6 +971,36 @@ public class ModeloResidente {
             }
         } catch (SQLException e) {
             System.err.println("Error al asegurar proyectos por defecto: " + e.getMessage());
+        }
+    }
+
+    public static boolean eliminacionDeAlumnosProyecto(Anteproyecto anteproyecto) {
+        PreparedStatement ps = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "UPDATE residente\n" +
+                "               SET id_proyecto = null\n" +
+                "                WHERE id_residente = ?";
+
+        try {
+
+            ps = conn.prepareStatement(sql);
+
+            for(int i = 0; i < anteproyecto.getResidentes().size(); i++) {
+                ps.setInt(1, anteproyecto.getResidentes().get(i).idResidente);
+                ps.execute();
+            }
+            return true;
+
+        } catch (SQLException e){
+            System.err.println(e);
+            return false;
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
         }
     }
 

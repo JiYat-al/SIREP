@@ -87,4 +87,37 @@ public class AnteproyectoDAO {
         }
         return anteproyectos;
     }
+
+    public static boolean  existedAnteproyecto (int id_proyecto) {
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String  sql = "SELECT p.estado_actividad\n" +
+                "\tFROM proyecto p\n" +
+                "\tWHERE p.id_proyecto = ;";
+        try {
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+
+                ps.setInt(1, id_proyecto);
+                ps.execute();
+                if (rs.getBoolean("estado_actividad")) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+        } catch (SQLException e){
+            System.err.println(e);
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+        return false;
+    }
 }

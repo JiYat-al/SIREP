@@ -14,6 +14,9 @@ public class Anteproyecto {
     private Periodo periodo;
     private Date fechaInicio;
     private Date fechaFin;
+    private boolean tieneProrroga;
+    private Date fechaFinNueva;
+    private String archivoAutorizacionProrroga;
 
     public Anteproyecto(Proyecto proyecto, String archivoAnteproyecto, ArrayList<ModeloResidente> residentes,
                         Docente asesor, ArrayList<Docente> revisores, Docente revisorAnteproyecto, Periodo periodo, boolean estatusRevision, Date fechaInicio,
@@ -27,9 +30,29 @@ public class Anteproyecto {
         this.periodo = periodo;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
+        this.tieneProrroga = false;
+        this.fechaFinNueva = null;
+        this.archivoAutorizacionProrroga = null;
     }
 
-    public  Anteproyecto() {
+    public Anteproyecto(Proyecto proyecto, String archivoAnteproyecto, ArrayList<ModeloResidente> residentes,
+                        Docente asesor, ArrayList<Docente> revisores, Docente revisorAnteproyecto, Periodo periodo, boolean estatusRevision, Date fechaInicio,
+                        Date fechaFin, boolean tieneProrroga, Date fechaFinNueva, String archivoAutorizacionProrroga) {
+        this.proyecto = proyecto;
+        this.archivoAnteproyecto = archivoAnteproyecto;
+        this.residentes = residentes;
+        this.asesor = asesor;
+        this.revisores = revisores;
+        this.revisorAnteproyecto = revisorAnteproyecto;
+        this.periodo = periodo;
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
+        this.tieneProrroga = tieneProrroga;
+        this.fechaFinNueva = fechaFinNueva;
+        this.archivoAutorizacionProrroga = archivoAutorizacionProrroga;
+    }
+
+    public Anteproyecto() {
         proyecto = null;
         archivoAnteproyecto = null;
         residentes = null;
@@ -39,6 +62,9 @@ public class Anteproyecto {
         periodo = null;
         fechaInicio = null;
         fechaFin = null;
+        fechaFinNueva = null;
+        tieneProrroga = false;
+        archivoAutorizacionProrroga = null;
     }
 
     public Proyecto getProyecto() {
@@ -107,6 +133,30 @@ public class Anteproyecto {
 
     public void setFechaFin(Date fechaFin) {
         this.fechaFin = fechaFin;
+    }
+
+    public boolean isTieneProrroga() {
+        return tieneProrroga;
+    }
+
+    public void setTieneProrroga(boolean tieneProrroga) {
+        this.tieneProrroga = tieneProrroga;
+    }
+
+    public Date getFechaFinNueva() {
+        return fechaFinNueva;
+    }
+
+    public void setFechaFinNueva(Date fechaFinNueva) {
+        this.fechaFinNueva = fechaFinNueva;
+    }
+
+    public String getArchivoAutorizacionProrroga() {
+        return archivoAutorizacionProrroga;
+    }
+
+    public void setArchivoAutorizacionProrroga(String archivoAutorizacionProrroga) {
+        this.archivoAutorizacionProrroga = archivoAutorizacionProrroga;
     }
 
 }
