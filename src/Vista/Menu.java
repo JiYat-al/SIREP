@@ -217,9 +217,11 @@ public class Menu extends JFrame {
         // Items del menú de alumnos
         JMenuItem itemCandidatos = new MenuItemEstilizado("Candidatos", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
         JMenuItem itemResidentes = new MenuItemEstilizado("Residentes", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
+        JMenuItem itemExpedientes = new MenuItemEstilizado("Expedientes", cargarPNGComoIcono("/Recursos/alumnos.png", 22, 22));
 
         menuAlumnos.add(itemCandidatos);
         menuAlumnos.add(itemResidentes);
+        menuAlumnos.add(itemExpedientes);
 
         // Agregar items al menú de reportes
         menuReportes.add(itemReporteAsesor);
@@ -412,26 +414,26 @@ public class Menu extends JFrame {
         lblFrase.setHorizontalAlignment(SwingConstants.CENTER);
 
         String[][] frases = {
-            {"El futuro pertenece a quienes creen en la belleza de sus sueños.", "Eleanor Roosevelt"},
-            {"La educación es el arma más poderosa que puedes usar para cambiar el mundo.", "Nelson Mandela"},
-            {"El éxito es la suma de pequeños esfuerzos repetidos día tras día.", "Robert Collier"},
-            {"Todo lo que puedas imaginar es real.", "Pablo Picasso"},
-            {"La mejor forma de predecir el futuro es creándolo.", "Peter Drucker"},
-            {"No dejes que tus miedos se interpongan en tus sueños.", "Walt Disney"}
+                {"El futuro pertenece a quienes creen en la belleza de sus sueños.", "Eleanor Roosevelt"},
+                {"La educación es el arma más poderosa que puedes usar para cambiar el mundo.", "Nelson Mandela"},
+                {"El éxito es la suma de pequeños esfuerzos repetidos día tras día.", "Robert Collier"},
+                {"Todo lo que puedas imaginar es real.", "Pablo Picasso"},
+                {"La mejor forma de predecir el futuro es creándolo.", "Peter Drucker"},
+                {"No dejes que tus miedos se interpongan en tus sueños.", "Walt Disney"}
         };
-        
+
         final int[] indice = {0};
         Timer timerFrases = new Timer(20000, e -> {
             indice[0] = (indice[0] + 1) % frases.length;
-            lblFrase.setText("<html><center>'" + frases[indice[0]][0] + 
-                           "'<br><span style='font-size:18px;color:#5c5da9;'>- " + 
-                           frases[indice[0]][1] + "</span></center></html>");
+            lblFrase.setText("<html><center>'" + frases[indice[0]][0] +
+                    "'<br><span style='font-size:18px;color:#5c5da9;'>- " +
+                    frases[indice[0]][1] + "</span></center></html>");
         });
-        
+
         // Establecer la primera frase
-        lblFrase.setText("<html><center>'" + frases[0][0] + 
-                        "'<br><span style='font-size:18px;color:#5c5da9;'>- " + 
-                        frases[0][1] + "</span></center></html>");
+        lblFrase.setText("<html><center>'" + frases[0][0] +
+                "'<br><span style='font-size:18px;color:#5c5da9;'>- " +
+                frases[0][1] + "</span></center></html>");
 
         timerFrases.start();
         panelCentral.add(lblFrase, gbc);
@@ -449,7 +451,7 @@ public class Menu extends JFrame {
 
         JButton btnCreditos = new JButton();
         btnCreditos.setToolTipText("Créditos");
-        btnCreditos.setIcon(cargarPNGComoIcono("/Recursos/creditos.png", 32, 32));
+        btnCreditos.setIcon(cargarPNGComoIcono("/Recursos/perfil.png", 32, 32));
         btnCreditos.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         btnCreditos.setBackground(Color.WHITE);
         btnCreditos.setFocusPainted(false);
@@ -516,6 +518,11 @@ public class Menu extends JFrame {
         itemResidentes.addActionListener(e -> {
             VistaResidentesActivos residentes = new VistaResidentesActivos();
             residentes.setVisible(true);
+            this.dispose();
+        });
+
+        itemExpedientes.addActionListener(e -> {
+            new ExpedientesUI();
             this.dispose();
         });
 

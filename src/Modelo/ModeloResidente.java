@@ -461,6 +461,8 @@ public class ModeloResidente {
                     residente.setNombre(rs.getString("nombre"));
                     residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                     residente.setApellidoMaterno(rs.getString("apellido_materno"));
+
+
                     residente.setSemestre(rs.getInt("semestre"));
                     residente.setCorreo(rs.getString("correo"));
                     residente.setTelefono(rs.getString("telefono"));
@@ -482,44 +484,6 @@ public class ModeloResidente {
         return residentes;
     }
 
-    public static boolean regresarACandidato(int idResidente) {
-        String sql = "UPDATE residente SET id_estatus_residente = 1 WHERE id_residente = ?";
-
-        try {
-            Connection conn = getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, idResidente);
-
-            int filasAfectadas = stmt.executeUpdate();
-            return filasAfectadas > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error al regresar a candidato: " + e.getMessage());
-            return false;
-        }
-    }
-    public static void verificarEstructuraTabla() {
-        String sqlCheck = "SELECT column_name FROM information_schema.columns " +
-                "WHERE table_name = 'residente' AND column_name = 'es_residente_activo'";
-
-        try {
-            Connection conn = getConnection();
-            PreparedStatement checkStmt = conn.prepareStatement(sqlCheck);
-            ResultSet rs = checkStmt.executeQuery();
-
-            if (!rs.next()) {
-                String sqlAlter = "ALTER TABLE residente ADD COLUMN es_residente_activo BOOLEAN DEFAULT FALSE";
-                PreparedStatement alterStmt = conn.prepareStatement(sqlAlter);
-                alterStmt.executeUpdate();
-                System.out.println("Columna es_residente_activo agregada a la tabla residente");
-            } else {
-                System.out.println("Columna es_residente_activo ya existe en la tabla residente");
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error al verificar/crear estructura de tabla: " + e.getMessage());
-        }
-    }
 
     public static void verificarEstatusResidentes() {
         String sqlCheck = "SELECT COUNT(*) FROM estatus_residente";
@@ -580,12 +544,24 @@ public class ModeloResidente {
                 residente.setNombre(rs.getString("nombre"));
                 residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                 residente.setApellidoMaterno(rs.getString("apellido_materno"));
-                residente.setCarrera(rs.getString("carrera"));
+
+                // FIX: No intentar leer la columna carrera que no existe
+                // residente.setCarrera(rs.getString("carrera")); // ❌ ESTO CAUSA EL ERROR
+                // La carrera está en id_carrera como FK, no como string directo
+
                 residente.setSemestre(rs.getInt("semestre"));
                 residente.setCorreo(rs.getString("correo"));
                 residente.setTelefono(rs.getString("telefono"));
                 residente.setIdProyecto(rs.getInt("id_proyecto"));
                 residente.setEstatus(rs.getBoolean("estatus"));
+
+                // Si necesitas la carrera, hacer un JOIN o consulta separada
+                try {
+                    residente.setIdEstatus(rs.getInt("id_estatus_residente"));
+                } catch (SQLException e) {
+                    residente.setIdEstatus(1); // Default candidato
+                }
+
                 return residente;
             }
 
@@ -597,7 +573,6 @@ public class ModeloResidente {
 
         return null;
     }
-
     // *** CAMBIO: Obtener solo activos - SIMPLIFICADO ***
     public static List<ModeloResidente> obtenerTodos() {
         List<ModeloResidente> residentes = new ArrayList<>();
@@ -628,16 +603,24 @@ public class ModeloResidente {
                     residente.setNombre(rs.getString("nombre"));
                     residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                     residente.setApellidoMaterno(rs.getString("apellido_materno"));
+
                     residente.setSemestre(rs.getInt("semestre"));
                     residente.setCorreo(rs.getString("correo"));
                     residente.setTelefono(rs.getString("telefono"));
                     residente.setIdProyecto(rs.getInt("id_proyecto"));
                     residente.setEstatus(rs.getBoolean("estatus"));
 
+                    // Manejar id_estatus_residente si existe
+                    try {
+                        residente.setIdEstatus(rs.getInt("id_estatus_residente"));
+                    } catch (SQLException e) {
+                        residente.setIdEstatus(1); // Default candidato
+                    }
+
                     residentes.add(residente);
                     contador++;
 
-                    if (contador <= 3) { // Solo mostrar los primeros 3 para debug
+                    if (contador <= 3) {
                         System.out.println("DEBUG: Residente cargado - ID: " + residente.getIdResidente() +
                                 ", No.Control: " + residente.getNumeroControl() +
                                 ", Nombre: " + residente.getNombre() +
@@ -646,7 +629,7 @@ public class ModeloResidente {
 
                 } catch (Exception e) {
                     System.err.println("Error procesando fila: " + e.getMessage());
-                    continue; // Continuar con el siguiente registro
+                    continue;
                 }
             }
 
@@ -655,10 +638,6 @@ public class ModeloResidente {
         } catch (SQLException e) {
             System.err.println("Error al obtener residentes: " + e.getMessage());
             e.printStackTrace();
-
-            // *** FALLBACK: Si falla, intentar sin filtro de estatus ***
-            System.out.println("DEBUG: Intentando consulta sin filtro estatus...");
-            return obtenerTodosSinFiltro();
         }
 
         return residentes;
@@ -682,7 +661,6 @@ public class ModeloResidente {
                     residente.setNombre(rs.getString("nombre"));
                     residente.setApellidoPaterno(rs.getString("apellido_paterno"));
                     residente.setApellidoMaterno(rs.getString("apellido_materno"));
-                    residente.setCarrera(rs.getString("carrera"));
                     residente.setSemestre(rs.getInt("semestre"));
                     residente.setCorreo(rs.getString("correo"));
                     residente.setTelefono(rs.getString("telefono"));
@@ -783,7 +761,25 @@ public class ModeloResidente {
 
         return residentes;
     }
+    /**
+     * Regresar un residente activo a candidato
+     */
+    public static boolean regresarACandidato(int idResidente) {
+        String sql = "UPDATE residente SET id_estatus_residente = 1 WHERE id_residente = ?";
 
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, idResidente);
+
+            int filasAfectadas = stmt.executeUpdate();
+            return filasAfectadas > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error al regresar a candidato: " + e.getMessage());
+            return false;
+        }
+    }
     // ==================== IMPORTACIÓN MEJORADA ====================
 
     public static ResultadoImportacion importarResidentes(List<ModeloResidente> residentes) {
