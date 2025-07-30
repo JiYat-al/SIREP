@@ -9,6 +9,7 @@ import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -682,7 +683,7 @@ public class FormularioAnteproyecto extends JFrame {
             this.dispose();
         });
 
-        btnGuardar.addActionListener(e -> {
+        /*btnGuardar.addActionListener(e -> {
             ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado, modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto, fechaInicio, fechaFinal,
                     (String) comboPeriodo.getSelectedItem());
             for(int i = 0; i < modeloAlumnos.getSize(); i++) {
@@ -690,7 +691,33 @@ public class FormularioAnteproyecto extends JFrame {
             }
             this.dispose();
             anteproyectoInterfaz.cargarTablaAnteproyectos();
+        });*/
+        btnGuardar.addActionListener(e -> {
+            Date fInicio = (Date) fechaInicio.getValue();
+            Date fFin = (Date) fechaFinal.getValue();
+            String periodo = (String) comboPeriodo.getSelectedItem();
+
+            boolean valido = ValidadorAnteproyecto.validarFormularioCompleto(proyecto, archivoSeleccionado,
+                    modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto,
+                    fInicio, fFin, periodo)
+                    && ValidadorAnteproyecto.validarFechas(fInicio, fFin)
+                    && ValidadorAnteproyecto.validarPeriodoConFechas(periodo, fInicio, fFin)
+                    && ValidadorAnteproyecto.validarArchivo(archivoSeleccionado);
+
+            if (!valido) return;
+
+            ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado,
+                    modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto,
+                    fechaInicio, fechaFinal, periodo);
+
+            for (int i = 0; i < modeloAlumnos.getSize(); i++) {
+                modeloAlumnos.get(i).convertirAResidenteActivo();
+            }
+
+            this.dispose();
+            anteproyectoInterfaz.cargarTablaAnteproyectos();
         });
+
 
         panelBotones.add(btnGuardar);
         panelBotones.add(btnCancelar);
@@ -972,15 +999,15 @@ public class FormularioAnteproyecto extends JFrame {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                // Obtener el objeto ModeloResidente correspondiente
                 ModeloResidente residente = finalListaResidentes.get(filaModelo);
-                if (!modeloAlumnos.contains(residente)) {
+
+                if (ValidadorAnteproyecto.validarAgregarAlumno(residente, modeloAlumnos, proyecto)) {
                     modeloAlumnos.addElement(residente);
                 }
             }
-
             dialogo.dispose();
         });
+
 
 
 
@@ -1136,10 +1163,11 @@ public class FormularioAnteproyecto extends JFrame {
                 docente.setNombre(nombreCompleto);
                 docente.setCorreo(correo);
 
-                modeloAsesores.clear(); // Solo uno
-                modeloAsesores.addElement(docente); // O asigna a tu variable asesorSeleccionado si así lo prefieres
-
-                dialogo.dispose();
+                if (ValidadorAnteproyecto.validarAgregarAsesor(docente, modeloAsesores)) {
+                    modeloAsesores.clear();
+                    modeloAsesores.addElement(docente);
+                    dialogo.dispose();
+                }
             }
         });
 
@@ -1285,14 +1313,15 @@ public class FormularioAnteproyecto extends JFrame {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                // Obtener el objeto ModeloResidente correspondiente
                 Docente docente = listaRevisores.get(filaModelo);
-                if (!modeloRevisores.contains(docente)) {
+
+                if (ValidadorAnteproyecto.validarAgregarRevisor(docente, modeloRevisores, modeloAsesores, modeloRevisoresAnteproyecto)) {
                     modeloRevisores.addElement(docente);
                 }
             }
             dialogo.dispose();
         });
+
 
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
@@ -1436,14 +1465,15 @@ public class FormularioAnteproyecto extends JFrame {
             int[] filasSeleccionadas = tabla.getSelectedRows();
             for (int fila : filasSeleccionadas) {
                 int filaModelo = tabla.convertRowIndexToModel(fila);
-                // Obtener el objeto ModeloResidente correspondiente
                 Docente docente = listaRevisorAnteproyecto.get(filaModelo);
-                if (!modeloRevisoresAnteproyecto.contains(docente)) {
+
+                if (ValidadorAnteproyecto.validarAgregarRevisorAnteproyecto(docente, modeloRevisoresAnteproyecto)) {
                     modeloRevisoresAnteproyecto.addElement(docente);
                 }
             }
             dialogo.dispose();
         });
+
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
 
