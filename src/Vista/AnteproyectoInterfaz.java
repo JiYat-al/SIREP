@@ -443,6 +443,8 @@ public class AnteproyectoInterfaz extends JFrame {
                 Empresa emps = EmpresaDAO.buscarPorID(ap.getProyecto().getId_empresa());
                 formulario.setEmpresa(emps);
 
+                formulario.setTodo(ap);
+
                 //formulario.setAlumnosTexto(ap.getResidentes());
 
                 formulario.setVisible(true);
@@ -479,6 +481,7 @@ public class AnteproyectoInterfaz extends JFrame {
         if (filaSeleccionada >= 0) {
 
             Anteproyecto ap = listaAnteproyectos.get(filaSeleccionada);
+            System.out.println(ap.getRevisorAnteproyecto().getNombre());
 
             // Crear diálogo moderno y elegante
             JDialog dialogo = new JDialog(this, "Información del Anteproyecto", true);
@@ -576,6 +579,10 @@ public class AnteproyectoInterfaz extends JFrame {
                         r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno() + " - " +
                         r.getCorreo() + "\n";
             }
+
+            String revisorAnteproyecto = ap.getRevisorAnteproyecto().getNumeroTarjeta() + " - "
+                    + ap.getRevisorAnteproyecto().getNombre() + " " + ap.getRevisorAnteproyecto().getApellidoPaterno();
+
             String asesor = ap.getAsesor().getNumeroTarjeta() + " - " + ap.getAsesor().getNombre() + " " + ap.getAsesor().getApellidoPaterno()
                     + " " + ap.getAsesor().getApellidoMaterno() + " - " + ap.getAsesor().getCorreo();
 
@@ -587,6 +594,7 @@ public class AnteproyectoInterfaz extends JFrame {
 
             contenidoPanel.add(crearSeccionInfo("EQUIPO DE TRABAJO",
                     "Alumnos:\n" + alumnos + "\n" +
+                            "Revisor de Anteproyecto:\n" + revisorAnteproyecto + "\n\n" +
                             "Asesor:\n" + asesor + "\n\n" +
                             "Revisores:\n" + revisores
             ));
@@ -602,6 +610,7 @@ public class AnteproyectoInterfaz extends JFrame {
             contenidoPanel.add(crearSeccionInfo("DOCUMENTACIÓN",
                     "Archivo: " + ruta
             ));
+
 
             JScrollPane scrollPane = new JScrollPane(contenidoPanel);
             scrollPane.setOpaque(false);

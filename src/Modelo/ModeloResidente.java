@@ -981,6 +981,36 @@ public class ModeloResidente {
         }
     }
 
+    public static boolean eliminacionDeAlumnosProyecto(Anteproyecto anteproyecto) {
+        PreparedStatement ps = null;
+        Connection conn = Conexion_bd.getInstancia().getConexion();
+
+        String sql = "UPDATE residente\n" +
+                "               SET id_proyecto = null\n" +
+                "                WHERE id_residente = ?";
+
+        try {
+
+            ps = conn.prepareStatement(sql);
+
+            for(int i = 0; i < anteproyecto.getResidentes().size(); i++) {
+                ps.setInt(1, anteproyecto.getResidentes().get(i).idResidente);
+                ps.execute();
+            }
+            return true;
+
+        } catch (SQLException e){
+            System.err.println(e);
+            return false;
+        } finally {
+            try{
+                conn.close();
+            } catch(SQLException e){
+                System.err.println(e);
+            }
+        }
+    }
+
     public static boolean asigancionAlumnosProyecto(Anteproyecto anteproyecto) {
         PreparedStatement ps = null;
         Connection conn = Conexion_bd.getInstancia().getConexion();

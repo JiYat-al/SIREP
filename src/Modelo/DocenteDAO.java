@@ -199,8 +199,7 @@ public class DocenteDAO {
     }
 
     public static Docente revisorAnteproyectoPorIDProyecto(int id_proyecto){
-        Docente docente;
-        Docente revisor = new Docente();
+        Docente docente = new Docente();
 
         String sql = "SELECT d.numero_tarjeta, d.nombre, d.apellido_paterno, d.apellido_materno, correo\n" +
                 "FROM docente d\n" +
@@ -208,7 +207,7 @@ public class DocenteDAO {
                 "\tON dp.numero_tarjeta = d.numero_tarjeta\n" +
                 "WHERE dp.id_proyecto = ?\n" +
                 "\tAND dp.rol = 'Revisor'" +
-                "\tAND dp.etapa = 'Anteproyecto';";
+                "\tAND dp.etapa = 'anteproyecto';";
 
         try (Connection con = Conexion_bd.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -230,7 +229,7 @@ public class DocenteDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return revisor; // Si no encontró resultados
+        return docente; // Si no encontró resultados
     }
 
     public static boolean asginarRevisoresProyecto(Anteproyecto anteproyecto) {

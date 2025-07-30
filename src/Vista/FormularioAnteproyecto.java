@@ -34,7 +34,7 @@ public class FormularioAnteproyecto extends JFrame {
     private JList<ModeloResidente> listaAlumnos;
     private JList<Docente> listaAsesores;
     private JList<Docente> listaRevisores;
-    private JComboBox<String> comboPeriodo;
+    private JComboBox<Periodo> comboPeriodo;
     private File archivoSeleccionado;
     private DefaultListModel<Docente> modeloRevisoresAnteproyecto;
     private DefaultListModel<ModeloResidente> modeloAlumnos;
@@ -238,9 +238,7 @@ public class FormularioAnteproyecto extends JFrame {
         listaAsesores.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listaRevisores.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        comboPeriodo = new JComboBox<>(new String[]{
-                "ENERO_JUNIO", "JULIO_AGOSTO", "AGOSTO_DICIEMBRE"
-        });
+        comboPeriodo = new JComboBox<>(Periodo.values());
 
     }
 
@@ -693,6 +691,7 @@ public class FormularioAnteproyecto extends JFrame {
             anteproyectoInterfaz.cargarTablaAnteproyectos();
         });*/
         btnGuardar.addActionListener(e -> {
+
             Date fInicio = (Date) fechaInicio.getValue();
             Date fFin = (Date) fechaFinal.getValue();
             String periodo = (String) comboPeriodo.getSelectedItem();
@@ -706,16 +705,22 @@ public class FormularioAnteproyecto extends JFrame {
 
             if (!valido) return;
 
-            ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado,
-                    modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto,
-                    fechaInicio, fechaFinal, periodo);
 
-            for (int i = 0; i < modeloAlumnos.getSize(); i++) {
-                modeloAlumnos.get(i).convertirAResidenteActivo();
+            if(AnteproyectoDAO.existedAnteproyecto(proyecto.getId_proyecto())) {
+
+            } else {
+
+                ControladorAnteproyecto.registrarAnteproyecto(proyecto, archivoSeleccionado,
+                        modeloAlumnos, modeloAsesores, modeloRevisores, modeloRevisoresAnteproyecto,
+                        fechaInicio, fechaFinal, periodo);
+
+                for (int i = 0; i < modeloAlumnos.getSize(); i++) {
+                    modeloAlumnos.get(i).convertirAResidenteActivo();
+                }
+
+                this.dispose();
+                anteproyectoInterfaz.cargarTablaAnteproyectos();
             }
-
-            this.dispose();
-            anteproyectoInterfaz.cargarTablaAnteproyectos();
         });
 
 
@@ -1604,6 +1609,18 @@ public class FormularioAnteproyecto extends JFrame {
         fechaInicio.setValue(anteproyecto.getFechaInicio());
 
         fechaFinal.setValue(anteproyecto.getFechaFin());
+
+        String ruta = "";
+        if (anteproyecto.getArchivoAnteproyecto() != null) {
+            ruta = anteproyecto.getArchivoAnteproyecto().substring(anteproyecto.getArchivoAnteproyecto().lastIndexOf('/') + 1);
+            lblArchivo.setText(ruta);
+        }
+
+        modeloAlumnos.addAll(anteproyecto.getResidentes());
+        modeloRevisoresAnteproyecto.addElement(anteproyecto.getRevisorAnteproyecto());
+        modeloAsesores.addElement(anteproyecto.getAsesor());
+        modeloRevisores.addAll(anteproyecto.getRevisores());
+
     }
 
 }
