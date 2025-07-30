@@ -481,7 +481,6 @@ public class AnteproyectoInterfaz extends JFrame {
         if (filaSeleccionada >= 0) {
 
             Anteproyecto ap = listaAnteproyectos.get(filaSeleccionada);
-            System.out.println(ap.getRevisorAnteproyecto().getNombre());
 
             // Crear diálogo moderno y elegante
             JDialog dialogo = new JDialog(this, "Información del Anteproyecto", true);
