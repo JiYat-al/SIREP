@@ -1,7 +1,6 @@
 package Vista;
 
 import Modelo.*;
-
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -200,7 +199,13 @@ public class AnteproyectoInterfaz extends JFrame {
             mostrarDialogoNuevo();
         });
 
+        JButton btnProrroga = crearBotonAccion("Prórroga", new Color(255, 152, 0));
+        btnProrroga.addActionListener(e -> {
+            mostrarSeleccionProrrogaEnMismaVentana();
+        });
+
         panelBotonesHeader.add(btnNuevo);
+        panelBotonesHeader.add(btnProrroga);
         header.add(panelBotonesHeader, BorderLayout.EAST);
         return header;
     }
@@ -241,13 +246,25 @@ public class AnteproyectoInterfaz extends JFrame {
         tabla.setSelectionBackground(new Color(220, 219, 245));
         tabla.setSelectionForeground(new Color(60, 60, 100));
 
-        // Configurar renderer para wrap text
+        // Configurar renderer para wrap text y colorear prórroga
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
 
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+                // Colorear filas con prórroga de amarillo (color huevo)
+                if (row < listaAnteproyectos.size() && listaAnteproyectos.get(row).isTieneProrroga()) {
+                    if (!isSelected) {
+                        c.setBackground(new Color(255, 248, 180)); // Color amarillo huevo
+                    }
+                } else {
+                    if (!isSelected) {
+                        c.setBackground(Color.WHITE);
+                    }
+                }
+
                 if (column == 1) { // Columna DESCRIPCIÓN
                     setToolTipText(value != null ? value.toString() : "");
                 }
@@ -306,9 +323,11 @@ public class AnteproyectoInterfaz extends JFrame {
                 setCursor(new Cursor(Cursor.HAND_CURSOR));
                 setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
                 addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
                     public void mouseEntered(java.awt.event.MouseEvent e) {
                         if (isEnabled()) { hover = true; repaint(); }
                     }
+                    @Override
                     public void mouseExited(java.awt.event.MouseEvent e) { hover = false; repaint(); }
                 });
             }
@@ -334,6 +353,7 @@ public class AnteproyectoInterfaz extends JFrame {
         };
     }
 
+
     private JButton crearBotonEstilo(String texto) {
         return new JButton(texto) {
             private boolean hover = false;
@@ -346,10 +366,12 @@ public class AnteproyectoInterfaz extends JFrame {
                 setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
                 addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
                     public void mouseEntered(java.awt.event.MouseEvent e) {
                         hover = true;
                         repaint();
                     }
+                    @Override
                     public void mouseExited(java.awt.event.MouseEvent e) {
                         hover = false;
                         repaint();
@@ -375,10 +397,12 @@ public class AnteproyectoInterfaz extends JFrame {
     private void mostrarAyuda() {
         String ayuda = "Sistema de Banco de Anteproyectos SIREP\n\n" +
                 "• Nuevo Anteproyecto: Registra un anteproyecto nuevo\n" +
+                "• Prórroga: Gestiona prórrogas para anteproyectos existentes\n" +
                 "• Editar: Modifica el anteproyecto seleccionado\n" +
                 "• Eliminar: Elimina el anteproyecto seleccionado\n" +
                 "• Ver Información: Muestra detalles del anteproyecto\n" +
-                "• Flecha izquierda: Regresa al menú principal\n";
+                "• Flecha izquierda: Regresa al menú principal\n\n" +
+                "NOTA: Los anteproyectos con prórroga aparecen resaltados en amarillo.";
 
         JOptionPane.showMessageDialog(this, ayuda, "Ayuda - Banco de Anteproyectos", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -498,8 +522,8 @@ public class AnteproyectoInterfaz extends JFrame {
 
                     // Fondo degradado elegante
                     GradientPaint gradient = new GradientPaint(
-                        0, 0, new Color(250, 248, 255),
-                        0, getHeight(), new Color(240, 235, 255)
+                            0, 0, new Color(250, 248, 255),
+                            0, getHeight(), new Color(240, 235, 255)
                     );
                     g2.setPaint(gradient);
                     g2.fillRect(0, 0, getWidth(), getHeight());
@@ -563,7 +587,7 @@ public class AnteproyectoInterfaz extends JFrame {
                             "Origen: " + ap.getProyecto().getNombreOrigen()));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
-            SimpleDateFormat formato = new SimpleDateFormat("d MMMM yyyy", new Locale("es", "ES"));
+            SimpleDateFormat formato = new SimpleDateFormat("d MMMM yyyy", Locale.of("es", "ES"));
 
             contenidoPanel.add(crearSeccionInfo("CRONOGRAMA",
                     "Periodo: " + ap.getPeriodo() + "\n" +
@@ -578,10 +602,6 @@ public class AnteproyectoInterfaz extends JFrame {
                         r.getNombre() + " " + r.getApellidoPaterno() + " " + r.getApellidoMaterno() + " - " +
                         r.getCorreo() + "\n";
             }
-
-            String revisorAnteproyecto = ap.getRevisorAnteproyecto().getNumeroTarjeta() + " - "
-                    + ap.getRevisorAnteproyecto().getNombre() + " " + ap.getRevisorAnteproyecto().getApellidoPaterno();
-
             String asesor = ap.getAsesor().getNumeroTarjeta() + " - " + ap.getAsesor().getNombre() + " " + ap.getAsesor().getApellidoPaterno()
                     + " " + ap.getAsesor().getApellidoMaterno() + " - " + ap.getAsesor().getCorreo();
 
@@ -593,23 +613,31 @@ public class AnteproyectoInterfaz extends JFrame {
 
             contenidoPanel.add(crearSeccionInfo("EQUIPO DE TRABAJO",
                     "Alumnos:\n" + alumnos + "\n" +
-                            "Revisor de Anteproyecto:\n" + revisorAnteproyecto + "\n\n" +
                             "Asesor:\n" + asesor + "\n\n" +
                             "Revisores:\n" + revisores
             ));
             contenidoPanel.add(Box.createVerticalStrut(20));
 
-            String ruta = "";
-            if (ap.getArchivoAnteproyecto() != null) {
-                ruta = ap.getArchivoAnteproyecto().substring(ap.getArchivoAnteproyecto().lastIndexOf('/') + 1);
-            } else {
-                ruta = "Ningún archivo seleccionado";
+            // Información del documento de prórroga si existe
+            String archivoAnteproyecto = (ap.getArchivoAnteproyecto() != null)
+                    ? ap.getArchivoAnteproyecto().substring(ap.getArchivoAnteproyecto().lastIndexOf('/') + 1)
+                    : "Ningún archivo seleccionado";
+
+            String documentacionTexto = "Archivo Anteproyecto: " + archivoAnteproyecto;
+            if (ap.isTieneProrroga() && ap.getArchivoAutorizacionProrroga() != null &&
+                    !ap.getArchivoAutorizacionProrroga().trim().isEmpty()) {
+
+                String nombreDocProrroga = ap.getArchivoAutorizacionProrroga();
+                if (nombreDocProrroga.contains("\\") || nombreDocProrroga.contains("/")) {
+                    nombreDocProrroga = nombreDocProrroga.substring(Math.max(
+                            nombreDocProrroga.lastIndexOf("\\"),
+                            nombreDocProrroga.lastIndexOf("/")
+                    ) + 1);
+                }
+                documentacionTexto += "\nAutorización Prórroga: " + nombreDocProrroga;
             }
 
-            contenidoPanel.add(crearSeccionInfo("DOCUMENTACIÓN",
-                    "Archivo: " + ruta
-            ));
-
+            contenidoPanel.add(crearSeccionInfo("DOCUMENTACIÓN", documentacionTexto));
 
             JScrollPane scrollPane = new JScrollPane(contenidoPanel);
             scrollPane.setOpaque(false);
@@ -633,9 +661,11 @@ public class AnteproyectoInterfaz extends JFrame {
                     setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
 
                     addMouseListener(new java.awt.event.MouseAdapter() {
+                        @Override
                         public void mouseEntered(java.awt.event.MouseEvent e) {
                             hover = true; repaint();
                         }
+                        @Override
                         public void mouseExited(java.awt.event.MouseEvent e) {
                             hover = false; repaint();
                         }
@@ -711,6 +741,48 @@ public class AnteproyectoInterfaz extends JFrame {
         seccion.add(textArea, BorderLayout.CENTER);
 
         return seccion;
+    }
+
+    private void mostrarSeleccionProrrogaEnMismaVentana() {
+        // Verificar que hay anteproyectos disponibles
+        if (listaAnteproyectos.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No hay anteproyectos disponibles para gestionar prórrogas.",
+                    "Sin Anteproyectos",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Verificar que hay una fila seleccionada
+        int filaSeleccionada = tabla.getSelectedRow();
+        if (filaSeleccionada < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Por favor, seleccione un anteproyecto de la tabla para gestionar su prórroga.",
+                    "Seleccione un Anteproyecto",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Abrir el formulario de prórroga
+        Anteproyecto anteproyectoSeleccionado = listaAnteproyectos.get(filaSeleccionada);
+
+        // Validación: Verificar si ya tiene prórroga
+        if (anteproyectoSeleccionado.isTieneProrroga()) {
+            int opcion = JOptionPane.showConfirmDialog(this,
+                    "Este anteproyecto ya tiene una prórroga asignada.\n" +
+                            "¿Desea modificar la prórroga existente?",
+                    "Prórroga Existente",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
+            if (opcion != JOptionPane.YES_OPTION) {
+                return;
+            }
+        }
+
+        // Abrir el formulario de prórroga en una clase separada
+        FormularioProrroga formulario = new FormularioProrroga(this, anteproyectoSeleccionado);
+        formulario.setVisible(true);
     }
 
     public static void main(String[] args) {

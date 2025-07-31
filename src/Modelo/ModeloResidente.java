@@ -253,7 +253,7 @@ public class ModeloResidente {
     }
 
 
-    // Modificar el método insertar para incluir el nuevo campo
+    // Modificar el metodo insertar para incluir el nuevo campo
     public boolean insertarConEstatus() {
         String sql = "INSERT INTO residente (numero_control, nombre, apellido_paterno, apellido_materno, " +
                 "carrera, semestre, correo, telefono, id_proyecto, estatus, es_residente_activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
